@@ -12,6 +12,7 @@ Extension to provides syntax highlighting, linting, go to definition, and snippe
 | Linter              | 🗹      |
 | Go to definition    | 🗹      |
 | Completion          | 🗹      |
+| Split to Partial    | 🗹      |
 | Snippets - HAML     | 🗹      |
 | Snippets - Rails    | 🗹      |
 
@@ -63,6 +64,7 @@ You can configure the extension by creating a `.vscode/settings.json` file in th
 - [Better Haml](https://github.com/karuna/haml-vscode/): (MIT License)
 - [Rails Open Partial](https://github.com/shanehofstetter/rails-open-partial-vscode): (MIT License)
 - [Haml Lint](https://github.com/aki77/vscode-haml-lint): (MIT License)
+- [Rails Partial](https://github.com/aki77/vscode-rails-partial): (MIT License)
 
 ## License
 

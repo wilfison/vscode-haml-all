@@ -52,6 +52,13 @@
         }
       }
     },
+    "commands": [
+      {
+        "command": "hamlAll.createPartialFromSelection",
+        "title": "HAML: Create a partial from selection",
+        "enablement": "editorLangId == haml"
+      }
+    ],
     "languages": [
       {
         "id": "haml",
