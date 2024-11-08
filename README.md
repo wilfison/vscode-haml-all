@@ -11,7 +11,7 @@ Extension to provides syntax highlighting, linting, go to definition, and snippe
 | Syntax highlighting | 🗹      |
 | Linter              | 🗹      |
 | Go to definition    | 🗹      |
-| Completion          | ☐      |
+| Completion          | 🗹      |
 | Snippets - HAML     | 🗹      |
 | Snippets - Rails    | 🗹      |
 

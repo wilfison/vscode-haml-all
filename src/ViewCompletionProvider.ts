@@ -36,6 +36,7 @@ export default class ViewCompletionProvider implements CompletionItemProvider {
   public async provideCompletionItems(document: TextDocument, position: Position): Promise<CompletionItem[] | null> {
     const line = document.getText(new Range(new Position(position.line, 0), position));
     const matches = line.match(RENDER_REGEXP);
+
     if (!matches) {
       return null;
     }
@@ -49,7 +50,7 @@ export default class ViewCompletionProvider implements CompletionItemProvider {
     const currentViewPath = viewPathForRelativePath(document.uri);
 
     const itemsWithScore = viewPaths.map(viewPath => ({
-      item: this.buildCompletionItem(viewPath),
+      item: this.buildCompletionItem(viewPath, currentViewPath),
       score: matchScore(currentViewPath, viewPath)
     }));
 
@@ -66,10 +67,14 @@ export default class ViewCompletionProvider implements CompletionItemProvider {
     return itemsWithScore.map(({ item }) => item);
   }
 
-  private buildCompletionItem(viewPath: string): CompletionItem {
-    const parts = viewPath.split(path.sep);
+  private buildCompletionItem(viewPath: string, currentViewPath: string): CompletionItem {
+    let parts = viewPath.split(path.sep);
     const fileName = parts.pop();
     const baseName = fileName?.split('.', 2)[0].slice(1) || '';
+
+    if (currentViewPath.startsWith(parts.join(path.sep))) {
+      parts = parts.slice(currentViewPath.split(path.sep).length - 1);
+    }
 
     const partialPath = [...parts, baseName].join(path.sep);
 
