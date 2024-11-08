@@ -1,4 +1,4 @@
-import { exec } from "node:child_process";
+import { exec } from 'node:child_process';
 import {
   Diagnostic,
   DiagnosticCollection,
@@ -8,7 +8,7 @@ import {
   workspace,
   Range,
   Position
-} from "vscode";
+} from 'vscode';
 
 type Offense = {
   linter_name: string;
@@ -24,10 +24,10 @@ type File = {
   offenses: Offense[];
 };
 
-export const SOURCE = "haml-lint";
+export const SOURCE = 'haml-lint';
 
 export default class Linter {
-  private collection: DiagnosticCollection = languages.createDiagnosticCollection("haml-lint");
+  private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
   private processes: WeakMap<TextDocument, any> = new WeakMap();
 
   public dispose() {
@@ -35,13 +35,13 @@ export default class Linter {
   }
 
   public run(document: TextDocument) {
-    if (document.languageId !== "haml") { return; }
+    if (document.languageId !== 'haml') { return; }
 
     this.lint(document);
   }
 
   public clear(document: TextDocument) {
-    if (document.uri.scheme === "file") {
+    if (document.uri.scheme === 'file') {
       this.collection.delete(document.uri);
     }
   }
@@ -98,7 +98,7 @@ export default class Linter {
         lineTextRange.end
       );
 
-      const severity = offense.severity === "warning" ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error;
+      const severity = offense.severity === 'warning' ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error;
       const diagnostic = new Diagnostic(range, offense.message, severity);
 
       diagnostic.code = offense.linter_name;
@@ -109,11 +109,11 @@ export default class Linter {
   }
 
   private buildCommand(document: TextDocument): string {
-    const config = workspace.getConfiguration("hamlAll");
+    const config = workspace.getConfiguration('hamlAll');
     const args = '--parallel --reporter json';
 
     let linterExecutablePath = config.linterExecutablePath || SOURCE;
-    linterExecutablePath = config.useBundler ? "bundle exec " : linterExecutablePath;
+    linterExecutablePath = config.useBundler ? 'bundle exec ' : linterExecutablePath;
 
     return `${linterExecutablePath} ${args} ${document.uri.fsPath}`;
   }

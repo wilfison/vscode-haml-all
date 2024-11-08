@@ -5,9 +5,9 @@ import {
   TextDocument,
   ExtensionContext,
   FileSystemWatcher
-} from "vscode";
+} from 'vscode';
 
-import Linter from "./Linter";
+import Linter from './Linter';
 import FixActionsProvider from './FixActionsProvider';
 
 class EventSubscriber {
@@ -20,8 +20,8 @@ class EventSubscriber {
     this.context = context;
     this.linter = new Linter();
 
-    this.hamlLintWatcher = workspace.createFileSystemWatcher("**/.haml-lint.yml");
-    this.ruboCopWatcher = workspace.createFileSystemWatcher("**/.rubocop.yml");
+    this.hamlLintWatcher = workspace.createFileSystemWatcher('**/.haml-lint.yml');
+    this.ruboCopWatcher = workspace.createFileSystemWatcher('**/.rubocop.yml');
   }
 
   public subscribe() {
@@ -34,8 +34,6 @@ class EventSubscriber {
   }
 
   public updateAllDiagnostics() {
-    console.log("HAML: Updating all diagnostics");
-
     workspace.textDocuments.forEach(document => this.linter.run(document));
   }
 
@@ -58,7 +56,7 @@ class EventSubscriber {
 
     this.context.subscriptions.push(
       languages.registerCodeActionsProvider(
-        "haml",
+        'haml',
         new FixActionsProvider(),
         {
           providedCodeActionKinds: [CodeActionKind.QuickFix]

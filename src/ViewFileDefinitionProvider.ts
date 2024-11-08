@@ -24,8 +24,6 @@ export default class ViewFileDefinitionProvider implements DefinitionProvider {
     const originSelectionRange = document.getWordRangeAtPosition(position, /[\w/]+/);
     const location = new Location(uri, new Range(new Position(0, 0), new Position(0, 0)));
 
-    console.log('File Location: ', filePath);
-
     const definitionLink: DefinitionLink = {
       targetUri: uri,
       targetRange: location.range,
