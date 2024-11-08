@@ -1,0 +1,81 @@
+{
+  "if": {
+    "prefix": "if",
+    "description": "if",
+    "body": [
+      "- if ${1:condition}",
+      "  $0"
+    ]
+  },
+  "else": {
+    "prefix": "else",
+    "description": "else",
+    "body": [
+      "- else",
+      "  $0"
+    ]
+  },
+  "elsif": {
+    "prefix": "elsif",
+    "description": "elsif",
+    "body": [
+      "- elsif ${1:condition}",
+      "  $0"
+    ]
+  },
+  "unless": {
+    "prefix": "unless",
+    "description": "unless",
+    "body": [
+      "- unless ${1:condition}",
+      "  $0"
+    ]
+  },
+  "each": {
+    "prefix": "each",
+    "description": "each",
+    "body": [
+      "- ${1:resource}s.each do |${1:resource}|",
+      "  $0"
+    ]
+  },
+  "HTML5": {
+    "prefix": "!html5",
+    "body": [
+      "!!!",
+      "%html{lang: '${1:en}'}",
+      "  %head",
+      "    %meta{content: 'text/html; charset=UTF-8', 'http-equiv': 'Content-Type'}/",
+      "    %meta{charset: 'UTF-8'}/",
+      "    %meta{content: 'IE=edge', 'http-equiv': 'X-UA-Compatible'}/",
+      "    %meta{content: 'width=device-width, initial-scale=1.0', name: 'viewport'}/",
+      "",
+      "    %title ${2:Title}",
+      "",
+      "  %body",
+      "    ${3:= yield}",
+      "$0"
+    ]
+  },
+  "Filter: JavaScript": {
+    "prefix": "javascript",
+    "body": [
+      ":javascript",
+      "  $1"
+    ]
+  },
+  "Filter: CSS": {
+    "prefix": "css",
+    "body": [
+      ":css",
+      "  $1"
+    ]
+  },
+  "Filter: Ruby": {
+    "prefix": "ruby",
+    "body": [
+      ":ruby",
+      "  $1"
+    ]
+  }
+}

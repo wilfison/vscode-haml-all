@@ -1,0 +1,106 @@
+{
+  "name": "haml-all",
+  "displayName": "HAML - All in One",
+  "description": "All you need in one extension",
+  "icon": "images/icon.png",
+  "publisher": "wilfison",
+  "author": {
+    "name": "wilfison",
+    "url": "https://github.com/wilfison"
+  },
+  "repository": {
+    "url": "https://github.com/wilfison/vscode-haml-all"
+  },
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Linters"
+  ],
+  "tags": [
+    "haml",
+    "ruby",
+    "lint",
+    "linter",
+    "snippets"
+  ],
+  "license": "MIT",
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "Haml All in One - Linter",
+      "properties": {
+        "hamlAll.lintEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable haml-lint"
+        },
+        "hamlAll.linterExecutablePath": {
+          "type": "string",
+          "default": "haml-lint",
+          "description": "Path to haml-lint executable"
+        },
+        "hamlAll.useBundler": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use `bundle exec` to run haml-lint. (If this is true, the 'linterExecutablePath' setting is ignored.)"
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "haml",
+        "aliases": [
+          "Ruby Haml",
+          "Haml",
+          "haml"
+        ],
+        "extensions": [
+          ".haml"
+        ],
+        "configuration": "./haml-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "haml",
+        "scopeName": "text.haml",
+        "path": "./syntaxes/haml.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "haml",
+        "path": "./snippets/snippets.json"
+      },
+      {
+        "language": "haml",
+        "path": "./snippets/rails-snippets.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.95.0",
+    "@types/mocha": "^10.0.9",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^8.10.0",
+    "@typescript-eslint/parser": "^8.7.0",
+    "eslint": "^9.13.0",
+    "typescript": "^5.6.3",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1"
+  }
+}
