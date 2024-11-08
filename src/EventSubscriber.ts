@@ -4,11 +4,12 @@ import {
   CodeActionKind,
   TextDocument,
   ExtensionContext,
-  FileSystemWatcher
+  FileSystemWatcher,
 } from 'vscode';
 
 import Linter from './Linter';
 import FixActionsProvider from './FixActionsProvider';
+import { autoCorrectAll } from './autoCorrect';
 
 class EventSubscriber {
   private context: ExtensionContext;
@@ -43,7 +44,13 @@ class EventSubscriber {
     this.context.subscriptions.push(this.linter);
 
     this.context.subscriptions.push(
-      workspace.onDidSaveTextDocument(updateDiagnostics)
+      workspace.onDidSaveTextDocument(async (document: TextDocument) => {
+        if (workspace.getConfiguration('hamlAll').simpleAutoFixOnSave) {
+          await autoCorrectAll(document);
+        }
+
+        updateDiagnostics(document);
+      })
     );
 
     this.context.subscriptions.push(
