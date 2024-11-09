@@ -10,10 +10,7 @@ import {
   Uri
 } from 'vscode';
 
-type CompletionItemWithScore = {
-  item: CompletionItem | null;
-  score: number;
-};
+import { CompletionItemWithScore } from './types';
 
 const RENDER_REGEXP = /[^\w.]render(?:\s+|\()['"]([\w\d_\/]*)$/;
 

@@ -9,20 +9,7 @@ import {
   Range,
   Position
 } from 'vscode';
-
-type Offense = {
-  linter_name: string;
-  location: {
-    line: number;
-  };
-  message: string;
-  severity: string;
-};
-
-type File = {
-  path: string;
-  offenses: Offense[];
-};
+import { LinterOutput } from './types';
 
 export const SOURCE = 'haml-lint';
 
@@ -83,7 +70,7 @@ export default class Linter {
   }
 
   private parse(output: string, document: TextDocument): Diagnostic[] {
-    const json = JSON.parse(output) as { files: File[] };
+    const json = JSON.parse(output) as LinterOutput;
     if (json.files.length < 1) {
       return [];
     }
