@@ -19,18 +19,14 @@ Extension to provides syntax highlighting, linting, go to definition, and snippe
 ### Linting
 
 It uses the `haml-lint` gem to lint the files.
-You can configure the `haml-lint` gem by creating a `.haml-lint.yml` file in the root of your project. Clique [here](https://github.com/sds/haml-lint/blob/main/config/default.yml) to see the default configuration.
+You can configure the gem by creating a `.haml-lint.yml` file in the root of your project. Clique [here](https://github.com/sds/haml-lint/blob/main/config/default.yml) to see the default configuration.
 
-To install the `haml-lint` gem, run the following command:
-
-```shell
-gem install haml_lint
-```
-
-Or add the following line to your Gemfile:
+To install the `haml-lint` gem, add the following line to your Gemfile:
 
 ```ruby
-gem 'haml_lint'
+group :development do
+  gem 'haml-lint'
+end
 ```
 
 ### Partials - Go to definition
