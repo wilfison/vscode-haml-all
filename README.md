@@ -41,15 +41,15 @@ This feature allows you to navigate to the partial file by `CTRL + Clicking` on 
 
 You can configure the extension by creating a `.vscode/settings.json` file in the root of your project.
 
-```json
+```ruby
 {
   "hamlAll.lintEnabled": true,
 
-  // Use 'bundle exec' to run haml-lint
-  // (If this is true, the 'linterExecutablePath' setting is ignored.)
+  # Use 'bundle exec' to run haml-lint
+  # (If this is true, the 'linterExecutablePath' setting is ignored.)
   "hamlAll.useBundler": false,
 
-  // Path to haml-lint executable
+  # Path to haml-lint executable
   "hamlAll.linterExecutablePath": "haml-lint"
 }
 ```
