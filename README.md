@@ -1,6 +1,6 @@
 # HAML - All in One
 
-![HAML - All in One](https://github.io/wilfison/vscode-haml-all/blob/main/icon.png)
+![HAML - All in One](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/icon.png)
 
 Extension to provides syntax highlighting, linting, go to definition, and snippets for Ruby Haml files in VS Code.
 
