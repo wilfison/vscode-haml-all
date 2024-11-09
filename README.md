@@ -19,6 +19,9 @@ Extension to provides syntax highlighting, linting, go to definition, and snippe
 ### Linting
 
 It uses the `haml-lint` gem to lint the files.
+
+![Linting](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/linter.gif)
+
 You can configure the gem by creating a `.haml-lint.yml` file in the root of your project. Clique [here](https://github.com/sds/haml-lint/blob/main/config/default.yml) to see the default configuration.
 
 To install the `haml-lint` gem, add the following line to your Gemfile:
@@ -32,6 +35,20 @@ end
 ### Partials - Go to definition
 
 This feature allows you to navigate to the partial file by `CTRL + Clicking` on the partial name. Or you can right-click on the partial name and select `Go to definition`.
+
+![Go to definition](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/go-to-definition.gif)
+
+### Partials - Split to Partial
+
+This feature allows you to split the current file into a partial. You can select the content you want to split and click on the `Create a partial from selection` option in Code Actions (lightbulb icon).
+
+![Go to definition](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/partial-from-selection.gif)
+
+### Partial Completion
+
+This feature provides completion for partials in the project. It uses the `app/views` folder as the base path.
+
+![Partial Completion](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/partial-completion.gif)
 
 ## Configuration
 
