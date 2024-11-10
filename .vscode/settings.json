@@ -15,5 +15,5 @@
       "source.fixAll.eslint": "always"
     }
   },
-  "cSpell.words": ["cdata", "stylesheet"]
+  "cSpell.words": ["Autocorrect", "cdata", "stylesheet"]
 }
