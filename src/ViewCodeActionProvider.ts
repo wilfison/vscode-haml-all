@@ -58,8 +58,7 @@ export async function createPartialFromSelection(): Promise<void> {
   const partialName = getPartialName(editor.document.uri, name);
   const uri = Uri.file(filePath);
 
-  const [partialContent, indentation] = formatPartialContent(editor.document.getText(editor.selection));
-  const renderText = `${indentation}= render('${partialName}')\n`;
+  const [partialContent, renderText] = formatPartialContent(partialName, editor.document.getText(editor.selection));
 
   const edit = new WorkspaceEdit();
   edit.createFile(uri);
@@ -80,7 +79,40 @@ function getPartialName(documentUri: Uri, name: string): string {
   return path.join(...parts, name);
 }
 
-function formatPartialContent(content: string): [string, string] {
+function globalVariableList(content: string): string[] {
+  const globalVariables = content.match(/(@[\w\d_]*)/g) || [];
+  const globalVariablesSet = new Set(globalVariables);
+
+  // sort by length to replace correctly
+  return Array.from(globalVariablesSet).sort((a, b) => b.length - a.length);
+}
+
+function formatPartialVariables(globalVariables: string[], content: string): string {
+  if (globalVariables.length === 0) {
+    return content;
+  }
+
+  const globalVariablesKeys = globalVariables.map(variable => `${variable.replace('@', '')}:`).join(', ');
+  const newContent = globalVariables.reduce((acc, variable) => {
+    return acc.replace(new RegExp(variable, 'g'), variable.replace('@', ''));
+  }, content);
+
+  return `# locals: (${globalVariablesKeys})\n\n${newContent}`;
+}
+
+function buildRenderText(partialName: string, globalVariables: string[]): string {
+  if (globalVariables.length === 0) {
+    return `= render('${partialName}')\n`;
+  }
+
+  const globalVariablesKeys = globalVariables.map((variable) => {
+    return `${variable.replace('@', '')}: ${variable}`;
+  }).join(', ');
+
+  return `= render('${partialName}', ${globalVariablesKeys})\n`;
+}
+
+function formatPartialContent(partialName: string, content: string): [string, string] {
   const lines = content.split('\n');
 
   if (lines.length === 0) {
@@ -90,13 +122,15 @@ function formatPartialContent(content: string): [string, string] {
   const firstLineWithContent = lines.findIndex(line => line.trim().length > 0);
   const firstLineIndentation = lines[firstLineWithContent].match(/^[\s\t]*/)?.[0] || '';
 
-  console.log(firstLineIndentation);
-
   const formattedLines = lines.map(line => {
     return line.startsWith(firstLineIndentation) ? line.slice(firstLineIndentation.length) : line;
   });
 
-  const newContent = formattedLines.join('\n');
+  const globalVariables = globalVariableList(content);
+  const renderText = buildRenderText(partialName, globalVariables);
 
-  return [newContent, firstLineIndentation];
+  let newContent = formattedLines.join('\n');
+  newContent = formatPartialVariables(globalVariables, newContent);
+
+  return [newContent, renderText];
 }
