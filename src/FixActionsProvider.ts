@@ -12,6 +12,7 @@ import {
 
 import { SOURCE } from './Linter';
 import { rubocopFixes } from './quick_fixes';
+import { fixAllStringLiterals } from './quick_fixes/stringLiterals';
 
 export default class FixActionsProvider implements CodeActionProvider {
   private codeActions: CodeAction[];
@@ -24,6 +25,7 @@ export default class FixActionsProvider implements CodeActionProvider {
     this.codeActions = [];
     const warnings = this.filterWarnings(context);
 
+    this.createGlobalRubocopActions(document, warnings);
     this.createActions(document, warnings);
 
     return this.codeActions;
@@ -60,8 +62,8 @@ export default class FixActionsProvider implements CodeActionProvider {
     const fix = rubocopFixes[rule] as Function | undefined;
 
     if (fix) {
-      const customFix = fix(document, diagnostic) as CodeAction[];
-      customFix.forEach((fix) => this.codeActions.push(fix));
+      const customFix = fix(document, diagnostic) as CodeAction;
+      this.codeActions.push(customFix);
     }
 
     const disableFix = new CodeAction(`Disable ${rule} for this entire file`, CodeActionKind.QuickFix);
@@ -84,5 +86,20 @@ export default class FixActionsProvider implements CodeActionProvider {
     }
 
     return edit;
+  }
+
+  private createGlobalRubocopActions(document: TextDocument, diagnostics: Diagnostic[]) {
+    const rubocopDiagnostics = diagnostics.filter((diagnostic) => diagnostic.code === 'RuboCop');
+
+    if (rubocopDiagnostics.length === 0) {
+      return;
+    }
+
+    let actions = [];
+    actions.push(fixAllStringLiterals(document, diagnostics));
+
+    actions = actions.filter((action) => action !== null);
+
+    this.codeActions.push(...actions);
   }
 }
