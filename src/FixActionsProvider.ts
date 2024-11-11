@@ -11,7 +11,7 @@ import {
 } from 'vscode';
 
 import { SOURCE } from './Linter';
-import { rubocopFixes } from './quick_fixes';
+import { hamlLintFixes, rubocopFixes } from './quick_fixes';
 import { fixAllStringLiterals } from './quick_fixes/stringLiterals';
 
 export default class FixActionsProvider implements CodeActionProvider {
@@ -51,6 +51,14 @@ export default class FixActionsProvider implements CodeActionProvider {
   }
 
   private createHamlLintAction(document: TextDocument, diagnostic: Diagnostic) {
+    const rule = diagnostic.code as keyof typeof hamlLintFixes;
+    const fix = hamlLintFixes[rule] as Function | undefined;
+
+    if (fix) {
+      const customFix = fix(document, diagnostic) as CodeAction;
+      this.codeActions.push(customFix);
+    }
+
     const disableFix = new CodeAction(`Disable ${diagnostic.code} for this entire file`, CodeActionKind.QuickFix);
     disableFix.edit = this.createWorkspaceEdit(document, diagnostic.code as string, 'haml-lint:disable');
 

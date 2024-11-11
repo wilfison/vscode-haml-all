@@ -86,7 +86,8 @@ export default class Linter {
       );
 
       const severity = offense.severity === 'warning' ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error;
-      const diagnostic = new Diagnostic(range, offense.message, severity);
+      const message = offense.linter_name === 'RuboCop' ? offense.message : `${offense.linter_name}: ${offense.message}`;
+      const diagnostic = new Diagnostic(range, message, severity);
 
       diagnostic.code = offense.linter_name;
       diagnostic.source = SOURCE;
