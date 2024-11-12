@@ -62,6 +62,11 @@
         "command": "hamlAll.createPartialFromSelection",
         "title": "HAML: Create a partial from selection",
         "enablement": "editorLangId == haml"
+      },
+      {
+        "command": "hamlAll.html2Haml",
+        "title": "HAML: Convert HTML to HAML",
+        "enablement": "editorLangId == html || editorLangId == erb"
       }
     ],
     "languages": [
@@ -98,7 +103,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "rm -rf ./out && tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
