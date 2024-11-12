@@ -11,7 +11,7 @@ import {
 } from 'vscode';
 
 import { SOURCE } from './Linter';
-import { hamlLintFixes, rubocopFixes } from './quick_fixes';
+import { hamlLintFixes, rubocopFix } from './quick_fixes';
 import { fixAllStringLiterals } from './quick_fixes/stringLiterals';
 
 export default class FixActionsProvider implements CodeActionProvider {
@@ -66,12 +66,11 @@ export default class FixActionsProvider implements CodeActionProvider {
   }
 
   private createRubocopAction(document: TextDocument, diagnostic: Diagnostic) {
-    const rule = diagnostic.message.split(':')[0].trim() as keyof typeof rubocopFixes;
-    const fix = rubocopFixes[rule] as Function | undefined;
+    const rule = diagnostic.message.split(':')[0].trim();
+    const fix = rubocopFix(rule, document, diagnostic);
 
     if (fix) {
-      const customFix = fix(document, diagnostic) as CodeAction;
-      this.codeActions.push(customFix);
+      this.codeActions.push(fix);
     }
 
     const disableFix = new CodeAction(`Disable ${rule} for this entire file`, CodeActionKind.QuickFix);
