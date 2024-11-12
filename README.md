@@ -6,15 +6,16 @@ Extension to provides syntax highlighting, linting, go to definition, and snippe
 
 ## Features
 
-| Feature             | Status |
-| ------------------- | ------ |
-| Syntax highlighting | 🗹      |
-| Linter              | 🗹      |
-| Go to definition    | 🗹      |
-| Completion          | 🗹      |
-| Split to Partial    | 🗹      |
-| Snippets - HAML     | 🗹      |
-| Snippets - Rails    | 🗹      |
+| Feature                  | Status |
+| ------------------------ | ------ |
+| Syntax highlighting      | 🗹      |
+| Linter                   | 🗹      |
+| Go to definition         | 🗹      |
+| Completion               | 🗹      |
+| Split to Partial         | 🗹      |
+| Convert HTML/ERB to HAML | 🗹      |
+| Snippets - HAML          | 🗹      |
+| Snippets - Rails         | 🗹      |
 
 ### Linting
 
@@ -50,7 +51,25 @@ This feature provides completion for partials in the project. It uses the `app/v
 
 ![Partial Completion](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/partial-completion.gif)
 
+### Convert HTML/ERB to HAML
+
+This feature allows you to convert HTML or ERB files to HAML. It uses the `html2haml`.
+
+Add in your Gemfile or install it manually:
+
+```shell
+gem install html2haml
+```
+
+**How to use:**
+
+1. Open the HTML or ERB file you want to convert.
+2. Open the Command Palette (`CTRL + SHIFT + P`).
+3. Search for `HAML: Convert HTML to HAML` and select it.
+4. And await the magic!
+
 ## Configuration
+
 
 You can configure the extension by creating a `.vscode/settings.json` file in the root of your project.
 

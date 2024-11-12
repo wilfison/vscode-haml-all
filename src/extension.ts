@@ -7,6 +7,7 @@ import ViewCompletionProvider from './ViewCompletionProvider';
 import ViewFileDefinitionProvider from './ViewFileDefinitionProvider';
 
 import { ViewCodeActionProvider, createPartialFromSelection } from './ViewCodeActionProvider';
+import { html2Haml } from './html2Haml';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('haml-all active!');
@@ -45,6 +46,13 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       'hamlAll.createPartialFromSelection',
       createPartialFromSelection
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'hamlAll.html2Haml',
+      html2Haml
     )
   );
 
