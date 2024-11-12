@@ -51,12 +51,11 @@ export default class FixActionsProvider implements CodeActionProvider {
   }
 
   private createHamlLintAction(document: TextDocument, diagnostic: Diagnostic) {
-    const rule = diagnostic.code as keyof typeof hamlLintFixes;
-    const fix = hamlLintFixes[rule] as Function | undefined;
+    const rule = diagnostic.code as string;
+    const fix = hamlLintFixes(rule, document, diagnostic);
 
     if (fix) {
-      const customFix = fix(document, diagnostic) as CodeAction;
-      this.codeActions.push(customFix);
+      this.codeActions.push(fix);
     }
 
     const disableFix = new CodeAction(`Disable ${diagnostic.code} for this entire file`, CodeActionKind.QuickFix);

@@ -15,6 +15,11 @@ export function rubocopFix(rule: string, document: TextDocument, diagnostic: Dia
   }
 };
 
-export const hamlLintFixes = {
-  'SpaceBeforeScript': (document: TextDocument, diagnostic: Diagnostic) => fixSpaceBeforeScript(document, diagnostic),
+export function hamlLintFixes(rule: string, document: TextDocument, diagnostic: Diagnostic): CodeAction | null {
+  switch (rule) {
+    case 'SpaceBeforeScript':
+      return fixSpaceBeforeScript(document, diagnostic);
+    default:
+      return null;
+  }
 };
