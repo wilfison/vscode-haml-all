@@ -33,6 +33,10 @@ export default class Linter {
     }
   }
 
+  public clearAll() {
+    this.collection.clear();
+  }
+
   private async lint(document: TextDocument) {
     const text = document.getText();
     const oldProcess = this.processes.get(document);

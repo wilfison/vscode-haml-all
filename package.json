@@ -28,7 +28,9 @@
     "snippets"
   ],
   "license": "MIT",
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:ruby"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {

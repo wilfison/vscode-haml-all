@@ -32,12 +32,15 @@ class EventSubscriber {
     this.routes = new Routes(this.rootPath.fsPath);
   }
 
-  public subscribe() {
+  public subscribeHaml() {
     this.subscribeToEvents();
-    this.subscribeToWatchers();
+    this.subscribeHamlWatchers();
+  }
 
+  public subscribeRails() {
     if (this.isARailsProject) {
       this.routes.load();
+      this.subscribeRailsWatchers();
     }
   }
 
@@ -46,6 +49,8 @@ class EventSubscriber {
   }
 
   public updateAllDiagnostics(_event: any = null) {
+    this.linter.clearAll();
+
     workspace.textDocuments.forEach(document => this.linter.run(document));
   }
 
@@ -85,14 +90,18 @@ class EventSubscriber {
     this.updateAllDiagnostics();
   }
 
-  private subscribeToWatchers() {
+  private subscribeHamlWatchers() {
     this.subscribeFileWatcher('**/.haml-lint.yml', this.updateAllDiagnostics);
     this.subscribeFileWatcher('**/.rubocop.yml', this.updateAllDiagnostics);
+  }
 
-    if (this.isARailsProject) {
-      this.subscribeFileWatcher('config/routes.rb', () => refreshRoutes(this.routes));
-      this.subscribeFileWatcher('config/routes/**/*.rb', () => refreshRoutes(this.routes));
-    }
+  private subscribeRailsWatchers() {
+    const routeFiles = [
+      '**/config/routes.rb',
+      '**/config/routes/**/*.rb',
+    ];
+
+    routeFiles.forEach(pattern => this.subscribeFileWatcher(pattern, () => refreshRoutes(this.routes)));
   }
 
   private subscribeFileWatcher(pattern: string, callback: (e: Uri) => void): void {
@@ -100,6 +109,8 @@ class EventSubscriber {
 
     watcher.onDidChange(callback);
     watcher.onDidCreate(callback);
+
+    this.context.subscriptions.push(watcher);
   }
 }
 

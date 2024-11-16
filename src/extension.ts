@@ -10,16 +10,25 @@ import RoutesCompletionProvider from './RoutesCompletionProvider';
 import { ViewCodeActionProvider, createPartialFromSelection } from './ViewCodeActionProvider';
 import { html2Haml } from './html2Haml';
 
-export async function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext) {
   console.log('haml-all active!');
 
   const config = vscode.workspace.getConfiguration('hamlAll');
   const eventSubscriber = new EventSubscriber(context);
 
-  const HAML_SELECTOR = {
-    language: 'haml',
-    scheme: 'file'
-  };
+  const HAML_SELECTOR = { language: 'haml', scheme: 'file' };
+  const RUBY_SELECTOR = { language: 'ruby', scheme: 'file' };
+
+  if (eventSubscriber.isARailsProject) {
+    context.subscriptions.push(
+      vscode.languages.registerCompletionItemProvider(
+        [RUBY_SELECTOR, HAML_SELECTOR],
+        new RoutesCompletionProvider(eventSubscriber.routes),
+      )
+    );
+
+    eventSubscriber.subscribeRails();
+  }
 
   context.subscriptions.push(
     vscode.languages.registerDefinitionProvider(HAML_SELECTOR, new ViewFileDefinitionProvider())
@@ -33,15 +42,6 @@ export async function activate(context: vscode.ExtensionContext) {
       '\''
     )
   );
-
-  if (eventSubscriber.isARailsProject) {
-    context.subscriptions.push(
-      vscode.languages.registerCompletionItemProvider(
-        ['ruby', 'haml'],
-        new RoutesCompletionProvider(eventSubscriber.routes),
-      )
-    );
-  }
 
   context.subscriptions.push(
     vscode.languages.registerCodeActionsProvider(
@@ -73,9 +73,11 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   if (config.lintEnabled) {
-    eventSubscriber.subscribe();
+    eventSubscriber.subscribeHaml();
   }
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {
+  console.log('haml-all deactivated!');
+}

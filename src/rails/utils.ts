@@ -1,4 +1,4 @@
-import { SnippetString, Uri, ProgressLocation, window } from 'vscode';
+import { SnippetString, ProgressLocation, window } from 'vscode';
 import { Route } from './router_parser';
 
 import Routes from './routes';
