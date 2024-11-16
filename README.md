@@ -1,21 +1,21 @@
 # HAML - All in One
 
-![HAML - All in One](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/icon.png)
-
-Extension to provides syntax highlighting, linting, go to definition, and snippets for Ruby Haml files in VS Code.
+Extension to provides all the necessary tools to work with HAML in Visual Studio Code.
 
 ## Features
 
-| Feature                  | Status |
-| ------------------------ | ------ |
-| Syntax highlighting      | 🗹      |
-| Linter                   | 🗹      |
-| Go to definition         | 🗹      |
-| Completion               | 🗹      |
-| Split to Partial         | 🗹      |
-| Convert HTML/ERB to HAML | 🗹      |
-| Snippets - HAML          | 🗹      |
-| Snippets - Rails         | 🗹      |
+| Feature                   | Status |
+| ------------------------- | ------ |
+| Syntax highlighting       | 🗹      |
+| Linter                    | 🗹      |
+| Partial: Go to definition | 🗹      |
+| Partial: Completions      | 🗹      |
+| Routes: Completions       | 🗹      |
+| Routes: Go to definition  | ☐      |
+| Split to Partial          | 🗹      |
+| Convert HTML/ERB to HAML  | 🗹      |
+| Snippets - HAML           | 🗹      |
+| Snippets - Rails          | 🗹      |
 
 ### Linting
 
@@ -93,10 +93,13 @@ You can configure the extension by creating a `.vscode/settings.json` file in th
 
 ## Special Thanks
 
+This extension is based on ideas from the following extensions:
+
 - [Better Haml](https://github.com/karuna/haml-vscode/): (MIT License)
 - [Rails Open Partial](https://github.com/shanehofstetter/rails-open-partial-vscode): (MIT License)
 - [Haml Lint](https://github.com/aki77/vscode-haml-lint): (MIT License)
 - [Rails Partial](https://github.com/aki77/vscode-rails-partial): (MIT License)
+- [Rails Routes](https://github.com/aki77/vscode-rails-routes): (MIT License)
 
 ## License
 

@@ -14,3 +14,16 @@ export function hamlLintPresent(): boolean {
     return false;
   }
 }
+
+export function isARailsProject(): boolean {
+  const config = workspace.getConfiguration('railsRoutes');
+  let executable = config.railsCommand || 'bin/rails';
+
+  try {
+    exec(`${executable} --version`);
+    console.log('Rails project detected');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}

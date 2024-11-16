@@ -5,14 +5,16 @@ import { hamlLintPresent } from './Helpers';
 import EventSubscriber from './EventSubscriber';
 import ViewCompletionProvider from './ViewCompletionProvider';
 import ViewFileDefinitionProvider from './ViewFileDefinitionProvider';
+import RoutesCompletionProvider from './RoutesCompletionProvider';
 
 import { ViewCodeActionProvider, createPartialFromSelection } from './ViewCodeActionProvider';
 import { html2Haml } from './html2Haml';
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   console.log('haml-all active!');
 
   const config = vscode.workspace.getConfiguration('hamlAll');
+  const eventSubscriber = new EventSubscriber(context);
 
   const HAML_SELECTOR = {
     language: 'haml',
@@ -31,6 +33,15 @@ export function activate(context: vscode.ExtensionContext) {
       '\''
     )
   );
+
+  if (eventSubscriber.isARailsProject) {
+    context.subscriptions.push(
+      vscode.languages.registerCompletionItemProvider(
+        ['ruby', 'haml'],
+        new RoutesCompletionProvider(eventSubscriber.routes),
+      )
+    );
+  }
 
   context.subscriptions.push(
     vscode.languages.registerCodeActionsProvider(
@@ -62,8 +73,6 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   if (config.lintEnabled) {
-    const eventSubscriber = new EventSubscriber(context);
-
     eventSubscriber.subscribe();
   }
 }

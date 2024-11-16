@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.0.5] - 2024-11-16
+
+- Feature: Add Routes Completions if the project is a Rails project.
+
 ## [0.0.4] - 2024-11-12
 
 - Feature: Add `Html2Haml` command to convert HTML to Haml.
