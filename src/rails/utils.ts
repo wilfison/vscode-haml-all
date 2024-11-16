@@ -1,32 +1,29 @@
-import { SnippetString, ProgressLocation, window } from 'vscode';
-import { Route } from './router_parser';
+import { SnippetString, ProgressLocation, window, Position, workspace, Uri } from 'vscode';
 
+import { Route } from './router_parser';
 import Routes from './routes';
 
-export const refreshRoutes = (routes: Routes) => {
+export const refreshRoutes = async (routes: Routes) => {
   const progressOptions = {
     location: ProgressLocation.Window,
     title: 'Loading rails routes'
   };
 
-  window.withProgress(progressOptions, () => routes.load());
+  await window.withProgress(progressOptions, () => routes.load());
 };
 
-export function buildRouteHelperSnippet(helperPrefix: string, params: string[]) {
-  let snippet = `${helperPrefix}_\${1|path,url|}`;
-
-  if (params.length > 0) {
-    const args = params.map((param, index) => `\${${index + 2}:${param}}`);
-
-    snippet = `${snippet}(${args.join(', ')})\$0`;
-  }
+export function buildRouteHelperSnippet(helperPrefix: string, params: string[]): SnippetString {
+  const paramSnippets = params.map((param, index) => `\${${index + 2}:${param}}`).join(', ');
+  const snippet = params.length > 0
+    ? `${helperPrefix}_\${1|path,url|}(${paramSnippets})\$0`
+    : `${helperPrefix}_\${1|path,url|}`;
 
   return new SnippetString(snippet);
 }
 
-export function buildRouteHelperDetails(route: Route, currentUri: string) {
-  let verbs = Array.from(route.verbs).join(', ');
-  let actions = Array.from(route.actions).join(', ');
+export function buildRouteHelperDetails(route: Route, currentUri: string): string {
+  const verbs = Array.from(route.verbs).join(', ');
+  const actions = Array.from(route.actions).join(', ');
 
   return [
     verbs,
@@ -35,4 +32,19 @@ export function buildRouteHelperDetails(route: Route, currentUri: string) {
     `Actions: ${actions}`,
     `Source: ${route.source_location.replace(currentUri, '')}`
   ].join('\n');
+}
+
+export async function getActionPosition(controllerPath: Uri, action: string): Promise<Position | null> {
+  const document = await workspace.openTextDocument(controllerPath);
+  const regex = new RegExp(`^\\s*def\\s+${action}[;\\s]*(?:end)?$`);
+
+  for (let index = 0; index < document.lineCount; index++) {
+    const line = document.lineAt(index);
+
+    if (regex.test(line.text)) {
+      return new Position(index, 0);
+    }
+  }
+
+  return null;
 }

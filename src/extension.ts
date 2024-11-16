@@ -6,6 +6,7 @@ import EventSubscriber from './EventSubscriber';
 import ViewCompletionProvider from './ViewCompletionProvider';
 import ViewFileDefinitionProvider from './ViewFileDefinitionProvider';
 import RoutesCompletionProvider from './RoutesCompletionProvider';
+import RoutesDefinitionProvider from './RoutesDefinitionProvider';
 
 import { ViewCodeActionProvider, createPartialFromSelection } from './ViewCodeActionProvider';
 import { html2Haml } from './html2Haml';
@@ -24,6 +25,13 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.languages.registerCompletionItemProvider(
         [RUBY_SELECTOR, HAML_SELECTOR],
         new RoutesCompletionProvider(eventSubscriber.routes),
+      )
+    );
+
+    context.subscriptions.push(
+      vscode.languages.registerDefinitionProvider(
+        HAML_SELECTOR,
+        new RoutesDefinitionProvider(eventSubscriber.routes)
       )
     );
 
