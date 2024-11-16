@@ -3,6 +3,7 @@
 ## [0.0.5] - 2024-11-16
 
 - Feature: Add Routes Completions if the project is a Rails project.
+- Feature: Add Routes Definition provider if the project is a Rails project.
 
 ## [0.0.4] - 2024-11-12
 
