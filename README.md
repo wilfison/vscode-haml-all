@@ -11,7 +11,7 @@ Extension to provides all the necessary tools to work with HAML in Visual Studio
 | Partial: Go to definition | 🗹      |
 | Partial: Completions      | 🗹      |
 | Routes: Completions       | 🗹      |
-| Routes: Go to definition  | ☐      |
+| Routes: Go to definition  | 🗹      |
 | Split to Partial          | 🗹      |
 | Convert HTML/ERB to HAML  | 🗹      |
 | Snippets - HAML           | 🗹      |
