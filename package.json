@@ -68,7 +68,7 @@
       {
         "command": "hamlAll.html2Haml",
         "title": "HAML: Convert HTML to HAML",
-        "enablement": "editorLangId == html || editorLangId == erb"
+        "enablement": "editorLangId =~ /html|erb|haml/"
       }
     ],
     "languages": [

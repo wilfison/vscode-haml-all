@@ -34,7 +34,7 @@ function newFilePath(filePath: string): Uri {
 }
 
 function notAllowedLanguageId(languageId: string | undefined): boolean {
-  return ['html', 'erb'].includes(String(languageId)) === false;
+  return ['html', 'erb', 'haml'].includes(String(languageId)) === false;
 }
 
 export async function html2Haml(): Promise<void> {
@@ -48,6 +48,8 @@ export async function html2Haml(): Promise<void> {
   const config = workspace.getConfiguration('hamlAll');
 
   if (!html2HamlAvailable(config.useBundler)) {
+    window.showErrorMessage('html2haml not found. Please install html2haml gem to use this feature.');
+
     return;
   }
 
