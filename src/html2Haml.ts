@@ -15,7 +15,7 @@ function html2HamlAvailable(useBundler: boolean): boolean {
 
 function runHtml2haml(html: string, useBundler: boolean, erb: boolean): string {
   let command = useBundler ? 'bundle exec html2haml' : 'html2haml';
-  let args = ['--ruby19-attributes'];
+  let args = ['--ruby19-attributes --stdin'];
 
   if (erb) {
     args.push('--erb');
@@ -51,14 +51,21 @@ export async function html2Haml(): Promise<void> {
     return;
   }
 
-  const html = editor.document.getText();
+  const hasSelection = !editor.selection.isEmpty;
+
+  const html = editor.document.getText(hasSelection ? editor.selection : undefined);
   const haml = runHtml2haml(html, config.useBundler, languageId === 'erb');
 
-  const uri: Uri = newFilePath(editor.document.fileName);
-
+  const uri: Uri = hasSelection ? editor.document.uri : newFilePath(editor.document.fileName);
   const edit = new WorkspaceEdit();
-  edit.createFile(uri);
-  edit.insert(uri, new Position(0, 0), haml);
+
+  if (hasSelection) {
+    edit.replace(uri, editor.selection, haml);
+  }
+  else {
+    edit.createFile(uri);
+    edit.insert(uri, new Position(0, 0), haml);
+  }
 
   await workspace.applyEdit(edit);
   await window.showTextDocument(uri);
