@@ -27,6 +27,13 @@
     "linter",
     "snippets"
   ],
+  "keywords": [
+    "haml",
+    "ruby",
+    "lint",
+    "linter",
+    "snippets"
+  ],
   "license": "MIT",
   "activationEvents": [
     "onLanguage:ruby"
