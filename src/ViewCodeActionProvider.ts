@@ -16,23 +16,39 @@ import * as path from 'path';
 
 export class ViewCodeActionProvider implements CodeActionProvider {
   public provideCodeActions(document: TextDocument, range: Range): CodeAction[] | null {
-    if (range.isSingleLine) {
-      return null;
-    }
+    const actions: (CodeAction | null)[] = [
+      buildPartialAction(range),
+      buildHtml2HamlAction()
+    ];
 
-    const relativePath = workspace.asRelativePath(document.uri);
-    if (!relativePath.startsWith(path.join('app', 'views'))) {
-      return null;
-    }
+    const codeActions = actions.filter(action => action !== null) as CodeAction[];
 
-    const action = new CodeAction('Create a partial from selection', CodeActionKind.RefactorExtract);
-    action.command = {
-      command: 'hamlAll.createPartialFromSelection',
-      title: 'Create a partial from selection'
-    };
-
-    return [action];
+    return codeActions.length > 0 ? codeActions : null;
   }
+}
+
+function buildHtml2HamlAction(): CodeAction | null {
+  const html2HamlAction = new CodeAction('Convert to HAML', CodeActionKind.RefactorExtract);
+  html2HamlAction.command = {
+    command: 'hamlAll.html2Haml',
+    title: 'HAML: Convert HTML to HAML'
+  };
+
+  return html2HamlAction;
+}
+
+function buildPartialAction(range: Range): CodeAction | null {
+  if (range.isSingleLine) {
+    return null;
+  }
+
+  const partialAction = new CodeAction('Create a partial from selection', CodeActionKind.RefactorExtract);
+  partialAction.command = {
+    command: 'hamlAll.createPartialFromSelection',
+    title: 'Create a partial from selection'
+  };
+
+  return partialAction;
 }
 
 export async function createPartialFromSelection(): Promise<void> {
