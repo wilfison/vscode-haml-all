@@ -24,6 +24,7 @@ export default class Routes {
 
     this.routes.clear();
     this.routes = parseRoutes(output);
+    console.log('Routes loaded');
   }
 
   public getAll() {

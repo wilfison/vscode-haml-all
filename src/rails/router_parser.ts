@@ -40,7 +40,7 @@ function parseRawBlock(block: string, lastRoute: BaseRoute): BaseRoute {
     uri_params,
     controller,
     action,
-    source_location: source.replace(RAW_LINE_REMOVE, '')
+    source_location: source?.replace(RAW_LINE_REMOVE, '') || ''
   };
 }
 

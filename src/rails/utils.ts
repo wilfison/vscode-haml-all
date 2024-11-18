@@ -30,7 +30,7 @@ export function buildRouteHelperDetails(route: Route, currentUri: string): strin
     `${route.uri}(.:format)\n`,
     `Controller: ${route.controller}`,
     `Actions: ${actions}`,
-    `Source: ${route.source_location.replace(currentUri, '')}`
+    route.source_location ? `Source: ${route.source_location.replace(currentUri, '')}` : ''
   ].join('\n');
 }
 
