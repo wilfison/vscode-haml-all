@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.0.7] - 2024-11-18
+
+- Fix: Rails routes loader to old Rails versions.
+
 ## [0.0.6] - 2024-11-17
 
 - Feature: Add suporte to convert selected HTML/ERB to HAML.
