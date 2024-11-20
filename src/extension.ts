@@ -9,7 +9,7 @@ import RoutesCompletionProvider from './RoutesCompletionProvider';
 import RoutesDefinitionProvider from './RoutesDefinitionProvider';
 
 import { ViewCodeActionProvider, createPartialFromSelection } from './ViewCodeActionProvider';
-import { html2Haml } from './html2Haml';
+import { html2Haml } from './html2haml';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('haml-all active!');
