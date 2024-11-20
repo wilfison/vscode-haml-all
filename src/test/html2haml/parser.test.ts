@@ -1,9 +1,10 @@
-import { htmlToJs } from '../../html2haml/parser';
+import assert from 'node:assert';
 
+import { htmlToJs } from '../../html2haml/parser';
 import { ERB_TEMPLATE_INDEX, JS_TEMPLATE_INDEX } from './templates';
 
-describe('htmlToJs', () => {
-  it('should parse HTML string to JavaScript object', () => {
+suite('htmlToJs', () => {
+  test('should parse HTML string to JavaScript object', () => {
     const htmlStr = '<div class=\'container\'><h1>Hello, world!</h1></div>';
     const expected = {
       div: {
@@ -18,10 +19,10 @@ describe('htmlToJs', () => {
 
     const result = htmlToJs(htmlStr);
 
-    expect(result).toEqual(expected);
+    assert.deepStrictEqual(result, expected);
   });
 
-  it('should parse HTML5 base to JavaScript object', () => {
+  test('should parse HTML5 base to JavaScript object', () => {
     const html5 = `<!doctype html>
     <html lang="en">
       <head>
@@ -69,10 +70,10 @@ describe('htmlToJs', () => {
 
     const result = htmlToJs(html5);
 
-    expect(result).toEqual(expected);
+    assert.deepStrictEqual(result, expected);
   });
 
-  it('should parse ERB inline string to JavaScript object', () => {
+  test('should parse ERB inline string to JavaScript object', () => {
     const htmlStr = '<div class=\'container\'><%= @message %></div>';
     const expected = {
       div: {
@@ -89,12 +90,12 @@ describe('htmlToJs', () => {
 
     const result = htmlToJs(htmlStr, { erb: true });
 
-    expect(result).toEqual(expected);
+    assert.deepStrictEqual(result, expected);
   });
 
-  it('should parse ERB full template string to JavaScript object', () => {
+  test('should parse ERB full template string to JavaScript object', () => {
     const result = htmlToJs(ERB_TEMPLATE_INDEX, { erb: true });
 
-    expect(result).toEqual(JS_TEMPLATE_INDEX);
+    assert.deepStrictEqual(result, JS_TEMPLATE_INDEX);
   });
 });

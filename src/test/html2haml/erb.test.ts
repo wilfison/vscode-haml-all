@@ -1,49 +1,51 @@
+import * as assert from 'assert';
+
 import { parseErb, setErbTag } from '../../html2haml/erb';
 import { ERB_TEMPLATE_INDEX } from './templates';
 
-describe('setErbTag', () => {
-  it('should identify ERB tag and replace it with ruby-line content', () => {
+suite('setErbTag', () => {
+  test('should identify ERB tag and replace it with ruby-line content', () => {
     const htmlLine = '<div><%= @message %></div>';
     const match = '<%= @message %>';
     const expected = '<div><ruby-line content="= @message"></div>';
 
     const result = setErbTag(htmlLine, match);
 
-    expect(result).toEqual(expected);
+    assert.strictEqual(result, expected);
   });
 
-  it('should identify ERB tag with \'do |\' and replace it with ruby-block content', () => {
+  test('should identify ERB tag with \'do |\' and replace it with ruby-block content', () => {
     const htmlLine = '<div><% some_method do |arg| %></div>';
     const match = '<% some_method do |arg| %>';
     const expected = '<div><ruby-block content="some_method do |arg|"></div>';
 
     const result = setErbTag(htmlLine, match);
 
-    expect(result).toEqual(expected);
+    assert.strictEqual(result, expected);
   });
 
-  it('should identify \'end\' ERB tag and replace it with ruby-block closing tag', () => {
+  test('should identify \'end\' ERB tag and replace it with ruby-block closing tag', () => {
     const htmlLine = '<div><% end %></div>';
     const match = '<% end %>';
     const expected = '<div></ruby-block></div>';
 
     const result = setErbTag(htmlLine, match);
 
-    expect(result).toEqual(expected);
+    assert.strictEqual(result, expected);
   });
 });
 
-describe('parseErb', () => {
-  it('should parse ERB tags in HTML string and replace them with ruby-line and ruby-block', () => {
+suite('parseErb', () => {
+  test('should parse ERB tags in HTML string and replace them with ruby-line and ruby-block', () => {
     const htmlStr = '<div><%= @message %></div>';
     const expected = '<div><ruby-line content="= @message"></div>';
 
     const result = parseErb(htmlStr);
 
-    expect(result).toEqual(expected);
+    assert.strictEqual(result, expected);
   });
 
-  it('should parse multiple ERB tags in HTML string and replace them with ruby-line and ruby-block', () => {
+  test('should parse multiple ERB tags in HTML string and replace them with ruby-line and ruby-block', () => {
     const htmlStr =
       '<div><%= @message %></div><p><% some_method do |arg| %></p>';
     const expected =
@@ -51,19 +53,36 @@ describe('parseErb', () => {
 
     const result = parseErb(htmlStr);
 
-    expect(result).toEqual(expected);
+    assert.strictEqual(result, expected);
   });
 
-  it('should not modify HTML string if no ERB tags are present', () => {
+  test('should not modify HTML string if no ERB tags are present', () => {
     const htmlStr = '<div>Hello, world!</div>';
-    const expected = '<div>Hello, world!</div>';
+    const result = parseErb(htmlStr);
+
+    assert.strictEqual(result, htmlStr);
+  });
+
+  test('should parse if-else as ruby-block', () => {
+    const htmlStr = `<% if condition %>
+  <div>condition pass</div>
+<% else %>
+  <div>condition fail</div>
+<% end %>`;
+
+    const expected = `<ruby-block content="if condition">
+  <div>condition pass</div>
+</ruby-block>
+<ruby-block content="else">
+  <div>condition fail</div>
+</ruby-block>`;
 
     const result = parseErb(htmlStr);
 
-    expect(result).toEqual(expected);
+    assert.strictEqual(result, expected);
   });
 
-  it('should parse a full ERB template', () => {
+  test('should parse a full ERB template', () => {
     const htmlStr = ERB_TEMPLATE_INDEX;
     const expected = `
 <h1>Listing Books</h1>
@@ -97,6 +116,6 @@ describe('parseErb', () => {
 
     const result = parseErb(htmlStr);
 
-    expect(result).toEqual(expected);
+    assert.strictEqual(result, expected);
   });
 });

@@ -116,10 +116,9 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "jest"
+    "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
     "@types/mocha": "^10.0.9",
     "@types/node": "20.x",
     "@types/vscode": "^1.95.0",
@@ -129,8 +128,6 @@
     "@vscode/test-electron": "^2.4.1",
     "eslint": "^9.13.0",
     "fast-xml-parser": "^4.5.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.2.5",
     "typescript": "^5.6.3"
   }
 }

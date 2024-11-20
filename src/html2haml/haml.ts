@@ -1,4 +1,4 @@
-import { Html2HamlOptions } from '.';
+import { Html2HamlOptions } from './config';
 
 function joinAttributeList(attr: string | undefined, joinChar: string): string {
   if (!attr) {

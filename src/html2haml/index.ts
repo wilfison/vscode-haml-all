@@ -3,23 +3,7 @@ import { Position, Uri, window, workspace, WorkspaceEdit } from 'vscode';
 
 import { jsToHaml } from './haml';
 import { htmlToJs } from './parser';
-
-export type Html2HamlOptions = {
-  erb?: boolean;
-  tabSize: number;
-  tabChar: HamlTabChar;
-};
-
-export enum HamlTabChar {
-  Space = ' ',
-  Tab = '\t',
-}
-
-const defaultOptions: Html2HamlOptions = {
-  erb: false,
-  tabSize: 2,
-  tabChar: HamlTabChar.Space,
-};
+import { defaultOptions, Html2HamlOptions } from './config';
 
 export async function html2Haml(): Promise<void> {
   const editor = window.activeTextEditor;

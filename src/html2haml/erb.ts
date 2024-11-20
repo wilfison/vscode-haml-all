@@ -1,6 +1,7 @@
 const ERB_TAG_REGEX = /<%([^<]*)%>/gm;
 const ERB_SCAPE_QUOTES_CHAR = '\'\'';
 const ERB_OPEN_BLOCK = /^-?(?:if)|\sdo\s\|/;
+const ERB_ELSIF = /^-?else|elsif/;
 
 export function setErbTag(htmlLine: string, match: string) {
   let content = match.replaceAll(/\n\s*/g, ' ').replace('<%', '');
@@ -15,7 +16,7 @@ export function setErbTag(htmlLine: string, match: string) {
     content = `<ruby-block content="${content}">`;
   } else if (content === 'end') {
     content = '</ruby-block>';
-  } else if (content === 'else') {
+  } else if (ERB_ELSIF.test(content)) {
     content = `</ruby-block>\n<ruby-block content="${content}">`;
   } else {
     content = `<ruby-line content="${content}">`;
