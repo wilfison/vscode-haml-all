@@ -1,39 +1,42 @@
 # HAML - All in One
 
-A VS Code Extension to provides all the necessary tools to work with HAML.
+A comprehensive VS Code extension that equips you with essential tools for seamless HAML development.
 
 [![VSCode Marketplace](https://img.shields.io/vscode-marketplace/v/wilfison.haml-all.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=wilfison.haml-all) [![Total Installs](https://img.shields.io/vscode-marketplace/d/wilfison.haml-all.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=wilfison.haml-all) [![Average Rating](https://img.shields.io/vscode-marketplace/r/wilfison.haml-all.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=wilfison.haml-all)
 
-![Linting](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/linter.gif)
+![Linting Preview](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/linter.gif)
 
 ## Features
 
-| Status | Feature                   | Required                                             |
+The following features are supported to make your HAML development effortless:
+
+| Status | Feature                   | Requirement                                          |
 | ------ | ------------------------- | ---------------------------------------------------- |
-| ✅      | Syntax highlighting       |                                                      |
+| ✅      | Syntax Highlighting       |                                                      |
 | ✅      | Linter                    | [`haml-lint`](https://github.com/sds/haml-lint) gem  |
-| ✅      | Partial: Go to definition |                                                      |
-| ✅      | Partial: Completions      |                                                      |
-| ✅      | Routes: Completions       | Rails Project                                        |
-| ✅      | Routes: Go to definition  | Rails Project                                        |
+| ✅      | Partial: Go to Definition |                                                      |
+| ✅      | Partial: Autocompletion   |                                                      |
+| ✅      | Routes: Autocompletion    | Rails Project                                        |
+| ✅      | Routes: Go to Definition  | Rails Project                                        |
 | ✅      | Split to Partial          |                                                      |
 | ✅      | Convert HTML/ERB to HAML  | [`html2haml`](https://github.com/haml/html2haml) gem |
 | ✅      | Snippets - HAML           |                                                      |
 | ✅      | Snippets - Rails          |                                                      |
 
-### Future Features
+### Upcoming Features
 
 - [ ] HAML Formatter (Code Beautifier)
-- [ ] Preview Template (Pure HAML)
+- [ ] Pure HAML Template Preview
 - [ ] Template Scaffolding
 
-### Linting
+---
 
-It uses the `haml-lint` gem to lint the files.
+## Linting
 
-You can configure the gem by creating a `.haml-lint.yml` file in the root of your project. Clique [here](https://github.com/sds/haml-lint/blob/main/config/default.yml) to see the default configuration.
+This extension utilizes the `haml-lint` gem for linting HAML files.  
+To configure, create a `.haml-lint.yml` file in your project root. Check the [default configuration](https://github.com/sds/haml-lint/blob/main/config/default.yml).
 
-To install the `haml-lint` gem, add the following line to your Gemfile:
+**To install the gem, add this to your `Gemfile`:**
 
 ```ruby
 group :development, :test do
@@ -41,74 +44,87 @@ group :development, :test do
 end
 ```
 
-### Partials - Go to definition
+---
 
-This feature allows you to navigate to the partial file by `CTRL + Clicking` on the partial name. Or you can right-click on the partial name and select `Go to definition`.
+## Features in Depth
 
-![Go to definition](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/go-to-definition.gif)
+### Partials - Go to Definition
+
+Navigate to a partial file by using `CTRL + Click` on the partial name or right-click and select `Go to Definition`.
+
+![Go to Definition](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/go-to-definition.gif)
 
 ### Partials - Split to Partial
 
-This feature allows you to split the current file into a partial. You can select the content you want to split and click on the `Create a partial from selection` option in Code Actions (lightbulb icon).
+Easily extract content into a new partial. Select the content, click the `Create a partial from selection` option in the Code Actions menu (lightbulb icon), and you're done!
 
-![Go to definition](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/partial-from-selection.gif)
+![Split to Partial](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/partial-from-selection.gif)
 
 ### Partial Completion
 
-This feature provides completion for partials in the project. It uses the `app/views` folder as the base path.
+Autocomplete for partials based on the `app/views` directory in your project.
 
 ![Partial Completion](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/partial-completion.gif)
 
 ### Convert HTML/ERB to HAML
 
-This feature allows you to convert HTML or ERB files to HAML. It uses the `html2haml`.
+Convert existing HTML or ERB files to HAML using `html2haml`.
 
-Add in your Gemfile or install it manually:
+**Installation:**
 
 ```shell
 gem install html2haml
 ```
 
-**How to use:**
+**Usage:**
 
-1. Open the HTML or ERB file you want to convert.
+1. Open an HTML or ERB file.
 2. Open the Command Palette (`CTRL + SHIFT + P`).
 3. Search for `HAML: Convert HTML to HAML` and select it.
-4. And await the magic!
+4. Watch the magic happen!
+
+---
 
 ## Configuration
 
+You can customize this extension by creating a `.vscode/settings.json` file in your project root:
 
-You can configure the extension by creating a `.vscode/settings.json` file in the root of your project.
-
-```ruby
+```json
 {
   "hamlAll.lintEnabled": true,
 
-  # Use 'bundle exec' to run haml-lint
-  # (If this is true, the 'linterExecutablePath' setting is ignored.)
+  // Use 'bundle exec' to run haml-lint.
+  // (If true, the 'linterExecutablePath' setting is ignored.)
   "hamlAll.useBundler": false,
 
-  # Path to haml-lint executable
+  // Specify the path to the haml-lint executable.
   "hamlAll.linterExecutablePath": "haml-lint"
 }
 ```
 
+---
+
 ## Recommended Extensions
 
-- [One Dark Dracula](https://marketplace.visualstudio.com/items?itemName=wilfison.one-dark-dracula): A dark theme for Visual Studio Code. Works well with this extension highlighting.
-- [Ruby LSP](https://marketplace.visualstudio.com/items?itemName=Shopify.ruby-lsp): Provides Ruby language support.
+Enhance your experience with these complementary extensions:
 
-## Special Thanks
+- [One Dark Dracula](https://marketplace.visualstudio.com/items?itemName=wilfison.one-dark-dracula): A vibrant dark theme that pairs beautifully with this extension's syntax highlighting.
+- [Ruby LSP](https://marketplace.visualstudio.com/items?itemName=Shopify.ruby-lsp): Provides robust Ruby language support.
 
-This extension is based on ideas from the following extensions:
+---
 
-- [Better Haml](https://github.com/karuna/haml-vscode/): (MIT License)
-- [Rails Open Partial](https://github.com/shanehofstetter/rails-open-partial-vscode): (MIT License)
-- [Haml Lint](https://github.com/aki77/vscode-haml-lint): (MIT License)
-- [Rails Partial](https://github.com/aki77/vscode-rails-partial): (MIT License)
-- [Rails Routes](https://github.com/aki77/vscode-rails-routes): (MIT License)
+## Acknowledgments
+
+Special thanks to these extensions for inspiration and functionality:
+
+- [Better HAML](https://github.com/karuna/haml-vscode/) (MIT License)
+- [Rails Open Partial](https://github.com/shanehofstetter/rails-open-partial-vscode) (MIT License)
+- [HAML Lint](https://github.com/aki77/vscode-haml-lint) (MIT License)
+- [Rails Partial](https://github.com/aki77/vscode-rails-partial) (MIT License)
+- [Rails Routes](https://github.com/aki77/vscode-rails-routes) (MIT License)
+
+---
 
 ## License
 
-This extension is licensed under the [MIT License](./LICENSE).
+This extension is released under the [MIT License](./LICENSE).
