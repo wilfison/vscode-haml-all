@@ -1,35 +1,43 @@
 # HAML - All in One
 
-Extension to provides all the necessary tools to work with HAML in Visual Studio Code.
+A VS Code Extension to provides all the necessary tools to work with HAML.
+
+[![VSCode Marketplace](https://img.shields.io/vscode-marketplace/v/wilfison.haml-all.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=wilfison.haml-all) [![Total Installs](https://img.shields.io/vscode-marketplace/d/wilfison.haml-all.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=wilfison.haml-all) [![Average Rating](https://img.shields.io/vscode-marketplace/r/wilfison.haml-all.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=wilfison.haml-all)
+
+![Linting](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/linter.gif)
 
 ## Features
 
-| Feature                   | Status |
-| ------------------------- | ------ |
-| Syntax highlighting       | 🗹      |
-| Linter                    | 🗹      |
-| Partial: Go to definition | 🗹      |
-| Partial: Completions      | 🗹      |
-| Routes: Completions       | 🗹      |
-| Routes: Go to definition  | 🗹      |
-| Split to Partial          | 🗹      |
-| Convert HTML/ERB to HAML  | 🗹      |
-| Snippets - HAML           | 🗹      |
-| Snippets - Rails          | 🗹      |
+| Status | Feature                   | Required                                             |
+| ------ | ------------------------- | ---------------------------------------------------- |
+| ✅      | Syntax highlighting       |                                                      |
+| ✅      | Linter                    | [`haml-lint`](https://github.com/sds/haml-lint) gem  |
+| ✅      | Partial: Go to definition |                                                      |
+| ✅      | Partial: Completions      |                                                      |
+| ✅      | Routes: Completions       | Rails Project                                        |
+| ✅      | Routes: Go to definition  | Rails Project                                        |
+| ✅      | Split to Partial          |                                                      |
+| ✅      | Convert HTML/ERB to HAML  | [`html2haml`](https://github.com/haml/html2haml) gem |
+| ✅      | Snippets - HAML           |                                                      |
+| ✅      | Snippets - Rails          |                                                      |
+
+### Future Features
+
+- [ ] HAML Formatter (Code Beautifier)
+- [ ] Preview Template (Pure HAML)
+- [ ] Template Scaffolding
 
 ### Linting
 
 It uses the `haml-lint` gem to lint the files.
-
-![Linting](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/linter.gif)
 
 You can configure the gem by creating a `.haml-lint.yml` file in the root of your project. Clique [here](https://github.com/sds/haml-lint/blob/main/config/default.yml) to see the default configuration.
 
 To install the `haml-lint` gem, add the following line to your Gemfile:
 
 ```ruby
-group :development do
-  gem 'haml-lint'
+group :development, :test do
+  gem 'haml-lint', require: false
 end
 ```
 

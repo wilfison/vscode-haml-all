@@ -1,7 +1,7 @@
 {
   "name": "haml-all",
   "displayName": "HAML - All in One",
-  "description": "All you need in one extension",
+  "description": "Provides all the necessary tools to work with HAML",
   "icon": "images/icon.png",
   "publisher": "wilfison",
   "author": {
@@ -33,6 +33,10 @@
     "lint",
     "linter",
     "snippets"
+  ],
+  "recommendations": [
+    "wilfison.one-dark-dracula",
+    "Shopify.ruby-lsp"
   ],
   "license": "MIT",
   "activationEvents": [
