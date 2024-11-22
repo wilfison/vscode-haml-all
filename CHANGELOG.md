@@ -1,6 +1,10 @@
 # Change Log
 
-## [0.0.7] - 2024-11-22
+## [0.0.9] - 2024-11-22
+
+- Fix: icon background color.
+
+## [0.0.8] - 2024-11-22
 
 - Update extension description and enhance README with feature details and future plans.
 - Update icon.
