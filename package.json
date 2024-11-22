@@ -4,7 +4,7 @@
   "description": "Provides all the necessary tools to work with HAML",
   "icon": "images/icon.png",
   "galleryBanner": {
-    "color": "#E3E3DB",
+    "color": "#EAEAE1",
     "theme": "light"
   },
   "publisher": "wilfison",
