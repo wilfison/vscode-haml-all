@@ -7,7 +7,7 @@ const X2J_OPTIONS: X2jOptions = {
   ignoreAttributes: false,
   attributesGroupName: 'attributes',
   attributeNamePrefix: '',
-  alwaysCreateTextNode: true,
+  alwaysCreateTextNode: false,
   unpairedTags: [
     'br',
     'hr',

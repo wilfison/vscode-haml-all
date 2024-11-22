@@ -32,6 +32,14 @@ function rubyLineNeedsInitialDash(content: string): boolean {
   return /^(?:if|else)/.test(content.trim());
 }
 
+function sanitizeExtraText(text: string): string {
+  if (/^[\.\-#]$/.test(text)) {
+    return `= "${text}"`;
+  }
+
+  return text;
+}
+
 export function formatTagLine(tag: string, tagData: any, tab: string, options: Html2HamlOptions) {
   const attributes = tagData.attributes;
   const tagText = tagData['#text'];
@@ -56,17 +64,15 @@ export function formatTagLine(tag: string, tagData: any, tab: string, options: H
     tagContent = ` ${tagText}`;
   }
 
-  switch (tag) {
-    case 'ruby-block':
-      hamlTag = attributes.content.startsWith('=') ? attributes.content : `- ${attributes.content}`;
-      tagAttributes = '';
-      tagContent = '';
-      break;
-    case 'ruby-line':
-      hamlTag = rubyLineNeedsInitialDash(attributes.content) ? `- ${attributes.content}` : attributes.content;
-      tagAttributes = '';
-      tagContent = '';
-      break;
+  if (tag === 'ruby-block') {
+    hamlTag = attributes.content.startsWith('=') ? attributes.content : `- ${attributes.content}`;
+    tagAttributes = '';
+    tagContent = '';
+  }
+  else if (tag === 'ruby-line') {
+    hamlTag = rubyLineNeedsInitialDash(attributes.content) ? `- ${attributes.content}` : attributes.content;
+    tagAttributes = '';
+    tagContent = tagText ? `\n${tab}${sanitizeExtraText(tagText)}` : '';
   }
 
   return `${hamlTag}${tagAttributes}${tagContent}`;

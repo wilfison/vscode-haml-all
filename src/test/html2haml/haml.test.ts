@@ -61,4 +61,86 @@ suite('jsToHaml', () => {
 
     assert.strictEqual(result, expected);
   });
+
+  test('should convert a simple ERB content to HAML string', () => {
+    const htmlJs = {
+      'p': {
+        'ruby-line': {
+          '#text': '!',
+          'attributes': {
+            'content': '= @email'
+          }
+        },
+        '#text': 'Hello'
+      }
+    };
+
+    const expected = `%p
+  Hello
+  = @email
+  !
+`;
+
+    const result = jsToHaml(htmlJs, options);
+
+    assert.strictEqual(result, expected);
+  });
+
+  test('should convert a ERB block to HAML string', () => {
+    const htmlJs = {
+      'h2': 'Resend confirmation instructions',
+      'ruby-block': {
+        'ruby-line': [
+          { 'attributes': { 'content': '= f.error_notification' } },
+          { 'attributes': { 'content': '= f.full_error :confirmation_token' } }
+        ],
+        'div': [
+          {
+            'ruby-line': {
+              'attributes': {
+                'content': '= f.input :email, required: true, autofocus: true, value: (resource.pending_reconfirmation? ? resource.unconfirmed_email : resource.email), input_html: { autocomplete: \'\'email\'\' }'
+              }
+            },
+            'attributes': {
+              'class': 'form-inputs'
+            }
+          },
+          {
+            'ruby-line': {
+              'attributes': {
+                'content': '= f.button :submit, \'\'Resend confirmation instructions\'\''
+              }
+            },
+            'attributes': {
+              'class': 'form-actions'
+            }
+          }
+        ],
+        'attributes': {
+          'content': '= simple_form_for(resource, as: resource_name, url: confirmation_path(resource_name), html: { method: :post }) do |f|'
+        }
+      },
+      'ruby-line': {
+        'attributes': {
+          'content': '= render \'\'users/shared/links\'\''
+        }
+      }
+    };
+
+    const expected = `%h2
+  Resend confirmation instructions
+- simple_form_for(resource, as: resource_name, url: confirmation_path(resource_name), html: { method: :post }) do |f|
+  = f.error_notification
+  = f.full_error :confirmation_token
+  .form-inputs
+    = f.input :email, required: true, autofocus: true, value: (resource.pending_reconfirmation? ? resource.unconfirmed_email : resource.email), input_html: { autocomplete: ''email'' }
+  .form-actions
+    = f.button :submit, 'Resend confirmation instructions'
+= render 'users/shared/links'
+`;
+
+    const result = jsToHaml(htmlJs, options);
+
+    assert.strictEqual(result, expected);
+  });
 });
