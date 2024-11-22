@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.0.7] - 2024-11-22
+
+- Update extension description and enhance README with feature details and future plans.
+- Update icon.
+
 ## [0.0.7] - 2024-11-18
 
 - Fix: Rails routes loader to old Rails versions.

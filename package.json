@@ -3,6 +3,10 @@
   "displayName": "HAML - All in One",
   "description": "Provides all the necessary tools to work with HAML",
   "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#E3E3DB",
+    "theme": "light"
+  },
   "publisher": "wilfison",
   "author": {
     "name": "wilfison",
@@ -11,7 +15,7 @@
   "repository": {
     "url": "https://github.com/wilfison/vscode-haml-all"
   },
-  "version": "0.0.7",
+  "version": "0.0.8",
   "engines": {
     "vscode": "^1.95.0"
   },
