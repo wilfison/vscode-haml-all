@@ -1,7 +1,7 @@
 import { DocumentFormattingEditProvider, FormattingOptions, Range, TextDocument, TextEdit } from 'vscode';
 
 import Linter from './linter';
-import { autoCorrectAll } from './formatter/autoCorrect';
+import autoCorrectAll from './formatter';
 
 export default class FormattingEditProvider implements DocumentFormattingEditProvider {
   private linter: Linter;
