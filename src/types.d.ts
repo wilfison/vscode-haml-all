@@ -38,13 +38,9 @@ type LinterConfigEnabler = {
  * @see https://github.com/sds/haml-lint/blob/main/lib/haml_lint/linter/README.md
  */
 export type LinterConfig = {
-  // ClassesBeforeIds: LinterConfigEnabler;
+  ClassesBeforeIds: LinterConfigEnabler;
   FinalNewline: LinterConfigEnabler;
   // HtmlAttributes: LinterConfigEnabler;
-
-  // IdNames: LinterConfigEnabler & {
-  //   style: 'lisp_case' | 'camel_case' | 'pascal_case' | 'snake_case';
-  // };
 
   // Indentation: LinterConfigEnabler & {
   //   character: 'space' | 'tab';

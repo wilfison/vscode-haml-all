@@ -7,6 +7,7 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
 
   if (hamlLintConfig) {
     fixedText = fixWhitespace(fixedText, hamlLintConfig);
+    fixedText = fixClassBeforeId(fixedText, hamlLintConfig);
   }
 
   return fixedText;
@@ -34,4 +35,14 @@ function fixWhitespace(text: string, config: LinterConfig): string {
   }
 
   return fixedText;
+}
+
+function fixClassBeforeId(text: string, config: LinterConfig): string {
+  if (!config.ClassesBeforeIds.enabled) {
+    return text;
+  }
+
+  const regex = /(?<id>#[\w\-_]+)(?<class>\.[\w\-_\.]+)/g;
+
+  return text.replace(regex, '$2$1');
 }
