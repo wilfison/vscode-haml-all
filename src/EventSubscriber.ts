@@ -7,7 +7,7 @@ import {
   Uri,
 } from 'vscode';
 
-import Linter from './Linter';
+import Linter from './linter';
 import FixActionsProvider from './FixActionsProvider';
 import { autoCorrectAll } from './autoCorrect';
 import { refreshRoutes } from './rails/utils';
@@ -62,7 +62,7 @@ class EventSubscriber {
     this.context.subscriptions.push(
       workspace.onDidSaveTextDocument(async (document: TextDocument) => {
         if (workspace.getConfiguration('hamlAll').simpleAutoFixOnSave) {
-          await autoCorrectAll(document);
+          await autoCorrectAll(document, this.linter);
         }
 
         updateDiagnostics(document);

@@ -1,4 +1,5 @@
 import { exec } from 'node:child_process';
+import path from 'node:path';
 import {
   Diagnostic,
   DiagnosticCollection,
@@ -9,13 +10,20 @@ import {
   Range,
   Position
 } from 'vscode';
-import { LinterOutput } from './types';
+
+import { LinterConfig, LinterOutput } from '../types';
 
 export const SOURCE = 'haml-lint';
 
 export default class Linter {
+  public hamlLintConfig: LinterConfig | null = null;
+
   private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
   private processes: WeakMap<TextDocument, any> = new WeakMap();
+
+  constructor() {
+    this.loadConfigs();
+  }
 
   public dispose() {
     this.collection.dispose();
@@ -108,5 +116,24 @@ export default class Linter {
     linterExecutablePath = config.useBundler ? 'bundle exec ' : linterExecutablePath;
 
     return `${linterExecutablePath} ${args} ${document.uri.fsPath}`;
+  }
+
+  private loadConfigs() {
+    const command = 'ruby -e "require \'haml_lint\'; puts HamlLint::ConfigurationLoader.load_applicable_config.hash.to_json"';
+    const workspaceFolder = workspace.workspaceFolders?.[0];
+
+    if (!workspaceFolder) {
+      return;
+    }
+
+    exec(command, { cwd: workspaceFolder.uri.fsPath }, (error, stdout, stderr) => {
+      if (error) {
+        console.error(stderr);
+        return;
+      }
+
+      this.hamlLintConfig = JSON.parse(stdout).linters;
+      console.log('Haml-lint config loaded');
+    });
   }
 }

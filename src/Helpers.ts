@@ -1,7 +1,7 @@
 import { exec } from 'node:child_process';
 import { workspace } from 'vscode';
 
-import { SOURCE } from './Linter';
+import { SOURCE } from './linter';
 
 export function hamlLintPresent(): boolean {
   const config = workspace.getConfiguration('hamlAll');

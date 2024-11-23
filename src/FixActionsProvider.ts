@@ -10,7 +10,7 @@ import {
   Position,
 } from 'vscode';
 
-import { SOURCE } from './Linter';
+import { SOURCE } from './linter';
 import { hamlLintFixes, rubocopFix } from './quick_fixes';
 import { fixAllStringLiterals } from './quick_fixes/stringLiterals';
 
