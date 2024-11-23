@@ -22,7 +22,8 @@
   "categories": [
     "Programming Languages",
     "Snippets",
-    "Linters"
+    "Linters",
+    "Formatters"
   ],
   "tags": [
     "haml",
@@ -56,11 +57,6 @@
           "type": "boolean",
           "default": true,
           "description": "Enable/disable haml-lint"
-        },
-        "hamlAll.simpleAutoFixOnSave": {
-          "type": "boolean",
-          "default": true,
-          "description": "Only removes trailing whitespace an adds a newline at the end of the file."
         },
         "hamlAll.linterExecutablePath": {
           "type": "string",
