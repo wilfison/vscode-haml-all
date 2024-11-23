@@ -1,35 +1,37 @@
-import { TextDocument, TextEdit, workspace, WorkspaceEdit } from 'vscode';
+import { Range, TextDocument, TextEdit, workspace, WorkspaceEdit } from 'vscode';
 
 export async function autoCorrectAll(document: TextDocument): Promise<void> {
-  await trailingWhitespace(document);
+  await fixWhitespace(document);
+
+  // save the document
+  await document.save();
 }
 
-async function trailingWhitespace(document: TextDocument): Promise<void> {
+async function fixWhitespace(document: TextDocument): Promise<void> {
+  const text = document.getText();
   const edits: TextEdit[] = [];
-  const lastLine = document.lineAt(document.lineCount - 1);
-  let hasTrailingWhitespace = false;
 
-  // Remove trailing whitespace from each line
-  for (let i = 0; i < document.lineCount; i++) {
-    const line = document.lineAt(i);
-    const trimmedText = line.text.replace(/\s+$/, '');
+  // Remove trailing whitespace and multiple blank lines
+  const fixedText = text
+    .split('\n')
+    .map(line => line.replace(/\s+$/, ''))
+    .join('\n')
+    .replace(/\n{2,}/g, '\n\n');
 
-    if (line.text !== trimmedText) {
-      edits.push(TextEdit.replace(line.range, trimmedText));
-      hasTrailingWhitespace = true;
-    }
+  // Add a blank line at the end if not present
+  const finalText = fixedText.endsWith('\n') ? fixedText : fixedText + '\n';
+
+  if (finalText !== text) {
+    const fullRange = new Range(
+      document.positionAt(0),
+      document.positionAt(text.length)
+    );
+    edits.push(TextEdit.replace(fullRange, finalText));
   }
 
-  // Ensure there is a blank line at the end of the file
-  if (lastLine.text.trim() !== '') {
-    edits.push(TextEdit.insert(lastLine.range.end, '\n'));
-  }
-
-  if (hasTrailingWhitespace || lastLine.text.trim() !== '') {
-    const edit = new WorkspaceEdit();
-    edit.set(document.uri, edits);
-
-    await workspace.applyEdit(edit);
-    await document.save();
+  if (edits.length > 0) {
+    const workspaceEdit = new WorkspaceEdit();
+    workspaceEdit.set(document.uri, edits);
+    await workspace.applyEdit(workspaceEdit);
   }
 }
