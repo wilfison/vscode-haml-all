@@ -1,27 +1,30 @@
 import { LinterConfig } from '../types';
 
-function fixWhitespace(text: string, config: LinterConfig): string {
-  let fixedText = text;
-
-  // Remove trailing whitespace
-  if (config.TrailingWhitespace.enabled) {
-    fixedText = fixedText
-      .split('\n')
-      .map(line => line.replace(/\s+$/, ''))
-      .join('\n');
+function fixTrailingWhitespace(text: string, config: LinterConfig): string {
+  if (!config.TrailingWhitespace.enabled) {
+    return text;
   }
 
-  // Remove trailing empty lines
-  if (config.TrailingEmptyLines.enabled) {
-    fixedText = fixedText.replace(/\n{2,}/g, '\n\n');
+  return text
+    .split('\n')
+    .map(line => line.replace(/\s+$/, ''))
+    .join('\n');
+}
+
+function fixTrailingEmptyLines(text: string, config: LinterConfig): string {
+  if (!config.TrailingEmptyLines.enabled) {
+    return text;
   }
 
-  // Add a blank line at the end if not present
-  if (config.FinalNewline.enabled) {
-    fixedText = fixedText.endsWith('\n') ? fixedText : fixedText + '\n';
+  return text.replace(/\n{2,}/g, '\n\n');
+}
+
+function fixFinalNewline(text: string, config: LinterConfig): string {
+  if (!config.FinalNewline.enabled) {
+    return text;
   }
 
-  return fixedText;
+  return text.endsWith('\n') ? text.replace(/\n+$/, '\n') : `${text}\n`;
 }
 
 function fixClassBeforeId(text: string, config: LinterConfig): string {
@@ -73,7 +76,9 @@ function fixLeadingCommentSpace(text: string, config: LinterConfig): string {
 }
 
 export default {
-  fixWhitespace,
+  fixTrailingWhitespace,
+  fixTrailingEmptyLines,
+  fixFinalNewline,
   fixClassBeforeId,
   fixSpaceBeforeScript,
   fixLeadingCommentSpace,

@@ -10,7 +10,9 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
   let fixedText = text;
 
   if (hamlLintConfig) {
-    fixedText = haml.fixWhitespace(fixedText, hamlLintConfig);
+    fixedText = haml.fixTrailingWhitespace(fixedText, hamlLintConfig);
+    fixedText = haml.fixTrailingEmptyLines(fixedText, hamlLintConfig);
+    fixedText = haml.fixFinalNewline(fixedText, hamlLintConfig);
     fixedText = haml.fixClassBeforeId(fixedText, hamlLintConfig);
     fixedText = haml.fixSpaceBeforeScript(fixedText, hamlLintConfig);
     fixedText = haml.fixLeadingCommentSpace(fixedText, hamlLintConfig);
