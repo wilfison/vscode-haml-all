@@ -1,4 +1,5 @@
 import { exec } from 'node:child_process';
+import path from 'node:path';
 import {
   Diagnostic,
   DiagnosticCollection,
@@ -9,13 +10,21 @@ import {
   Range,
   Position
 } from 'vscode';
-import { LinterOutput } from './types';
+
+import { LinterConfig, LinterOutput, RuboCopConfig } from '../types';
 
 export const SOURCE = 'haml-lint';
 
 export default class Linter {
+  public hamlLintConfig: LinterConfig | null = null;
+  public rubocopConfig: RuboCopConfig | null = null;
+
   private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
   private processes: WeakMap<TextDocument, any> = new WeakMap();
+
+  constructor() {
+    this.loadConfigs();
+  }
 
   public dispose() {
     this.collection.dispose();
@@ -35,6 +44,28 @@ export default class Linter {
 
   public clearAll() {
     this.collection.clear();
+  }
+
+  public loadConfigs() {
+    const libPath = path.join(__dirname, '..', '..', 'lib');
+    const command = `ruby ${libPath}/list_cops.rb`;
+    const workspaceFolder = workspace.workspaceFolders?.[0];
+
+    if (!workspaceFolder) {
+      return;
+    }
+
+    exec(command, { cwd: workspaceFolder.uri.fsPath }, (error, stdout, stderr) => {
+      if (error) {
+        console.error(stderr);
+        return;
+      }
+
+      const cops = JSON.parse(stdout);
+      this.hamlLintConfig = cops.haml_lint;
+      this.rubocopConfig = cops.rubocop;
+      console.log('Haml-lint config loaded');
+    });
   }
 
   private async lint(document: TextDocument) {

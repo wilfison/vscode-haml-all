@@ -10,6 +10,7 @@ import RoutesDefinitionProvider from './RoutesDefinitionProvider';
 
 import { ViewCodeActionProvider, createPartialFromSelection } from './ViewCodeActionProvider';
 import { html2Haml } from './html2Haml';
+import FormattingEditProvider from './FormattingEditProvider';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('haml-all active!');
@@ -37,6 +38,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     eventSubscriber.subscribeRails();
   }
+
+  context.subscriptions.push(
+    vscode.languages.registerDocumentFormattingEditProvider(
+      HAML_SELECTOR,
+      new FormattingEditProvider(eventSubscriber.linter)
+    )
+  );
 
   context.subscriptions.push(
     vscode.languages.registerDefinitionProvider(HAML_SELECTOR, new ViewFileDefinitionProvider())

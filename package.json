@@ -22,7 +22,8 @@
   "categories": [
     "Programming Languages",
     "Snippets",
-    "Linters"
+    "Linters",
+    "Formatters"
   ],
   "tags": [
     "haml",
@@ -57,11 +58,6 @@
           "default": true,
           "description": "Enable/disable haml-lint"
         },
-        "hamlAll.simpleAutoFixOnSave": {
-          "type": "boolean",
-          "default": true,
-          "description": "Only removes trailing whitespace an adds a newline at the end of the file."
-        },
         "hamlAll.linterExecutablePath": {
           "type": "string",
           "default": "haml-lint",
@@ -71,6 +67,11 @@
           "type": "boolean",
           "default": false,
           "description": "Use `bundle exec` to run haml-lint. (If this is true, the 'linterExecutablePath' setting is ignored.)"
+        },
+        "hamlAll.formatOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Format HAML files on save (Experimental)"
         }
       }
     },

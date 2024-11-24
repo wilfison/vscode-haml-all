@@ -7,9 +7,8 @@ import {
   Uri,
 } from 'vscode';
 
-import Linter from './Linter';
+import Linter from './linter';
 import FixActionsProvider from './FixActionsProvider';
-import { autoCorrectAll } from './autoCorrect';
 import { refreshRoutes } from './rails/utils';
 import Routes from './rails/routes';
 import { isARailsProject } from './Helpers';
@@ -17,10 +16,10 @@ import { isARailsProject } from './Helpers';
 class EventSubscriber {
   public routes: Routes;
   public isARailsProject: boolean = false;
+  public linter: Linter;
 
   private context: ExtensionContext;
   private rootPath: Uri;
-  private linter: Linter;
 
   constructor(context: ExtensionContext) {
     this.context = context;
@@ -61,10 +60,6 @@ class EventSubscriber {
 
     this.context.subscriptions.push(
       workspace.onDidSaveTextDocument(async (document: TextDocument) => {
-        if (workspace.getConfiguration('hamlAll').simpleAutoFixOnSave) {
-          await autoCorrectAll(document);
-        }
-
         updateDiagnostics(document);
       })
     );
@@ -90,9 +85,14 @@ class EventSubscriber {
     this.updateAllDiagnostics();
   }
 
+  private onUpdateLintConfig() {
+    this.updateAllDiagnostics();
+    this.linter.loadConfigs();
+  }
+
   private subscribeHamlWatchers() {
-    this.subscribeFileWatcher('**/.haml-lint.yml', this.updateAllDiagnostics);
-    this.subscribeFileWatcher('**/.rubocop.yml', this.updateAllDiagnostics);
+    this.subscribeFileWatcher('**/.haml-lint.yml', this.onUpdateLintConfig);
+    this.subscribeFileWatcher('**/.rubocop.yml', this.onUpdateLintConfig);
   }
 
   private subscribeRailsWatchers() {

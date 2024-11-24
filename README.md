@@ -98,7 +98,10 @@ You can customize this extension by creating a `.vscode/settings.json` file in y
   "hamlAll.useBundler": false,
 
   // Specify the path to the haml-lint executable.
-  "hamlAll.linterExecutablePath": "haml-lint"
+  "hamlAll.linterExecutablePath": "haml-lint",
+
+  // Enable HAML formatting on save.
+  "hamlAll.formatOnSave": true
 }
 ```
 
