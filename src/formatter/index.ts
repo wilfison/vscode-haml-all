@@ -20,6 +20,7 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
 
   if (rubocopConfig) {
     fixedText = rubocop.fixStringLiterals(fixedText, rubocopConfig);
+    fixedText = rubocop.fixSpaceInsideParens(fixedText, rubocopConfig);
   }
 
   return fixedText;

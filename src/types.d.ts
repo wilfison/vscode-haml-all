@@ -34,6 +34,10 @@ type LinterConfigEnabler = {
   enabled: boolean;
 };
 
+type RuboCopConfigEnabler = {
+  Enabled: boolean;
+};
+
 /**
  * @see https://github.com/sds/haml-lint/blob/main/lib/haml_lint/linter/README.md
  */
@@ -54,7 +58,11 @@ export type LinterConfig = {
 }
 
 export type RuboCopConfig = {
-  'Style/StringLiterals': LinterConfigEnabler & {
+  'Style/StringLiterals': RuboCopConfigEnabler & {
     EnforcedStyle: 'double_quotes' | 'single_quotes';
+  };
+
+  'Layout/SpaceInsideParens': RuboCopConfigEnabler & {
+    EnforcedStyle: 'space' | 'no_space' | 'compact';
   };
 };
