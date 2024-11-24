@@ -11,13 +11,13 @@ import {
   Position
 } from 'vscode';
 
-import { LinterConfig, LinterOutput } from '../types';
+import { LinterConfig, LinterOutput, RuboCopConfig } from '../types';
 
 export const SOURCE = 'haml-lint';
 
 export default class Linter {
   public hamlLintConfig: LinterConfig | null = null;
-  public rubocopConfig: LinterConfig | null = null;
+  public rubocopConfig: RuboCopConfig | null = null;
 
   private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
   private processes: WeakMap<TextDocument, any> = new WeakMap();
