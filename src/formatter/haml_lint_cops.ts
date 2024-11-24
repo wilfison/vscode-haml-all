@@ -41,7 +41,7 @@ function fixSpaceBeforeScript(text: string, config: LinterConfig): string {
   }
 
   const lines = text.split('\n');
-  const regex = /^\s*([-=])(?:\s{0}|\s{2,})(.*)/;
+  const regex = /^\s*([-=](?!#))(?:\s{0}|\s{2,})(.*)/;
 
   return lines
     .map(line => {
@@ -59,8 +59,22 @@ function fixSpaceBeforeScript(text: string, config: LinterConfig): string {
     .join('\n');
 }
 
+function fixLeadingCommentSpace(text: string, config: LinterConfig): string {
+  if (!config.LeadingCommentSpace.enabled) {
+    return text;
+  }
+
+  const regex = /^\s*-#(?!\s)/;
+
+  return text
+    .split('\n')
+    .map(line => (line.match(regex) ? line.replace(/-#/, '-# ') : line))
+    .join('\n');
+}
+
 export default {
   fixWhitespace,
   fixClassBeforeId,
-  fixSpaceBeforeScript
+  fixSpaceBeforeScript,
+  fixLeadingCommentSpace,
 };

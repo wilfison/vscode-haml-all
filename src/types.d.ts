@@ -47,9 +47,8 @@ export type LinterConfig = {
   //   width: number;
   // };
 
-  // LeadingCommentSpace: LinterConfigEnabler;
+  LeadingCommentSpace: LinterConfigEnabler;
   SpaceBeforeScript: LinterConfigEnabler;
-  // SpaceInsideHashAttributes: LinterConfigEnabler;
   TrailingEmptyLines: LinterConfigEnabler;
   TrailingWhitespace: LinterConfigEnabler;
 }
