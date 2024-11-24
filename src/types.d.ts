@@ -53,3 +53,9 @@ export type LinterConfig = {
   TrailingEmptyLines: LinterConfigEnabler;
   TrailingWhitespace: LinterConfigEnabler;
 }
+
+export type RuboCopConfig = {
+  'Style/StringLiterals': LinterConfigEnabler & {
+    EnforcedStyle: 'double_quotes' | 'single_quotes';
+  };
+};

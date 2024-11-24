@@ -85,9 +85,14 @@ class EventSubscriber {
     this.updateAllDiagnostics();
   }
 
+  private onUpdateLintConfig() {
+    this.updateAllDiagnostics();
+    this.linter.loadConfigs();
+  }
+
   private subscribeHamlWatchers() {
-    this.subscribeFileWatcher('**/.haml-lint.yml', this.updateAllDiagnostics);
-    this.subscribeFileWatcher('**/.rubocop.yml', this.updateAllDiagnostics);
+    this.subscribeFileWatcher('**/.haml-lint.yml', this.onUpdateLintConfig);
+    this.subscribeFileWatcher('**/.rubocop.yml', this.onUpdateLintConfig);
   }
 
   private subscribeRailsWatchers() {
