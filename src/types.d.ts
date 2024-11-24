@@ -48,7 +48,7 @@ export type LinterConfig = {
   // };
 
   // LeadingCommentSpace: LinterConfigEnabler;
-  // SpaceBeforeScript: LinterConfigEnabler;
+  SpaceBeforeScript: LinterConfigEnabler;
   // SpaceInsideHashAttributes: LinterConfigEnabler;
   TrailingEmptyLines: LinterConfigEnabler;
   TrailingWhitespace: LinterConfigEnabler;
