@@ -14,6 +14,7 @@ The following features are supported to make your HAML development effortless:
 | ------ | ------------------------- | ---------------------------------------------------- |
 | ✅      | Syntax Highlighting       |                                                      |
 | ✅      | Linter                    | [`haml-lint`](https://github.com/sds/haml-lint) gem  |
+| ✅      | HAML Formatter            | `haml-lint`, `rubocop`                               |
 | ✅      | Partial: Go to Definition |                                                      |
 | ✅      | Partial: Autocompletion   |                                                      |
 | ✅      | Routes: Autocompletion    | Rails Project                                        |

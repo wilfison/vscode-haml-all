@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.0.9] - 2024-11-24
+
+- Feature: [Add FormattingEditProvider](https://github.com/wilfison/vscode-haml-all/pull/1)
+  - Add HAML formatter (Code Beautifier).
+
 ## [0.0.9] - 2024-11-22
 
 - Fix: icon background color.
