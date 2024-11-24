@@ -67,6 +67,11 @@
           "type": "boolean",
           "default": false,
           "description": "Use `bundle exec` to run haml-lint. (If this is true, the 'linterExecutablePath' setting is ignored.)"
+        },
+        "hamlAll.formatOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Format HAML files on save"
         }
       }
     },

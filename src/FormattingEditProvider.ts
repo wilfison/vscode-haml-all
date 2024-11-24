@@ -1,4 +1,4 @@
-import { DocumentFormattingEditProvider, FormattingOptions, Range, TextDocument, TextEdit } from 'vscode';
+import { DocumentFormattingEditProvider, FormattingOptions, Range, TextDocument, TextEdit, workspace } from 'vscode';
 
 import Linter from './linter';
 import autoCorrectAll from './formatter';
@@ -11,6 +11,10 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
   }
 
   public provideDocumentFormattingEdits(document: TextDocument, _options: FormattingOptions, _token: any) {
+    if (!this.formatEnabled()) {
+      return [];
+    }
+
     const text = document.getText();
     const edits: TextEdit[] = [];
     const fixedText = autoCorrectAll(text, this.linter);
@@ -24,5 +28,9 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
     edits.push(TextEdit.replace(fullRange, fixedText));
 
     return edits;
+  }
+
+  private formatEnabled() {
+    return workspace.getConfiguration('hamlAll').get('formatOnSave', false);
   }
 }
