@@ -71,7 +71,7 @@
         "hamlAll.formatOnSave": {
           "type": "boolean",
           "default": false,
-          "description": "Format HAML files on save"
+          "description": "Format HAML files on save (Experimental)"
         }
       }
     },
