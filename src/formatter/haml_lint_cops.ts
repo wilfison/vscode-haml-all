@@ -67,7 +67,7 @@ function fixLeadingCommentSpace(text: string, config: LinterConfig): string {
     return text;
   }
 
-  const regex = /^\s*-#(?!\s)/;
+  const regex = /^\s*-#(?!\s)\w+/;
 
   return text
     .split('\n')
