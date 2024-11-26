@@ -1,9 +1,9 @@
 {
+  "displayName": "Ruby Haml",
   "fileTypes": ["haml", "html.haml"],
   "foldingStartMarker": "^\\s*([-%#\\:\\.\\w\\=].*)\\s$",
   "foldingStopMarker": "^\\s*$",
-  "keyEquivalent": "^~H",
-  "name": "Ruby Haml",
+  "name": "haml",
   "patterns": [
     {
       "begin": "^(\\s*)==",
@@ -90,7 +90,6 @@
     },
     {
       "begin": "^\\s*(?:((%)([-\\w:]+))|(?=\\.|#))",
-      "end": "$|(?!\\.|#|\\{|\\(|\\[|&amp;|=|-|~|!=|&=|/)",
       "captures": {
         "1": {
           "name": "meta.tag.haml"
@@ -102,6 +101,7 @@
           "name": "entity.name.tag.haml"
         }
       },
+      "end": "$|(?!\\.|#|\\{|\\(|\\[|&amp;|=|-|~|!=|&=|/)",
       "patterns": [
         {
           "begin": "==",
@@ -113,7 +113,6 @@
             }
           ]
         },
-
         {
           "captures": {
             "1": {
@@ -333,13 +332,13 @@
     },
     {
       "begin": "^(\\s*)(:php)",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "meta.embedded.php",
       "captures": {
         "2": {
           "name": "entity.name.tag.haml"
         }
       },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.php",
       "patterns": [
         {
           "include": "text.html.php#language"
@@ -348,13 +347,13 @@
     },
     {
       "begin": "^(\\s*)(:markdown)",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "meta.embedded.markdown",
       "captures": {
         "2": {
           "name": "entity.name.tag.haml"
         }
       },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.markdown",
       "patterns": [
         {
           "include": "text.html.markdown"
@@ -363,13 +362,13 @@
     },
     {
       "begin": "^(\\s*)(:(css|styles?))$",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "meta.embedded.css",
       "captures": {
         "2": {
           "name": "entity.name.tag.haml"
         }
       },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.css",
       "patterns": [
         {
           "include": "source.css"
@@ -378,13 +377,13 @@
     },
     {
       "begin": "^(\\s*)(:sass)$",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "meta.embedded.sass",
       "captures": {
         "2": {
           "name": "entity.name.tag.haml"
         }
       },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.sass",
       "patterns": [
         {
           "include": "source.sass"
@@ -393,13 +392,13 @@
     },
     {
       "begin": "^(\\s*)(:scss)$",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "meta.embedded.scss",
       "captures": {
         "2": {
           "name": "entity.name.tag.haml"
         }
       },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.scss",
       "patterns": [
         {
           "include": "source.scss"
@@ -488,6 +487,78 @@
         }
       ]
     },
+    "rubyline": {
+      "begin": "(&amp|!)?(=|-|~)",
+      "contentName": "source.ruby.embedded.haml",
+      "end": "((do|\\{)( \\|[.*]+\\|)?)$|$|^(?!.*\\|\\s*)$\\n?",
+      "endCaptures": {
+        "1": {
+          "name": "source.ruby.embedded.html"
+        },
+        "2": {
+          "name": "keyword.control.ruby.start-block"
+        }
+      },
+      "name": "meta.line.ruby.haml",
+      "patterns": [
+        {
+          "captures": {
+            "1": {
+              "name": "keyword.control.php"
+            }
+          },
+          "match": "\\s+((elseif|foreach|switch|declare|default|use))(?=\\s|\\()"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "keyword.control.import.include.php"
+            }
+          },
+          "match": "\\s+(require_once|include_once)(?=\\s|\\()"
+        },
+        {
+          "match": "\\s+(catch|try|throw|exception|finally|die)(?=\\s|\\(|\\n*)",
+          "name": "keyword.control.exception.php"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "storage.type.function.php"
+            }
+          },
+          "match": "\\s+(function\\s*)((?=\\())"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "keyword.control.php"
+            }
+          },
+          "match": "\\s+(use\\s*)((?=\\())"
+        },
+        {
+          "match": "(\\||,|<|do|\\{)\\s*(\\#.*)?$\\n*",
+          "name": "source.ruby",
+          "patterns": [
+            {
+              "include": "#rubyline"
+            }
+          ]
+        },
+        {
+          "comment": "Hack to let ruby comments work in this context properly",
+          "match": "#.*$",
+          "name": "comment.line.number-sign.ruby"
+        },
+        {
+          "include": "source.ruby"
+        },
+        {
+          "include": "#continuation"
+        }
+      ]
+    },
     "variables": {
       "patterns": [
         {
@@ -516,78 +587,6 @@
           },
           "match": "(#\\$)[a-zA-Z_]\\w*",
           "name": "variable.other.readwrite.global.ruby"
-        }
-      ]
-    },
-    "rubyline": {
-      "begin": "(&amp|!)?(=|-|~)",
-      "contentName": "source.ruby.embedded.haml",
-      "end": "((do|\\{)( \\|[.*]+\\|)?)$|$|^(?!.*\\|\\s*)$\\n?",
-      "endCaptures": {
-        "1": {
-          "name": "source.ruby.embedded.html"
-        },
-        "2": {
-          "name": "keyword.control.ruby.start-block"
-        }
-      },
-      "name": "meta.line.ruby.haml",
-      "patterns": [
-        {
-          "match": "\\s+((elseif|foreach|switch|declare|default|use))(?=\\s|\\()",
-          "captures": {
-            "1": {
-              "name": "keyword.control.php"
-            }
-          }
-        },
-        {
-          "match": "\\s+(require_once|include_once)(?=\\s|\\()",
-          "captures": {
-            "1": {
-              "name": "keyword.control.import.include.php"
-            }
-          }
-        },
-        {
-          "match": "\\s+(catch|try|throw|exception|finally|die)(?=\\s|\\(|\\n*)",
-          "name": "keyword.control.exception.php"
-        },
-        {
-          "match": "\\s+(function\\s*)((?=\\())",
-          "captures": {
-            "1": {
-              "name": "storage.type.function.php"
-            }
-          }
-        },
-        {
-          "match": "\\s+(use\\s*)((?=\\())",
-          "captures": {
-            "1": {
-              "name": "keyword.control.php"
-            }
-          }
-        },
-        {
-          "match": "(\\||,|<|do|\\{)\\s*(\\#.*)?$\\n*",
-          "name": "source.ruby",
-          "patterns": [
-            {
-              "include": "#rubyline"
-            }
-          ]
-        },
-        {
-          "comment": "Hack to let ruby comments work in this context properly",
-          "match": "#.*$",
-          "name": "comment.line.number-sign.ruby"
-        },
-        {
-          "include": "source.ruby"
-        },
-        {
-          "include": "#continuation"
         }
       ]
     }
