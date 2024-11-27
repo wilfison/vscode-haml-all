@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.0.9] - 2024-11-26
+
+- Bugfix: Fix HAML formatter block comments.
+- Update haml grammar from [textmate-grammars-themes](https://github.com/shikijs/textmate-grammars-themes/blob/main/packages/tm-grammars/grammars/haml.json)
+
 ## [0.0.9] - 2024-11-24
 
 - Feature: [Add FormattingEditProvider](https://github.com/wilfison/vscode-haml-all/pull/1)
