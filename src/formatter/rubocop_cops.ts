@@ -8,9 +8,16 @@ function fixStringLiterals(text: string, config: RuboCopConfig): string {
   const enforcedStyle = config['Style/StringLiterals'].EnforcedStyle;
   const wrongQuote = enforcedStyle === 'double_quotes' ? '\'' : '"';
   const rightQuote = enforcedStyle === 'double_quotes' ? '"' : '\'';
-  const regex = new RegExp(`${wrongQuote}{1}([^'",\\n]*)${wrongQuote}{1}`, 'g');
+  const regex = new RegExp(`${wrongQuote}([^'",\\n]*)${wrongQuote}`, 'g');
 
-  return text.replaceAll(regex, `${rightQuote}$1${rightQuote}`);
+  return text.split('\n').map(line => {
+    return line.replace(regex, match => {
+      if (match.includes('#{')) {
+        return match;
+      }
+      return match.replace(new RegExp(wrongQuote, 'g'), rightQuote);
+    });
+  }).join('\n');
 }
 
 function fixSpaceInsideParens(text: string, config: RuboCopConfig): string {
