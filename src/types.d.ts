@@ -34,6 +34,18 @@ type LinterConfigEnabler = {
   enabled: boolean;
 };
 
+/**
+ * @see https://github.com/sds/haml-lint/blob/main/lib/haml_lint/linter/README.md
+ */
+export type LinterConfig = {
+  ClassesBeforeIds: LinterConfigEnabler;
+  FinalNewline: LinterConfigEnabler;
+  LeadingCommentSpace: LinterConfigEnabler;
+  SpaceBeforeScript: LinterConfigEnabler;
+  TrailingEmptyLines: LinterConfigEnabler;
+  TrailingWhitespace: LinterConfigEnabler;
+}
+
 type RuboCopConfigEnabler = {
   Enabled: boolean;
 };
@@ -41,23 +53,9 @@ type RuboCopConfigEnabler = {
 /**
  * @see https://github.com/sds/haml-lint/blob/main/lib/haml_lint/linter/README.md
  */
-export type LinterConfig = {
-  ClassesBeforeIds: LinterConfigEnabler;
-  FinalNewline: LinterConfigEnabler;
-  // HtmlAttributes: LinterConfigEnabler;
-
-  // Indentation: LinterConfigEnabler & {
-  //   character: 'space' | 'tab';
-  //   width: number;
-  // };
-
-  LeadingCommentSpace: LinterConfigEnabler;
-  SpaceBeforeScript: LinterConfigEnabler;
-  TrailingEmptyLines: LinterConfigEnabler;
-  TrailingWhitespace: LinterConfigEnabler;
-}
-
 export type RuboCopConfig = {
+  'Layout/SpaceBeforeComma': RuboCopConfigEnabler;
+
   'Style/StringLiterals': RuboCopConfigEnabler & {
     EnforcedStyle: 'double_quotes' | 'single_quotes';
   };

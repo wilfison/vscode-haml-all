@@ -49,7 +49,23 @@ function fixSpaceInsideParens(text: string, config: RuboCopConfig): string {
     .join('\n');
 }
 
+function fixSpaceBeforeComma(text: string, config: RuboCopConfig): string {
+  if (!config['Layout/SpaceBeforeComma'].Enabled) {
+    return text;
+  }
+
+  const regex = /(?<!^\s*)(?<!["'].*)\s,(\s?)|(?<!^\s*)\s,(\s?(?:["']?[\w-]+["']?\s?[:=>]+))/g;
+  const match = text.match(regex);
+
+  if (!match) {
+    return text;
+  }
+
+  return text.replace(regex, ',$1$2');
+}
+
 export default {
   fixStringLiterals,
-  fixSpaceInsideParens
+  fixSpaceInsideParens,
+  fixSpaceBeforeComma
 };

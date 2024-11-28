@@ -4,6 +4,9 @@ import rubocopFixes from '../../formatter/rubocop_cops';
 import { RuboCopConfig } from '../../types';
 
 const DEFAULT_RUBOCOP_CONFIG: RuboCopConfig = {
+  'Layout/SpaceBeforeComma': {
+    Enabled: true,
+  },
   'Style/StringLiterals': {
     Enabled: true,
     EnforcedStyle: 'double_quotes',
@@ -66,6 +69,18 @@ suite('RuboCop Cops', () => {
       const text = '= render(foo: "bar")\n= render( foo: "bar")\n= render(foo: "bar" )\n= render( foo: "bar" )';
       const expected = '= render(foo: "bar")\n= render(foo: "bar")\n= render(foo: "bar")\n= render(foo: "bar")';
       const result = rubocopFixes.fixSpaceInsideParens(text, config);
+
+      assert.strictEqual(result, expected);
+    });
+  });
+
+  suite('fixSpaceBeforeComma', () => {
+    test('should add space before comma', () => {
+      const config = DEFAULT_RUBOCOP_CONFIG;
+
+      const text = 'foo , bar ,baz\\n= foo(bar: 1 , baz: "abc , 123" , "def" => 456)';
+      const expected = 'foo, bar,baz\\n= foo(bar: 1, baz: "abc , 123", "def" => 456)';
+      const result = rubocopFixes.fixSpaceBeforeComma(text, config);
 
       assert.strictEqual(result, expected);
     });
