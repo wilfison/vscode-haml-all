@@ -18,12 +18,11 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
     fixedText = haml.fixLeadingCommentSpace(fixedText, hamlLintConfig);
   }
 
-  console.log('rubocopConfig', rubocopConfig);
-
   if (rubocopConfig) {
     fixedText = rubocop.fixStringLiterals(fixedText, rubocopConfig);
     fixedText = rubocop.fixSpaceInsideParens(fixedText, rubocopConfig);
     fixedText = rubocop.fixSpaceBeforeComma(fixedText, rubocopConfig);
+    fixedText = rubocop.fixSpaceAfterColon(fixedText, rubocopConfig);
   }
 
   return fixedText;

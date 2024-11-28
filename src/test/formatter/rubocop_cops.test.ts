@@ -11,6 +11,9 @@ const DEFAULT_RUBOCOP_CONFIG: RuboCopConfig = {
     Enabled: true,
     EnforcedStyle: 'double_quotes',
   },
+  'Layout/SpaceAfterColon': {
+    Enabled: true,
+  },
   'Layout/SpaceInsideParens': {
     Enabled: true,
     EnforcedStyle: 'space',
@@ -78,9 +81,21 @@ suite('RuboCop Cops', () => {
     test('should add space before comma', () => {
       const config = DEFAULT_RUBOCOP_CONFIG;
 
-      const text = 'foo , bar ,baz\\n= foo(bar: 1 , baz: "abc , 123" , "def" => 456)';
-      const expected = 'foo, bar,baz\\n= foo(bar: 1, baz: "abc , 123", "def" => 456)';
+      const text = 'foo , bar ,baz\n= foo(bar: 1 , baz: "abc , 123" , "def" => 456)';
+      const expected = 'foo, bar,baz\n= foo(bar: 1, baz: "abc , 123", "def" => 456)';
       const result = rubocopFixes.fixSpaceBeforeComma(text, config);
+
+      assert.strictEqual(result, expected);
+    });
+  });
+
+  suite('fixSpaceAfterColon', () => {
+    test('should add space after colon', () => {
+      const config = DEFAULT_RUBOCOP_CONFIG;
+
+      const text = 'foo:bar\n= foo(bar:1, class:"abc:123 cde:456")\n- foo(bar:1,class:"abc:123 cde:456")';
+      const expected = 'foo:bar\n= foo(bar: 1, class: "abc:123 cde:456")\n- foo(bar: 1,class: "abc:123 cde:456")';
+      const result = rubocopFixes.fixSpaceAfterColon(text, config);
 
       assert.strictEqual(result, expected);
     });

@@ -60,6 +60,8 @@ export type RuboCopConfig = {
     EnforcedStyle: 'double_quotes' | 'single_quotes';
   };
 
+  'Layout/SpaceAfterColon': RuboCopConfigEnabler;
+
   'Layout/SpaceInsideParens': RuboCopConfigEnabler & {
     EnforcedStyle: 'space' | 'no_space' | 'compact';
   };

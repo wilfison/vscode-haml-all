@@ -64,8 +64,33 @@ function fixSpaceBeforeComma(text: string, config: RuboCopConfig): string {
   return text.replace(regex, ',$1$2');
 }
 
+function fixSpaceAfterColon(text: string, config: RuboCopConfig): string {
+  if (!config['Layout/SpaceAfterColon'].Enabled) {
+    return text;
+  }
+
+  const regex = /(?<=^\s*[=\-\.#].*)(?:[,\(\{]+\s*)[\w-]+:(?!\s)(.)/g;
+
+  const fixedText = text.split('\n').map(line => {
+    const match = line.match(regex);
+
+    if (!match) {
+      return line;
+    }
+
+    match.forEach(m => {
+      line = line.replace(m, m.replace(':', ': '));
+    });
+
+    return line;
+  });
+
+  return fixedText.join('\n');
+}
+
 export default {
   fixStringLiterals,
+  fixSpaceAfterColon,
+  fixSpaceBeforeComma,
   fixSpaceInsideParens,
-  fixSpaceBeforeComma
 };

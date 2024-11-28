@@ -4,6 +4,7 @@ RUBOCOP_COPS = [
   'Style/StringLiterals',
   'Layout/SpaceInsideParens',
   'Layout/SpaceBeforeComma',
+  'Layout/SpaceAfterColon',
 ].freeze
 
 HAML_LINT_COPS = [
