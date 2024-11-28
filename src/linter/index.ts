@@ -64,7 +64,7 @@ export default class Linter {
       const cops = JSON.parse(stdout);
       this.hamlLintConfig = cops.haml_lint;
       this.rubocopConfig = cops.rubocop;
-      console.log('Haml-lint config loaded');
+      console.log('Lint config loaded');
     });
   }
 
