@@ -1,11 +1,17 @@
 # Change Log
 
-## [0.0.9] - 2024-11-26
+## [1.0.2] - 2024-11-27
+
+- Formatter: Add support to rubocop `Layout/SpaceBeforeComma`
+- Formatter: Add support to rubocop `Layout/SpaceAfterColon`
+- Bugfix: Fix `Style/StringLiterals` with interpolation.
+
+## [1.0.1] - 2024-11-26
 
 - Bugfix: Fix HAML formatter block comments.
 - Update haml grammar from [textmate-grammars-themes](https://github.com/shikijs/textmate-grammars-themes/blob/main/packages/tm-grammars/grammars/haml.json)
 
-## [0.0.9] - 2024-11-24
+## [1.0.0] - 2024-11-24
 
 - Feature: [Add FormattingEditProvider](https://github.com/wilfison/vscode-haml-all/pull/1)
   - Add HAML formatter (Code Beautifier).
