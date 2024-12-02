@@ -113,7 +113,7 @@ function formatPartialVariables(globalVariables: string[], content: string): str
     return acc.replace(new RegExp(variable, 'g'), variable.replace('@', ''));
   }, content);
 
-  return `# locals: (${globalVariablesKeys})\n\n${newContent}`;
+  return `-# locals: (${globalVariablesKeys})\n\n${newContent}`;
 }
 
 function buildRenderText(partialName: string, globalVariables: string[]): string {
