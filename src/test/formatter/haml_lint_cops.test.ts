@@ -10,6 +10,9 @@ const DEFAULT_HAML_LINT_CONFIG: LinterConfig = {
   FinalNewline: {
     enabled: true,
   },
+  HtmlAttributes: {
+    enabled: true,
+  },
   LeadingCommentSpace: {
     enabled: true,
   },
@@ -106,6 +109,18 @@ suite('Haml-Lint Cops', () => {
       const text = '%div';
       const expected = text;
       const result = hamlFixes.fixFinalNewline(text, config);
+
+      assert.strictEqual(result, expected);
+    });
+  });
+
+  suite('HtmlAttributes', () => {
+    test('should convert HTML attributes to HAML Hash attributes', () => {
+      const config = DEFAULT_HAML_LINT_CONFIG;
+
+      const text = '%div(foo="bar" baz="qux#{quux}")';
+      const expected = '%div{foo: "bar", baz: "qux#{quux}"}';
+      const result = hamlFixes.fixHtmlAttributes(text, config);
 
       assert.strictEqual(result, expected);
     });

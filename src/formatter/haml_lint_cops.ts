@@ -75,10 +75,66 @@ function fixLeadingCommentSpace(text: string, config: LinterConfig): string {
     .join('\n');
 }
 
+function fixHtmlAttributes(text: string, config: LinterConfig): string {
+  if (!config.HtmlAttributes.enabled) {
+    return text;
+  }
+
+  const regex = /^\s*(?:[\.#%][\w-]+)+\(.*\)/;
+  const attributesRegex = /\((?<attributes>.*)\)$/;
+  const lines = text.split('\n');
+
+  function parseAttributes(inputString: string) {
+    const result: { [key: string]: string } = {};
+    // Regex to capture key=value parts (allowing quotes and unquoted values)
+    const regex = /(\w[\w-]*)=(?:"([^"]*)"|'([^']*)'|([^"\s]*))/g;
+    let match;
+
+    while ((match = regex.exec(inputString)) !== null) {
+      // Capture the key and value, prioritizing double-quoted, single-quoted, or unquoted values
+      const key = match[1];
+      let value = match[2] || match[3] || match[4];
+
+      result[key] = value;
+    }
+
+    return Object.keys(result)
+      .map(key => {
+        let attrKey = key.includes('-') ? `"${key}"` : key;
+
+        // do not add quotes to values that are a number
+        if (!isNaN(Number(result[key]))) {
+          return `${attrKey}: ${result[key]}`;
+        }
+
+        return `${attrKey}: "${result[key]}"`;
+      })
+      .join(', ');
+  }
+
+  return lines
+    .map(line => {
+      const match = line.match(regex);
+
+      if (!match) {
+        return line;
+      }
+
+      const attributes = match[0].match(attributesRegex)?.groups?.attributes;
+      if (!attributes) {
+        return line;
+      }
+
+      return line.replace(`(${attributes})`, `{${parseAttributes(attributes)}}`);
+    })
+    .join('\n');
+}
+
 export default {
   fixTrailingWhitespace,
   fixTrailingEmptyLines,
   fixFinalNewline,
+  fixHtmlAttributes,
   fixClassBeforeId,
   fixSpaceBeforeScript,
   fixLeadingCommentSpace,

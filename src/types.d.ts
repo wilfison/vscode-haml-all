@@ -40,6 +40,7 @@ type LinterConfigEnabler = {
 export type LinterConfig = {
   ClassesBeforeIds: LinterConfigEnabler;
   FinalNewline: LinterConfigEnabler;
+  HtmlAttributes: LinterConfigEnabler;
   LeadingCommentSpace: LinterConfigEnabler;
   SpaceBeforeScript: LinterConfigEnabler;
   TrailingEmptyLines: LinterConfigEnabler;

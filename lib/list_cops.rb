@@ -10,6 +10,7 @@ RUBOCOP_COPS = [
 HAML_LINT_COPS = [
   'ClassesBeforeIds',
   'FinalNewline',
+  'HtmlAttributes',
   'LeadingCommentSpace',
   'SpaceBeforeScript',
   'TrailingEmptyLines',

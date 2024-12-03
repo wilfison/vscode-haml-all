@@ -16,6 +16,7 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
     fixedText = haml.fixClassBeforeId(fixedText, hamlLintConfig);
     fixedText = haml.fixSpaceBeforeScript(fixedText, hamlLintConfig);
     fixedText = haml.fixLeadingCommentSpace(fixedText, hamlLintConfig);
+    fixedText = haml.fixHtmlAttributes(fixedText, hamlLintConfig);
   }
 
   if (rubocopConfig) {
