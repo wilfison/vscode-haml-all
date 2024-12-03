@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.0.3] - 2024-12-02
+
+- Bugfix: Fix locals comments in `Split to Partial` command.
+- Formatter: Add support to haml-lint `HtmlAttributes`
+
 ## [1.0.2] - 2024-11-27
 
 - Formatter: Add support to rubocop `Layout/SpaceBeforeComma`
