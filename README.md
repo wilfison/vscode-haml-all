@@ -10,11 +10,11 @@ A comprehensive VS Code extension that equips you with essential tools for seaml
 
 The following features are supported to make your HAML development effortless:
 
-| Status | Feature                   | Requirement                                          |
+| Status | Feature                   | Requirement/Infos                                    |
 | ------ | ------------------------- | ---------------------------------------------------- |
 | ✅      | Syntax Highlighting       |                                                      |
-| ✅      | Linter                    | [`haml_lint`](https://github.com/sds/haml-lint) gem  |
-| ✅      | HAML Formatter            | `haml_lint`, `rubocop`                               |
+| ✅      | Linter                    | Rquire `haml_lint` gem                               |
+| ✅      | HAML Formatter            | Rquires `haml_lint` e `rubocop` gems                 |
 | ✅      | Partial: Go to Definition |                                                      |
 | ✅      | Partial: Autocompletion   |                                                      |
 | ✅      | Routes: Autocompletion    | Rails Project                                        |
@@ -23,10 +23,7 @@ The following features are supported to make your HAML development effortless:
 | ✅      | Convert HTML/ERB to HAML  | [`html2haml`](https://github.com/haml/html2haml) gem |
 | ✅      | Snippets - HAML           |                                                      |
 | ✅      | Snippets - Rails          |                                                      |
-
-### Upcoming Features
-
-- [ ] Pure HAML Template Preview
+| ✅      | Live Preview              | Use `HAML: Open Live Preview` command                |
 
 ---
 

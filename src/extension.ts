@@ -11,6 +11,7 @@ import RoutesDefinitionProvider from './RoutesDefinitionProvider';
 import { ViewCodeActionProvider, createPartialFromSelection } from './ViewCodeActionProvider';
 import { html2Haml } from './html2Haml';
 import FormattingEditProvider from './FormattingEditProvider';
+import LivePreviewPanel from './LivePreviewPanel';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('haml-all active!');
@@ -82,6 +83,26 @@ export function activate(context: vscode.ExtensionContext) {
       html2Haml
     )
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('hamlAll.livePreview', () => {
+      LivePreviewPanel.createOrShow(context.extensionUri);
+    })
+  );
+
+  let timeoutUpdate: NodeJS.Timeout | undefined;
+
+  vscode.workspace.onDidChangeTextDocument(event => {
+    if (event.document.languageId === 'haml' && LivePreviewPanel.currentPanel) {
+      if (timeoutUpdate) {
+        clearTimeout(timeoutUpdate);
+      }
+      timeoutUpdate = setTimeout(() => {
+        const content = event.document.getText();
+        LivePreviewPanel.currentPanel?.update(content);
+      }, 500);
+    }
+  });
 
   if (!hamlLintPresent()) {
     vscode.window.showErrorMessage('haml-lint not found. Please install haml-lint gem to use this extension.');

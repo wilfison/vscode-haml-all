@@ -85,6 +85,11 @@
         "command": "hamlAll.html2Haml",
         "title": "HAML: Convert HTML to HAML",
         "enablement": "editorLangId =~ /html|erb|haml/"
+      },
+      {
+        "command": "hamlAll.livePreview",
+        "title": "HAML: Open Live Preview",
+        "enablement": "editorLangId == haml"
       }
     ],
     "languages": [
