@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.4] - 2024-12-05
+
+- Feature: Add Live Preview for HAML plain files.
+
 ## [1.0.3] - 2024-12-02
 
 - Bugfix: Fix locals comments in `Split to Partial` command.
