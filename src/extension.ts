@@ -90,20 +90,6 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  let timeoutUpdate: NodeJS.Timeout | undefined;
-
-  vscode.workspace.onDidChangeTextDocument(event => {
-    if (event.document.languageId === 'haml' && LivePreviewPanel.currentPanel) {
-      if (timeoutUpdate) {
-        clearTimeout(timeoutUpdate);
-      }
-      timeoutUpdate = setTimeout(() => {
-        const content = event.document.getText();
-        LivePreviewPanel.currentPanel?.update(content);
-      }, 500);
-    }
-  });
-
   if (!hamlLintPresent()) {
     vscode.window.showErrorMessage('haml-lint not found. Please install haml-lint gem to use this extension.');
     return;

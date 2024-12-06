@@ -17,6 +17,8 @@ export default class LivePreviewPanel {
     this.update(hamlContent);
 
     this._panel.onDidDispose(() => this.dispose(), null);
+
+    this._watchFile();
   }
 
   async update(hamlContent: string | undefined) {
@@ -60,6 +62,22 @@ export default class LivePreviewPanel {
     catch (error) {
       return String(error);
     }
+  }
+
+  private _watchFile() {
+    let timeoutUpdate: NodeJS.Timeout | undefined = undefined;
+
+    vscode.workspace.onDidChangeTextDocument(event => {
+      if (event.document.languageId === 'haml' && LivePreviewPanel.currentPanel) {
+        if (timeoutUpdate) {
+          clearTimeout(timeoutUpdate);
+        }
+        timeoutUpdate = setTimeout(() => {
+          const content = event.document.getText();
+          LivePreviewPanel.currentPanel?.update(content);
+        }, 500);
+      }
+    });
   }
 
   public dispose() {
