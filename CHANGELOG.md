@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.0.5] - 2024-12-07
+
+- Fix: update regex for space handling after colon and add test for space inside parentheses.
+- Feat: Implement file watching for live preview updates in HAML files
+
 ## [1.0.4] - 2024-12-05
 
 - Feature: Add Live Preview for HAML plain files.
