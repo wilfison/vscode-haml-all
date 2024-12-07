@@ -69,7 +69,7 @@ function fixSpaceAfterColon(text: string, config: RuboCopConfig): string {
     return text;
   }
 
-  const regex = /(?<=^\s*[=\-\.#].*)(?:[,\(\{]+\s*)[\w-]+:(?!\s)(.)/g;
+  const regex = /(?<=^\s*[=\-\.][^#].*)(?:[,\(\{]+\s*)[\w-]+:(?!\s)(.)/g;
 
   const fixedText = text.split('\n').map(line => {
     const match = line.match(regex);
