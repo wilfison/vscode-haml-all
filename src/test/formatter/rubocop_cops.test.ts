@@ -18,6 +18,10 @@ const DEFAULT_RUBOCOP_CONFIG: RuboCopConfig = {
     Enabled: true,
     EnforcedStyle: 'space',
   },
+  'Style/MethodCallWithArgsParentheses': {
+    Enabled: true,
+    EnforcedStyle: 'require_parentheses',
+  },
 };
 
 suite('RuboCop Cops', () => {
@@ -103,6 +107,31 @@ suite('RuboCop Cops', () => {
       const expected2 = '-# locals: (q:)';
       const result2 = rubocopFixes.fixSpaceInsideParens(text2, config);
       assert.strictEqual(result2, expected2);
+    });
+  });
+
+  suite('fixMethodCallWithArgsParentheses', () => {
+    test('should add parentheses to method call arguments', () => {
+      const config = DEFAULT_RUBOCOP_CONFIG;
+
+      const text = [
+        '= foo bar: 1, baz: "abc"',
+        '= foo bar: 1, baz: "abc" || \'ABC\'',
+        '- f.bar 1, "abc"',
+        '- foo bar: 1, baz: "abc" do |x|',
+        '- if foo? bar'
+      ].join('\n');
+
+      const expected = [
+        '= foo(bar: 1, baz: "abc")',
+        '= foo bar: 1, baz: "abc" || \'ABC\'',
+        '- f.bar(1, "abc")',
+        '- foo(bar: 1, baz: "abc") do |x|',
+        '- if foo? bar'
+      ].join('\n');
+
+      const result = rubocopFixes.fixMethodCallWithArgsParentheses(text, config);
+      assert.strictEqual(result, expected);
     });
   });
 });

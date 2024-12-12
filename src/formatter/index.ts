@@ -24,6 +24,7 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
     fixedText = rubocop.fixSpaceInsideParens(fixedText, rubocopConfig);
     fixedText = rubocop.fixSpaceBeforeComma(fixedText, rubocopConfig);
     fixedText = rubocop.fixSpaceAfterColon(fixedText, rubocopConfig);
+    fixedText = rubocop.fixMethodCallWithArgsParentheses(fixedText, rubocopConfig);
   }
 
   return fixedText;

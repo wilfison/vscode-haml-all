@@ -1,10 +1,11 @@
 require 'json'
 
 RUBOCOP_COPS = [
-  'Style/StringLiterals',
   'Layout/SpaceInsideParens',
   'Layout/SpaceBeforeComma',
   'Layout/SpaceAfterColon',
+  'Style/MethodCallWithArgsParentheses',
+  'Style/StringLiterals',
 ].freeze
 
 HAML_LINT_COPS = [

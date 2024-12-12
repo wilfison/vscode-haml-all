@@ -66,4 +66,8 @@ export type RuboCopConfig = {
   'Layout/SpaceInsideParens': RuboCopConfigEnabler & {
     EnforcedStyle: 'space' | 'no_space' | 'compact';
   };
+
+  'Style/MethodCallWithArgsParentheses': RuboCopConfigEnabler & {
+    EnforcedStyle: 'require_parentheses' | 'require_no_parentheses';
+  };
 };

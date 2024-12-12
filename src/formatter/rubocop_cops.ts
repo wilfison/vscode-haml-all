@@ -1,5 +1,28 @@
 import { RuboCopConfig } from '../types';
 
+const RESERVED_WORDS = [
+  'if',
+  'unless',
+  'while',
+  'until',
+  'rescue',
+  'else',
+  'elsif',
+  'when',
+  'ensure',
+  'case',
+  'for',
+  'return',
+  'break',
+  'next',
+  'raise',
+  'fail',
+  'alias',
+  'undef',
+  'self',
+  'nil'
+];
+
 function fixStringLiterals(text: string, config: RuboCopConfig): string {
   if (!config['Style/StringLiterals'].Enabled) {
     return text;
@@ -88,9 +111,51 @@ function fixSpaceAfterColon(text: string, config: RuboCopConfig): string {
   return fixedText.join('\n');
 }
 
+// Only add parentheses around method calls with arguments when there are no parentheses
+function fixMethodCallWithArgsParentheses(text: string, config: RuboCopConfig): string {
+  const copConfig = config['Style/MethodCallWithArgsParentheses'];
+
+  if (!copConfig.Enabled || copConfig.EnforcedStyle !== 'require_parentheses') {
+    return text;
+  }
+
+  const regexLineWithScript = new RegExp(`^\\s*(?:[\\.%][\\w-]+)?[=-] +(?!${RESERVED_WORDS.join('|')})[\\w\\.]+`);
+
+  const lines = text.split('\n');
+  const fixedText = lines.map((line, index) => {
+    const match = line.match(regexLineWithScript);
+
+    if (!match || line.includes('||') || line.slice(-1) === ',') {
+      return line;
+    }
+
+    let scriptAttributes = line.split(match[0])[1];
+
+    if (!scriptAttributes.startsWith(' ')) {
+      return line;
+    }
+
+    if (scriptAttributes.includes(' do')) {
+      const matchBlock = scriptAttributes.match(/(.*) do \|[\w, ]+\|$|(.*) do$/);
+      scriptAttributes = matchBlock ? (matchBlock[1] || matchBlock[2]) : scriptAttributes;
+    }
+
+    if (String(scriptAttributes).trim().length === 0) {
+      return line;
+    }
+
+    const attributesFormated = `(${scriptAttributes.trim()})`;
+
+    return line.replace(scriptAttributes, attributesFormated);
+  });
+
+  return fixedText.join('\n');
+}
+
 export default {
   fixStringLiterals,
   fixSpaceAfterColon,
   fixSpaceBeforeComma,
   fixSpaceInsideParens,
+  fixMethodCallWithArgsParentheses
 };
