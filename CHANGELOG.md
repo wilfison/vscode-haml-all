@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.6] - 2024-12-12
+
+- Feat: Add support to 'Style/MethodCallWithArgsParentheses' cop. Only add parentheses around method calls with arguments when there are no parentheses.
+
 ## [1.0.5] - 2024-12-07
 
 - Fix: update regex for space handling after colon and add test for space inside parentheses.
