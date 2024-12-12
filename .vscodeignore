@@ -14,3 +14,4 @@ vsc-extension-quickstart.md
 **/.vscode-test.*
 node_modules
 .ruby-lsp
+Gemfile*
