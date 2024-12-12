@@ -8,7 +8,7 @@ function fixStringLiterals(text: string, config: RuboCopConfig): string {
   const enforcedStyle = config['Style/StringLiterals'].EnforcedStyle;
   const wrongQuote = enforcedStyle === 'double_quotes' ? '\'' : '"';
   const rightQuote = enforcedStyle === 'double_quotes' ? '"' : '\'';
-  const regex = new RegExp(`${wrongQuote}([^'",\\n]*)${wrongQuote}`, 'g');
+  const regex = new RegExp(`(?<!#{\\w+\\()${wrongQuote}([^'",\\n#]*)${wrongQuote}`, 'g');
 
   return text.split('\n').map(line => {
     return line.replace(regex, match => {
