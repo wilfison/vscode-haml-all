@@ -29,13 +29,14 @@ The following features are supported to make your HAML development effortless:
 
 ## Linting
 
-This extension utilizes the `haml-lint` gem for linting HAML files.  
-To configure, create a `.haml-lint.yml` file in your project root. Check the [default configuration](https://github.com/sds/haml-lint/blob/main/config/default.yml).
+This extension utilizes the `haml-lint` and `rubocop` gems for linting HAML files.  
+To configure, create a `.haml-lint.yml` and `.rubocop` files in your project root. Check the [default configuration](https://github.com/sds/haml-lint/blob/main/config/default.yml).
 
 **To install the gem, add this to your `Gemfile`:**
 
 ```ruby
 group :development, :test do
+  gem 'rubocop'
   gem 'haml-lint', require: false
 end
 ```
