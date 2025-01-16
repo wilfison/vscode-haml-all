@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.7] - 2025-01-16
+
+- Bugfix: Altocorrenction to rubocop Layout/SpaceAfterColon when call class constants.
+
 ## [1.0.6] - 2024-12-12
 
 - Feat: Add support to 'Style/MethodCallWithArgsParentheses' cop. Only add parentheses around method calls with arguments when there are no parentheses.
