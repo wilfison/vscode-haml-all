@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.8] - 2025-01-17
+
+- Feat: Add rubocop support to haml_lint configuration enabling rubocop cops
+
 ## [1.0.7] - 2025-01-16
 
 - Bugfix: Altocorrenction to rubocop Layout/SpaceAfterColon when call class constants.
