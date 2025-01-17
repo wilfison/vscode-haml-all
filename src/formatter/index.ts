@@ -1,7 +1,7 @@
 import Linter from '../linter';
 
-import haml from './haml_lint_cops';
-import rubocop from './rubocop_cops';
+import { linter_cops } from './haml_lint_cops';
+import { rubocops } from './rubocop_cops';
 
 export default function autoCorrectAll(text: string, linter: Linter): string {
   const hamlLintConfig = linter.hamlLintConfig;
@@ -10,21 +10,26 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
   let fixedText = text;
 
   if (hamlLintConfig) {
-    fixedText = haml.fixTrailingWhitespace(fixedText, hamlLintConfig);
-    fixedText = haml.fixTrailingEmptyLines(fixedText, hamlLintConfig);
-    fixedText = haml.fixFinalNewline(fixedText, hamlLintConfig);
-    fixedText = haml.fixClassBeforeId(fixedText, hamlLintConfig);
-    fixedText = haml.fixSpaceBeforeScript(fixedText, hamlLintConfig);
-    fixedText = haml.fixLeadingCommentSpace(fixedText, hamlLintConfig);
-    fixedText = haml.fixHtmlAttributes(fixedText, hamlLintConfig);
+    linter_cops.forEach(([copName, fixer]) => {
+      if (!hamlLintConfig[copName].enabled) {
+        return;
+      }
+
+      fixedText = fixer(fixedText, hamlLintConfig);
+    });
   }
 
-  if (rubocopConfig) {
-    fixedText = rubocop.fixStringLiterals(fixedText, rubocopConfig);
-    fixedText = rubocop.fixSpaceInsideParens(fixedText, rubocopConfig);
-    fixedText = rubocop.fixSpaceBeforeComma(fixedText, rubocopConfig);
-    fixedText = rubocop.fixSpaceAfterColon(fixedText, rubocopConfig);
-    fixedText = rubocop.fixMethodCallWithArgsParentheses(fixedText, rubocopConfig);
+  // Only run RuboCop fixes if RuboCop is enabled in the Haml-Lint config
+  if (hamlLintConfig?.RuboCop.enabled && rubocopConfig) {
+    const ignoredCops = hamlLintConfig.RuboCop.ignored_cops;
+
+    for (const [copName, fixer] of rubocops) {
+      if (ignoredCops.includes(copName)) {
+        continue;
+      }
+
+      fixedText = fixer(fixedText, rubocopConfig);
+    }
   }
 
   return fixedText;

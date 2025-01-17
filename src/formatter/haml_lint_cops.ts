@@ -130,6 +130,16 @@ function fixHtmlAttributes(text: string, config: LinterConfig): string {
     .join('\n');
 }
 
+export const linter_cops: [keyof LinterConfig, (text: string, config: LinterConfig) => string][] = [
+  ['TrailingWhitespace', fixTrailingWhitespace],
+  ['TrailingEmptyLines', fixTrailingEmptyLines],
+  ['FinalNewline', fixFinalNewline],
+  ['ClassesBeforeIds', fixClassBeforeId],
+  ['SpaceBeforeScript', fixSpaceBeforeScript],
+  ['LeadingCommentSpace', fixLeadingCommentSpace],
+  ['HtmlAttributes', fixHtmlAttributes],
+];
+
 export default {
   fixTrailingWhitespace,
   fixTrailingEmptyLines,

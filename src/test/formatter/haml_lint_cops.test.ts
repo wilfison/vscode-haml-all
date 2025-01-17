@@ -4,6 +4,10 @@ import hamlFixes from '../../formatter/haml_lint_cops';
 import { LinterConfig } from '../../types';
 
 const DEFAULT_HAML_LINT_CONFIG: LinterConfig = {
+  RuboCop: {
+    enabled: false,
+    ignored_cops: [],
+  },
   ClassesBeforeIds: {
     enabled: true,
   },

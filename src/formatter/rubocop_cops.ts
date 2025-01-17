@@ -154,6 +154,14 @@ function fixMethodCallWithArgsParentheses(text: string, config: RuboCopConfig): 
   return fixedText.join('\n');
 }
 
+export const rubocops: [string, (text: string, config: RuboCopConfig) => string][] = [
+  ['Style/StringLiterals', fixStringLiterals],
+  ['Layout/SpaceInsideParens', fixSpaceInsideParens],
+  ['Layout/SpaceBeforeComma', fixSpaceBeforeComma],
+  ['Layout/SpaceAfterColon', fixSpaceAfterColon],
+  ['Style/MethodCallWithArgsParentheses', fixMethodCallWithArgsParentheses]
+];
+
 export default {
   fixStringLiterals,
   fixSpaceAfterColon,
