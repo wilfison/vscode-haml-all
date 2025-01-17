@@ -104,7 +104,7 @@ suite('RuboCop Cops', () => {
       assert.strictEqual(result, expected);
 
       const text2 = '-# locals: (q:)';
-      const expected2 = '-# locals: (q:)';
+      const expected2 = '-# locals: ( q: )';
       const result2 = rubocopFixes.fixSpaceInsideParens(text2, config);
       assert.strictEqual(result2, expected2);
     });
