@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+
+require 'json'
+
+def get_next_version(version, type)
+  major, minor, patch = version.split('.').map(&:to_i)
+  case type
+  when 'major'
+    major += 1
+    minor = 0
+    patch = 0
+  when 'minor'
+    minor += 1
+    patch = 0
+  when 'patch'
+    patch += 1
+  end
+  "#{major}.#{minor}.#{patch}"
+end
+
+def update_version(type)
+  package = JSON.parse(File.read('package.json'))
+  old_version = package['version']
+
+  new_version = get_next_version(old_version, type)
+  puts "Bumping version from #{old_version} to #{new_version}"
+
+  package['version'] = new_version
+  File.write('package.json', JSON.pretty_generate(package))
+
+  new_version
+end
+
+def commits
+  `git log --since="yesterday" --pretty=format:"%s"`.strip.split("\n")
+end
+
+def append_commits_to_changelog(version)
+  changelog = File.read('CHANGELOG.md')
+  changelog = changelog.split("\n")
+
+  new_lines = [
+    "\n## [#{version}] - #{Time.now.strftime('%Y-%m-%d')}\n",
+    *commits.map { |commit| "- #{commit.capitalize}" },
+  ]
+
+  puts "Appending to CHANGELOG.md:\n#{new_lines.join("\n")}"
+  changelog.insert(1, *new_lines)
+
+  File.write('CHANGELOG.md', changelog.join("\n"))
+end
+
+def package_extenssion
+  puts "Packaging extension"
+  `npm run package`
+end
+
+def commit_changes(version)
+  `git add .`
+  `git commit -m "Bump version to #{version}"`
+  `git tag -a #{version} -m "Release version #{version}"`
+end
+
+def main
+  type = ARGV[0] || 'patch'
+
+  version = update_version(type)
+  append_commits_to_changelog(version)
+  package_extenssion
+  # commit_changes(version)
+rescue StandardError => e
+  puts e.message
+  exit 1
+end
+
+main
