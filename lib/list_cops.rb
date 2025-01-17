@@ -9,6 +9,7 @@ RUBOCOP_COPS = [
 ].freeze
 
 HAML_LINT_COPS = [
+  'RuboCop',
   'ClassesBeforeIds',
   'FinalNewline',
   'HtmlAttributes',
