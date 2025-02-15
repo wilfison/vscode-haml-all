@@ -136,7 +136,10 @@ export default class Linter {
     const args = '--parallel --reporter json';
 
     let linterExecutablePath = config.linterExecutablePath || SOURCE;
-    linterExecutablePath = config.useBundler ? 'bundle exec ' : linterExecutablePath;
+
+    if (config.useBundler) {
+      linterExecutablePath = `bundle exec ${SOURCE}`;
+    }
 
     return `${linterExecutablePath} ${args} ${document.uri.fsPath}`;
   }
