@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.9] - 2025-01-15
+
+- Bugfix: Fix command execution when `useBundler` is `true`.
+
 ## [1.0.8] - 2025-01-17
 
 - Feat: Add rubocop support to haml_lint configuration enabling rubocop cops
