@@ -1,6 +1,12 @@
 # Change Log
 
-## [1.0.9] - 2025-01-15
+## [1.1.0] - 2025-02-18
+
+- Feat: add support for `UnnecessaryStringOutput` linting rule.
+- Feat: improve space handling for Ruby script indicators in Haml formatter.
+- Fix: load config by preload bundle config in rails projects.
+
+## [1.0.9] - 2025-02-15
 
 - Bugfix: Fix command execution when `useBundler` is `true`.
 
@@ -81,6 +87,7 @@
 ## [0.0.2] - 2024-11-09
 
 ### Split to Partial
+
 - `Strict template locals`: change global variables to locals when creating a partial from selection.
 
 ## [0.0.1] - 2024-11-09
