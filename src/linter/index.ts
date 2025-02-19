@@ -8,7 +8,8 @@ import {
   TextDocument,
   workspace,
   Range,
-  Position
+  Position,
+  OutputChannel
 } from 'vscode';
 
 import { LinterConfig, LinterOutput, RuboCopConfig } from '../types';
@@ -19,10 +20,13 @@ export default class Linter {
   public hamlLintConfig: LinterConfig | null = null;
   public rubocopConfig: RuboCopConfig | null = null;
 
+  private outputChanel: OutputChannel;
   private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
   private processes: WeakMap<TextDocument, any> = new WeakMap();
 
-  constructor() {
+  constructor(outputChanel: OutputChannel) {
+    this.outputChanel = outputChanel;
+
     this.loadConfigs();
   }
 
@@ -37,9 +41,12 @@ export default class Linter {
   }
 
   public clear(document: TextDocument) {
-    if (document.uri.scheme === 'file') {
-      this.collection.delete(document.uri);
+    if (document.uri.scheme !== 'file') {
+      return;
     }
+
+    this.outputChanel.appendLine(`Clearing diagnostics for ${document.uri.scheme}:${document.uri.path}`);
+    this.collection.delete(document.uri);
   }
 
   public clearAll() {
@@ -48,14 +55,17 @@ export default class Linter {
 
   public loadConfigs() {
     const libPath = path.join(__dirname, '..', '..', 'lib');
-    const command = `ruby ${libPath}/list_cops.rb`;
     const workspaceFolder = workspace.workspaceFolders?.[0];
 
     if (!workspaceFolder) {
       return;
     }
 
-    exec(command, { cwd: workspaceFolder.uri.fsPath }, (error, stdout, stderr) => {
+    const workingDirectory = workspaceFolder.uri.fsPath;
+    const command = `ruby ${libPath}/list_cops.rb ${workingDirectory}`;
+    console.log(`Running: ${command}`);
+
+    exec(command, {}, (error, stdout, stderr) => {
       if (error) {
         console.error(stderr);
         return;
@@ -64,12 +74,15 @@ export default class Linter {
       const cops = JSON.parse(stdout);
       this.hamlLintConfig = cops.haml_lint;
       this.rubocopConfig = cops.rubocop;
-      console.log('Lint config loaded');
+
+      this.outputChanel.appendLine('Loaded Haml-Lint config:');
+      this.outputChanel.appendLine(JSON.stringify(this.hamlLintConfig, null, 2));
+      this.outputChanel.appendLine('Loaded RuboCop config:');
+      this.outputChanel.appendLine(JSON.stringify(this.rubocopConfig, null, 2));
     });
   }
 
   private async lint(document: TextDocument) {
-    const text = document.getText();
     const oldProcess = this.processes.get(document);
     if (oldProcess) {
       oldProcess.kill();
@@ -81,7 +94,9 @@ export default class Linter {
     }
 
     const command = this.buildCommand(document);
+    const text = document.getText();
 
+    this.outputChanel.appendLine(`Running: ${command}`);
     const process = exec(command, { cwd: workspaceFolder.uri.fsPath }, (error, stdout, stderr) => {
       this.processes.delete(document);
 

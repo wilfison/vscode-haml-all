@@ -5,6 +5,7 @@ import {
   TextDocument,
   ExtensionContext,
   Uri,
+  OutputChannel,
 } from 'vscode';
 
 import Linter from './linter';
@@ -19,15 +20,17 @@ class EventSubscriber {
   public linter: Linter;
 
   private context: ExtensionContext;
+  private outputChanel: OutputChannel;
   private rootPath: Uri;
 
-  constructor(context: ExtensionContext) {
+  constructor(context: ExtensionContext, outputChanel: OutputChannel) {
     this.context = context;
+    this.outputChanel = outputChanel;
     this.rootPath = workspace.workspaceFolders![0].uri;
 
     this.isARailsProject = isARailsProject();
 
-    this.linter = new Linter();
+    this.linter = new Linter(outputChanel);
     this.routes = new Routes(this.rootPath.fsPath);
   }
 

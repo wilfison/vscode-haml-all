@@ -16,8 +16,9 @@ import LivePreviewPanel from './LivePreviewPanel';
 export function activate(context: vscode.ExtensionContext) {
   console.log('haml-all active!');
 
+  const outputChanel = vscode.window.createOutputChannel('Haml All');
   const config = vscode.workspace.getConfiguration('hamlAll');
-  const eventSubscriber = new EventSubscriber(context);
+  const eventSubscriber = new EventSubscriber(context, outputChanel);
 
   const HAML_SELECTOR = { language: 'haml', scheme: 'file' };
   const RUBY_SELECTOR = { language: 'ruby', scheme: 'file' };
@@ -43,7 +44,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.languages.registerDocumentFormattingEditProvider(
       HAML_SELECTOR,
-      new FormattingEditProvider(eventSubscriber.linter)
+      new FormattingEditProvider(eventSubscriber.linter, outputChanel)
     )
   );
 

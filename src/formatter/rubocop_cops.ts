@@ -38,7 +38,8 @@ function fixStringLiterals(text: string, config: RuboCopConfig): string {
       if (match.includes('#{')) {
         return match;
       }
-      return match.replace(new RegExp(wrongQuote, 'g'), rightQuote);
+
+      return match.replaceAll(wrongQuote, rightQuote);
     });
   }).join('\n');
 }

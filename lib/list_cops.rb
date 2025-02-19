@@ -26,8 +26,8 @@ def rubocop_cops
   config = config_store.for('.').to_h
 
   config.select { |cop, _| RUBOCOP_COPS.include?(cop) }
-rescue StandardError
-  {}
+rescue StandardError => e
+  { 'error' => e.message }
 end
 
 def haml_lint_cops
@@ -37,8 +37,8 @@ def haml_lint_cops
   config = config.hash['linters']
 
   config.select { |cop, _| HAML_LINT_COPS.include?(cop) }
-rescue StandardError
-  {}
+rescue StandardError => e
+  { 'error' => e.message }
 end
 
 def list_cops
@@ -46,6 +46,14 @@ def list_cops
     rubocop: rubocop_cops,
     haml_lint: haml_lint_cops,
   }
+end
+
+# get working directory from the first parameter
+working_dir = ARGV[0] || Dir.pwd
+bundle_script = File.join(working_dir, 'bin/bundle')
+
+if File.exist?(bundle_script)
+  load bundle_script
 end
 
 puts list_cops.to_json
