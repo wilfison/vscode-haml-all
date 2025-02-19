@@ -13,6 +13,7 @@ import {
 } from 'vscode';
 
 import { LinterConfig, LinterOutput, RuboCopConfig } from '../types';
+import { parseLintOffence } from './parser';
 
 export const SOURCE = 'haml-lint';
 
@@ -126,23 +127,7 @@ export default class Linter {
     }
 
     return json.files[0].offenses.map(offense => {
-      const line = Math.max(offense.location.line - 1, 0);
-      const lineText = document.lineAt(line);
-      const lineTextRange = lineText.range;
-
-      const range = new Range(
-        new Position(lineTextRange.start.line, lineText.firstNonWhitespaceCharacterIndex),
-        lineTextRange.end
-      );
-
-      const severity = offense.severity === 'warning' ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error;
-      const message = offense.linter_name === 'RuboCop' ? offense.message : `${offense.linter_name}: ${offense.message}`;
-      const diagnostic = new Diagnostic(range, message, severity);
-
-      diagnostic.code = offense.linter_name;
-      diagnostic.source = SOURCE;
-
-      return diagnostic;
+      return parseLintOffence(document, offense);
     });
   }
 
