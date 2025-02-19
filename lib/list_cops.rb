@@ -16,7 +16,8 @@ HAML_LINT_COPS = [
   'LeadingCommentSpace',
   'SpaceBeforeScript',
   'TrailingEmptyLines',
-  'TrailingWhitespace'
+  'TrailingWhitespace',
+  'UnnecessaryStringOutput'
 ].freeze
 
 def rubocop_cops

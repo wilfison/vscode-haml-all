@@ -50,6 +50,7 @@ export type LinterConfig = {
   SpaceBeforeScript: LinterConfigEnabler;
   TrailingEmptyLines: LinterConfigEnabler;
   TrailingWhitespace: LinterConfigEnabler;
+  UnnecessaryStringOutput: LinterConfigEnabler;
 }
 
 type RuboCopConfigEnabler = {

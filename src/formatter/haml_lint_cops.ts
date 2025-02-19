@@ -130,6 +130,19 @@ function fixHtmlAttributes(text: string, config: LinterConfig): string {
     .join('\n');
 }
 
+function fixUnnecessaryStringOutput(text: string, config: LinterConfig): string {
+  if (!config.UnnecessaryStringOutput.enabled) {
+    return text;
+  }
+
+  const regex = /=\s*["']([\w\s\d#\{\}]*)["']$/g;
+  const lines = text.split('\n');
+
+  return lines
+    .map(line => line.replace(regex, '$1'))
+    .join('\n');
+}
+
 export const linter_cops: [keyof LinterConfig, (text: string, config: LinterConfig) => string][] = [
   ['TrailingWhitespace', fixTrailingWhitespace],
   ['TrailingEmptyLines', fixTrailingEmptyLines],
@@ -138,6 +151,7 @@ export const linter_cops: [keyof LinterConfig, (text: string, config: LinterConf
   ['SpaceBeforeScript', fixSpaceBeforeScript],
   ['LeadingCommentSpace', fixLeadingCommentSpace],
   ['HtmlAttributes', fixHtmlAttributes],
+  ['UnnecessaryStringOutput', fixUnnecessaryStringOutput],
 ];
 
 export default {
@@ -148,4 +162,5 @@ export default {
   fixClassBeforeId,
   fixSpaceBeforeScript,
   fixLeadingCommentSpace,
+  fixUnnecessaryStringOutput,
 };

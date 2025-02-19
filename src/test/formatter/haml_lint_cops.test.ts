@@ -29,6 +29,9 @@ const DEFAULT_HAML_LINT_CONFIG: LinterConfig = {
   TrailingWhitespace: {
     enabled: true,
   },
+  UnnecessaryStringOutput: {
+    enabled: true,
+  },
 };
 
 suite('Haml-Lint Cops', () => {
@@ -211,4 +214,30 @@ suite('Haml-Lint Cops', () => {
     });
   });
 
+  suite('fixUnnecessaryStringOutput', () => {
+    test('should remove unnecessary string output indicators', () => {
+      const config = DEFAULT_HAML_LINT_CONFIG;
+
+      const text = '= "foo"';
+      const expected = 'foo';
+      const result = hamlFixes.fixUnnecessaryStringOutput(text, config);
+
+      assert.strictEqual(result, expected);
+    });
+
+    test('should not remove unnecessary string output indicators when disabled', () => {
+      const config = {
+        ...DEFAULT_HAML_LINT_CONFIG,
+        UnnecessaryStringOutput: {
+          enabled: false,
+        },
+      } as LinterConfig;
+
+      const text = '= "foo"';
+      const expected = text;
+      const result = hamlFixes.fixUnnecessaryStringOutput(text, config);
+
+      assert.strictEqual(result, expected);
+    });
+  });
 });
