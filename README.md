@@ -12,18 +12,18 @@ The following features are supported to make your HAML development effortless:
 
 | Status | Feature                   | Requirement/Infos                                    |
 | ------ | ------------------------- | ---------------------------------------------------- |
-| ✅      | Syntax Highlighting       |                                                      |
-| ✅      | Linter                    | Rquire `haml_lint` gem                               |
-| ✅      | HAML Formatter            | Rquires `haml_lint` e `rubocop` gems                 |
-| ✅      | Partial: Go to Definition |                                                      |
-| ✅      | Partial: Autocompletion   |                                                      |
-| ✅      | Routes: Autocompletion    | Rails Project                                        |
-| ✅      | Routes: Go to Definition  | Rails Project                                        |
-| ✅      | Split to Partial          |                                                      |
-| ✅      | Convert HTML/ERB to HAML  | [`html2haml`](https://github.com/haml/html2haml) gem |
-| ✅      | Snippets - HAML           |                                                      |
-| ✅      | Snippets - Rails          |                                                      |
-| ✅      | Live Preview              | Use `HAML: Open Live Preview` command                |
+| ✅     | Syntax Highlighting       |                                                      |
+| ✅     | Linter                    | Rquire `haml_lint` gem                               |
+| ✅     | HAML Formatter            | Rquires `haml_lint` e `rubocop` gems                 |
+| ✅     | Partial: Go to Definition |                                                      |
+| ✅     | Partial: Autocompletion   |                                                      |
+| ✅     | Routes: Autocompletion    | Rails Project                                        |
+| ✅     | Routes: Go to Definition  | Rails Project                                        |
+| ✅     | Split to Partial          |                                                      |
+| ✅     | Convert HTML/ERB to HAML  | [`html2haml`](https://github.com/haml/html2haml) gem |
+| ✅     | Snippets - HAML           |                                                      |
+| ✅     | Snippets - Rails          |                                                      |
+| ✅     | Live Preview              | Use `HAML: Open Live Preview` command                |
 
 ---
 
@@ -95,10 +95,7 @@ You can customize this extension by creating a `.vscode/settings.json` file in y
   "hamlAll.useBundler": false,
 
   // Specify the path to the haml-lint executable.
-  "hamlAll.linterExecutablePath": "haml-lint",
-
-  // Enable HAML formatting on save.
-  "hamlAll.formatOnSave": true
+  "hamlAll.linterExecutablePath": "haml-lint"
 }
 ```
 
