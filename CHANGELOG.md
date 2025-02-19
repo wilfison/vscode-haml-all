@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.1] - 2025-02-18
+
+- Feat: refactor lint offense handling and enabling clickable links to documentation.
+
 ## [1.1.0] - 2025-02-18
 
 - Feat: add support for `UnnecessaryStringOutput` linting rule.
