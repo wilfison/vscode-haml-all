@@ -164,8 +164,8 @@ suite('Haml-Lint Cops', () => {
     test('should add a space before Ruby script indicators (-/=)', () => {
       const config = DEFAULT_HAML_LINT_CONFIG;
 
-      const text = '-foo\n=bar';
-      const expected = '- foo\n= bar';
+      const text = '-foo\n=bar\n%p=baz\n- foo';
+      const expected = '- foo\n= bar\n%p= baz\n- foo';
       const result = hamlFixes.fixSpaceBeforeScript(text, config);
 
       assert.strictEqual(result, expected);
