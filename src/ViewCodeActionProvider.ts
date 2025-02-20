@@ -58,11 +58,14 @@ export async function createPartialFromSelection(): Promise<void> {
     return;
   }
 
-  const name = await window.showInputBox({ prompt: 'Input partial name:' });
+  let name = await window.showInputBox({ prompt: 'Input partial name:' });
 
   if (!name) {
     return;
   }
+
+  // sanitize name
+  name = name.trim().replace(/^_*/, '').replaceAll(/[^a-zA-Z0-9_]/g, '_');
 
   // change vscode selection to whole line
   editor.selection = new Selection(
@@ -147,6 +150,8 @@ function formatPartialContent(partialName: string, content: string): [string, st
 
   let newContent = formattedLines.join('\n');
   newContent = formatPartialVariables(globalVariables, newContent);
+  newContent = newContent.trim();
+  newContent += '\n';
 
   return [newContent, renderText];
 }
