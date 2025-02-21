@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.2] - 2025-02-21
+
+- Feat: refactor formaters to better performance.
+- Fix: fix `HamlLint: SpaceBeforeScript` cop autocorrect.
+
 ## [1.1.1] - 2025-02-18
 
 - Feat: refactor lint offense handling and enabling clickable links to documentation.
