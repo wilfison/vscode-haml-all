@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.3] - 2025-02-21
+
+- Feat: refactor linter diagnostics to prevent duplicated diagnostics for the same line.
+- Fix: Trim whitespace from empty lines.
+- Fix: update regex to support unicode letters in string output.
+- Fix: remove indentation from json output in linter logging.
+
 ## [1.1.2] - 2025-02-21
 
 - Feat: refactor formaters to better performance.

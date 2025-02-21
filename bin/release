@@ -31,8 +31,15 @@ def update_version(type)
   new_version
 end
 
-def commits
-  `git log --since="yesterday" --pretty=format:"%s"`.strip.split("\n")
+def unversioned_commits
+  commits = `git log --since="yesterday" --pretty=format:"%s"`.strip.split("\n")
+
+  # Discard commits before the last release version
+  last_version = commits.select { |commit| commit.start_with?('Release ') }.last
+
+  commits = commits.reverse.drop_while { |commit| commit != last_version }
+  commits = commits.drop(1) if commits.first == last_version
+  commits
 end
 
 def append_commits_to_changelog(version)
@@ -41,7 +48,7 @@ def append_commits_to_changelog(version)
 
   new_lines = [
     "\n## [#{version}] - #{Time.now.strftime('%Y-%m-%d')}\n",
-    *commits.map { |commit| "- #{commit.capitalize}" },
+    *unversioned_commits.map { |commit| "- #{commit.capitalize}" },
   ]
 
   puts "Appending to CHANGELOG.md:\n#{new_lines.join("\n")}"
