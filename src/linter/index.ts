@@ -74,9 +74,9 @@ export default class Linter {
       this.rubocopConfig = cops.rubocop;
 
       this.outputChanel.appendLine('Loaded Haml-Lint config:');
-      this.outputChanel.appendLine(JSON.stringify(this.hamlLintConfig, null, 2));
+      this.outputChanel.appendLine(JSON.stringify(this.hamlLintConfig));
       this.outputChanel.appendLine('Loaded RuboCop config:');
-      this.outputChanel.appendLine(JSON.stringify(this.rubocopConfig, null, 2));
+      this.outputChanel.appendLine(JSON.stringify(this.rubocopConfig));
     });
   }
 
