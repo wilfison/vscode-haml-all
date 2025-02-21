@@ -1,6 +1,9 @@
 {
   "displayName": "Ruby Haml",
-  "fileTypes": ["haml", "html.haml"],
+  "fileTypes": [
+    "haml",
+    "html.haml"
+  ],
   "foldingStartMarker": "^\\s*([-%#\\:\\.\\w\\=].*)\\s$",
   "foldingStopMarker": "^\\s*$",
   "name": "haml",
@@ -81,12 +84,7 @@
         }
       },
       "end": "^(?!\\1\\s+|\\n)",
-      "name": "comment.block.haml",
-      "patterns": [
-        {
-          "include": "text.haml"
-        }
-      ]
+      "name": "comment.block.haml"
     },
     {
       "begin": "^\\s*(?:((%)([-\\w:]+))|(?=\\.|#))",
