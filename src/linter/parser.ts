@@ -1,8 +1,8 @@
 import { Diagnostic, DiagnosticSeverity, Position, Range, TextDocument, Uri } from 'vscode';
 import { LinterOffense } from '../types';
+import { hamlCopUrl, rubocopUrl } from '../ultils/uris';
 
 function parseRuboCopAttributes(offense: LinterOffense) {
-  const copUrl = offense.message.match(/\s\((https.*)\)$/);
   const copName = offense.message.match(/([A-Z]\w+\/[A-Z]\w+)/);
   const message = offense.message.replace(/\s\((https.*)\)$/, '');
 
@@ -11,13 +11,12 @@ function parseRuboCopAttributes(offense: LinterOffense) {
     source: 'Rubocop',
     code: {
       value: copName ? copName[0] : '',
-      target: Uri.parse(copUrl ? copUrl[1] : '')
+      target: Uri.parse(rubocopUrl(copName ? copName[0] : ''))
     }
   };
 }
 
 function parseHamllintAttributes(offense: LinterOffense) {
-  const baseURL = 'https://github.com/sds/haml-lint/blob/main/lib/haml_lint/linter/README.md';
   const message = offense.message.replace(/\s\((https.*)\)$/, '');
   const code = offense.linter_name;
 
@@ -26,7 +25,7 @@ function parseHamllintAttributes(offense: LinterOffense) {
     source: 'haml-lint',
     code: {
       value: code,
-      target: Uri.parse(`${baseURL}#${code}`)
+      target: Uri.parse(hamlCopUrl(code))
     }
   };
 }
