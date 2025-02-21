@@ -44,7 +44,7 @@ function fixSpaceBeforeScript(text: string, config: LinterConfig): string {
   }
 
   const lines = text.split('\n');
-  const regex = /^\s*([-=](?!#))(?:\s{0}|\s{2,})(.*)|\s*(?:[%\.\w-]*)(=(?!#))(?:\s{0}|\s{2,})(.*)/;
+  const regex = /^\s*([-=](?!#))(?:\s{0}|\s{2,})(.*)/;
 
   return lines
     .map(line => {
