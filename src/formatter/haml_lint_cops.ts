@@ -1,14 +1,12 @@
 import { LinterConfig } from '../types';
+import { parseHtmlAttributes } from '../ultils/haml';
 
 function fixTrailingWhitespace(text: string, config: LinterConfig): string {
   if (!config.TrailingWhitespace.enabled) {
     return text;
   }
 
-  return text
-    .split('\n')
-    .map(line => line.replace(/\s+$/, ''))
-    .join('\n');
+  return text.trimEnd();
 }
 
 function fixTrailingEmptyLines(text: string, config: LinterConfig): string {
@@ -16,15 +14,15 @@ function fixTrailingEmptyLines(text: string, config: LinterConfig): string {
     return text;
   }
 
-  return text.replace(/\n{2,}/g, '\n\n');
+  return text.replace(/\n{2,}$/gm, '\n\n');
 }
 
-function fixFinalNewline(text: string, config: LinterConfig): string {
-  if (!config.FinalNewline.enabled) {
+function fixFinalNewline(text: string, config: LinterConfig | null): string {
+  if (!config?.FinalNewline.enabled) {
     return text;
   }
 
-  return text.endsWith('\n') ? text.replace(/\n+$/, '\n') : `${text}\n`;
+  return text.trimEnd() + '\n';
 }
 
 function fixClassBeforeId(text: string, config: LinterConfig): string {
@@ -43,23 +41,17 @@ function fixSpaceBeforeScript(text: string, config: LinterConfig): string {
     return text;
   }
 
-  const lines = text.split('\n');
   const regex = /^\s*([-=](?!#))(?:\s{0}|\s{2,})(.*)/;
+  const match = text.match(regex);
 
-  return lines
-    .map(line => {
-      const match = line.match(regex);
+  if (!match) {
+    return text;
+  }
 
-      if (!match) {
-        return line;
-      }
+  const indicator = match[1];
+  const code = match[2];
 
-      const indicator = match[1] || match[3];
-      const code = match[2] || match[4];
-
-      return line.replace(`${indicator}${code}`, `${indicator} ${code.trim()}`);
-    })
-    .join('\n');
+  return text.replace(`${indicator}${code}`, `${indicator} ${code.trim()}`);
 }
 
 function fixLeadingCommentSpace(text: string, config: LinterConfig): string {
@@ -67,12 +59,9 @@ function fixLeadingCommentSpace(text: string, config: LinterConfig): string {
     return text;
   }
 
-  const regex = /^\s*-#(?!\s)\w+/;
+  const regex = /^\s*-#(?!\s)[\w\d]+/;
 
-  return text
-    .split('\n')
-    .map(line => (line.match(regex) ? line.replace(/-#/, '-# ') : line))
-    .join('\n');
+  return text.match(regex) ? text.replace(/-#/, '-# ') : text;
 }
 
 function fixHtmlAttributes(text: string, config: LinterConfig): string {
@@ -81,53 +70,20 @@ function fixHtmlAttributes(text: string, config: LinterConfig): string {
   }
 
   const regex = /^\s*(?:[\.#%][\w-]+)+\(.*\)/;
-  const attributesRegex = /\((?<attributes>.*)\)$/;
-  const lines = text.split('\n');
+  const match = text.match(regex);
 
-  function parseAttributes(inputString: string) {
-    const result: { [key: string]: string } = {};
-    // Regex to capture key=value parts (allowing quotes and unquoted values)
-    const regex = /(\w[\w-]*)=(?:"([^"]*)"|'([^']*)'|([^"\s]*))/g;
-    let match;
-
-    while ((match = regex.exec(inputString)) !== null) {
-      // Capture the key and value, prioritizing double-quoted, single-quoted, or unquoted values
-      const key = match[1];
-      let value = match[2] || match[3] || match[4];
-
-      result[key] = value;
-    }
-
-    return Object.keys(result)
-      .map(key => {
-        let attrKey = key.includes('-') ? `"${key}"` : key;
-
-        // do not add quotes to values that are a number
-        if (!isNaN(Number(result[key]))) {
-          return `${attrKey}: ${result[key]}`;
-        }
-
-        return `${attrKey}: "${result[key]}"`;
-      })
-      .join(', ');
+  if (!match) {
+    return text;
   }
 
-  return lines
-    .map(line => {
-      const match = line.match(regex);
+  const attributesRegex = /\((?<attributes>.*)\)$/;
+  const attributes = match[0].match(attributesRegex)?.groups?.attributes;
 
-      if (!match) {
-        return line;
-      }
+  if (!attributes) {
+    return text;
+  }
 
-      const attributes = match[0].match(attributesRegex)?.groups?.attributes;
-      if (!attributes) {
-        return line;
-      }
-
-      return line.replace(`(${attributes})`, `{${parseAttributes(attributes)}}`);
-    })
-    .join('\n');
+  return text.replace(`(${attributes})`, `{${parseHtmlAttributes(attributes)}}`);
 }
 
 function fixUnnecessaryStringOutput(text: string, config: LinterConfig): string {
@@ -136,17 +92,15 @@ function fixUnnecessaryStringOutput(text: string, config: LinterConfig): string 
   }
 
   const regex = /=\s*["']([\w\s\d#\{\}]*)["']$/g;
-  const lines = text.split('\n');
 
-  return lines
-    .map(line => line.replace(regex, '$1'))
-    .join('\n');
+  return text.replace(regex, '$1');
 }
 
-export const linter_cops: [keyof LinterConfig, (text: string, config: LinterConfig) => string][] = [
+export type HamlLintFixer = (text: string, config: LinterConfig) => string;
+
+export const linter_cops: [keyof LinterConfig, HamlLintFixer][] = [
   ['TrailingWhitespace', fixTrailingWhitespace],
   ['TrailingEmptyLines', fixTrailingEmptyLines],
-  ['FinalNewline', fixFinalNewline],
   ['ClassesBeforeIds', fixClassBeforeId],
   ['SpaceBeforeScript', fixSpaceBeforeScript],
   ['LeadingCommentSpace', fixLeadingCommentSpace],
@@ -157,10 +111,10 @@ export const linter_cops: [keyof LinterConfig, (text: string, config: LinterConf
 export default {
   fixTrailingWhitespace,
   fixTrailingEmptyLines,
-  fixFinalNewline,
   fixHtmlAttributes,
   fixClassBeforeId,
   fixSpaceBeforeScript,
   fixLeadingCommentSpace,
   fixUnnecessaryStringOutput,
+  fixFinalNewline,
 };

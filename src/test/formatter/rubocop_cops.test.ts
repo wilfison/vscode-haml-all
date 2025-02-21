@@ -57,11 +57,27 @@ suite('RuboCop Cops', () => {
     test('should add spaces inside parentheses when EnforcedStyle is space', () => {
       const config = DEFAULT_RUBOCOP_CONFIG;
 
-      const text = '= render(foo: "bar")\n= render( foo: "bar")\n= render(foo: "bar" )\n= render( foo: "bar" )';
-      const expected = '= render( foo: "bar" )\n= render( foo: "bar" )\n= render( foo: "bar" )\n= render( foo: "bar" )';
-      const result = rubocopFixes.fixSpaceInsideParens(text, config);
+      const text = [
+        '= render(foo: "bar")',
+        '= render( foo: "bar")',
+        '= render(foo: "bar" )',
+        '= render( foo: "bar" )'
+      ];
 
-      assert.strictEqual(result, expected);
+      const expected = [
+        '= render( foo: "bar" )',
+        '= render( foo: "bar" )',
+        '= render( foo: "bar" )',
+        '= render( foo: "bar" )'
+      ];
+
+      const result = text.map((t) => rubocopFixes.fixSpaceInsideParens(t, config));
+      assert.deepStrictEqual(result, expected);
+
+      const text2 = '-# locals: (q:)';
+      const expected2 = '-# locals: ( q: )';
+      const result2 = rubocopFixes.fixSpaceInsideParens(text2, config);
+      assert.strictEqual(result2, expected2);
     });
 
     test('should remove spaces inside parentheses when EnforcedStyle is no_space', () => {
@@ -73,11 +89,22 @@ suite('RuboCop Cops', () => {
         },
       } as RuboCopConfig;
 
-      const text = '= render(foo: "bar")\n= render( foo: "bar")\n= render(foo: "bar" )\n= render( foo: "bar" )';
-      const expected = '= render(foo: "bar")\n= render(foo: "bar")\n= render(foo: "bar")\n= render(foo: "bar")';
-      const result = rubocopFixes.fixSpaceInsideParens(text, config);
+      const text = [
+        '= render(foo: "bar")',
+        '= render( foo: "bar")',
+        '= render(foo: "bar" )',
+        '= render( foo: "bar" )'
+      ];
 
-      assert.strictEqual(result, expected);
+      const expected = [
+        '= render(foo: "bar")',
+        '= render(foo: "bar")',
+        '= render(foo: "bar")',
+        '= render(foo: "bar")'
+      ];
+
+      const result = text.map((t) => rubocopFixes.fixSpaceInsideParens(t, config));
+      assert.deepStrictEqual(result, expected);
     });
   });
 
@@ -97,16 +124,11 @@ suite('RuboCop Cops', () => {
     test('should add space after colon', () => {
       const config = DEFAULT_RUBOCOP_CONFIG;
 
-      const text = 'foo:bar\n= foo(bar:1, class:"abc:123 cde:456")\n- foo(bar:1,class:"abc:123 cde:456")';
-      const expected = 'foo:bar\n= foo(bar: 1, class: "abc:123 cde:456")\n- foo(bar: 1,class: "abc:123 cde:456")';
-      const result = rubocopFixes.fixSpaceAfterColon(text, config);
+      const text = ['foo:bar', '= foo(bar:1, class:"abc:123 cde:456")', '- foo(bar:1,class:"abc:123 cde:456")'];
+      const expected = ['foo:bar', '= foo(bar: 1, class: "abc:123 cde:456")', '- foo(bar: 1,class: "abc:123 cde:456")'];
 
-      assert.strictEqual(result, expected);
-
-      const text2 = '-# locals: (q:)';
-      const expected2 = '-# locals: ( q: )';
-      const result2 = rubocopFixes.fixSpaceInsideParens(text2, config);
-      assert.strictEqual(result2, expected2);
+      const result = text.map((t) => rubocopFixes.fixSpaceAfterColon(t, config));
+      assert.deepStrictEqual(result, expected);
     });
   });
 
@@ -120,7 +142,7 @@ suite('RuboCop Cops', () => {
         '- f.bar 1, "abc"',
         '- foo bar: 1, baz: "abc" do |x|',
         '- if foo? bar'
-      ].join('\n');
+      ];
 
       const expected = [
         '= foo(bar: 1, baz: "abc")',
@@ -128,10 +150,10 @@ suite('RuboCop Cops', () => {
         '- f.bar(1, "abc")',
         '- foo(bar: 1, baz: "abc") do |x|',
         '- if foo? bar'
-      ].join('\n');
+      ];
 
-      const result = rubocopFixes.fixMethodCallWithArgsParentheses(text, config);
-      assert.strictEqual(result, expected);
+      const result = text.map((t) => rubocopFixes.fixMethodCallWithArgsParentheses(t, config));
+      assert.deepStrictEqual(result, expected);
     });
   });
 });

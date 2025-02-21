@@ -1,21 +1,31 @@
 import Linter from '../linter';
+import { HAML_FILTERS } from '../ultils/haml';
 
-import { linter_cops } from './haml_lint_cops';
-import { rubocops } from './rubocop_cops';
+import hamlFixes, { HamlLintFixer, linter_cops } from './haml_lint_cops';
+import { RuboCopFixer, rubocops } from './rubocop_cops';
+
+function isFilter(line: string): boolean {
+  const filter = line.trim().match(/^:(\w+)$/);
+
+  return filter ? HAML_FILTERS.includes(filter[1]) : false;
+}
+
+function lineIdent(line: string): number {
+  return (line.match(/^\s*/)?.[0] || '').length;
+}
 
 export default function autoCorrectAll(text: string, linter: Linter): string {
   const hamlLintConfig = linter.hamlLintConfig;
   const rubocopConfig = linter.rubocopConfig;
 
-  let fixedText = text;
+  let hamlFixers: HamlLintFixer[] = [];
+  let rubocopFixers: RuboCopFixer[] = [];
 
   if (hamlLintConfig) {
     linter_cops.forEach(([copName, fixer]) => {
-      if (!hamlLintConfig[copName].enabled) {
-        return;
+      if (hamlLintConfig[copName].enabled) {
+        hamlFixers.push(fixer);
       }
-
-      fixedText = fixer(fixedText, hamlLintConfig);
     });
   }
 
@@ -23,14 +33,53 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
   if (hamlLintConfig?.RuboCop.enabled && rubocopConfig) {
     const ignoredCops = hamlLintConfig.RuboCop.ignored_cops;
 
-    for (const [copName, fixer] of rubocops) {
-      if (ignoredCops.includes(copName)) {
-        continue;
+    rubocops.forEach(([copName, fixer]) => {
+      if (rubocopConfig[copName].Enabled && !ignoredCops.includes(copName)) {
+        rubocopFixers.push(fixer);
       }
-
-      fixedText = fixer(fixedText, rubocopConfig);
-    }
+    });
   }
 
-  return fixedText;
+  let insideFilter = false;
+  let filterIdent = 0;
+
+  const fixedText = text.split('\n').map(line => {
+    if (line.trim() === '') {
+      return line;
+    }
+
+    if (insideFilter) {
+      insideFilter = lineIdent(line) > filterIdent;
+      filterIdent = insideFilter ? filterIdent : 0;
+    }
+
+    if (insideFilter) {
+      return line.trimEnd();
+    }
+
+    if (isFilter(line)) {
+      insideFilter = true;
+      filterIdent = lineIdent(line);
+      return line.trimEnd();
+    }
+
+    let fixedLine = line;
+
+    if (rubocopConfig) {
+      rubocopFixers.forEach((fixer) => {
+        fixedLine = fixer(fixedLine, rubocopConfig);
+      });
+    }
+
+    if (hamlLintConfig) {
+      hamlFixers.forEach((fixer) => {
+        fixedLine = fixer(fixedLine, hamlLintConfig);
+      });
+    }
+
+    return fixedLine;
+  }
+  ).join('\n');
+
+  return hamlFixes.fixFinalNewline(fixedText, hamlLintConfig);
 }

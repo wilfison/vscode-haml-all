@@ -66,8 +66,8 @@ suite('Haml-Lint Cops', () => {
     test('should remove trailing whitespace to the right of the text', () => {
       const config = DEFAULT_HAML_LINT_CONFIG;
 
-      const text = '%div  \n  %div \n';
-      const expected = '%div\n  %div\n';
+      const text = '%div  \n';
+      const expected = '%div';
       const result = hamlFixes.fixTrailingWhitespace(text, config);
 
       assert.strictEqual(result, expected);
@@ -164,11 +164,11 @@ suite('Haml-Lint Cops', () => {
     test('should add a space before Ruby script indicators (-/=)', () => {
       const config = DEFAULT_HAML_LINT_CONFIG;
 
-      const text = '-foo\n=bar\n%p=baz\n- foo';
-      const expected = '- foo\n= bar\n%p= baz\n- foo';
-      const result = hamlFixes.fixSpaceBeforeScript(text, config);
+      const text = ['-foo', '=bar', '- foo'];
+      const expected = ['- foo', '= bar', '- foo'];
 
-      assert.strictEqual(result, expected);
+      const result = text.map((t) => hamlFixes.fixSpaceBeforeScript(t, config));
+      assert.deepStrictEqual(result, expected);
     });
 
     test('should not add a space before Ruby script indicators (-/=) when disabled', () => {

@@ -1,0 +1,22 @@
+export const RESERVED_RUBY_WORDS = [
+  'if',
+  'unless',
+  'while',
+  'until',
+  'rescue',
+  'else',
+  'elsif',
+  'when',
+  'ensure',
+  'case',
+  'for',
+  'return',
+  'break',
+  'next',
+  'raise',
+  'fail',
+  'alias',
+  'undef',
+  'self',
+  'nil'
+];
