@@ -10,7 +10,7 @@ import {
 } from 'vscode';
 
 import { LinterConfig, LinterOutput, RuboCopConfig } from '../types';
-import { DiagnosticFull, parseLintOffence } from './parser';
+import { DiagnosticFull, notifyErrors, parseLintOffence } from './parser';
 
 export const SOURCE = 'haml-lint';
 
@@ -73,10 +73,7 @@ export default class Linter {
       this.hamlLintConfig = cops.haml_lint;
       this.rubocopConfig = cops.rubocop;
 
-      this.outputChanel.appendLine('Loaded Haml-Lint config:');
-      this.outputChanel.appendLine(JSON.stringify(this.hamlLintConfig));
-      this.outputChanel.appendLine('Loaded RuboCop config:');
-      this.outputChanel.appendLine(JSON.stringify(this.rubocopConfig));
+      notifyErrors(cops, this.outputChanel);
     });
   }
 
@@ -96,7 +93,7 @@ export default class Linter {
     const command = this.buildCommand(document);
     const text = document.getText();
 
-    this.outputChanel.appendLine(`Running: ${command}`);
+    this.outputChanel.appendLine(`Linting ${document.uri.scheme}:${document.uri.path}`);
     const process = exec(command, { cwd: workspaceFolder.uri.fsPath }, (error, stdout, stderr) => {
       this.processes.delete(document);
 

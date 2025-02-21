@@ -10,7 +10,7 @@ import {
 
 import Linter from './linter';
 import FixActionsProvider from './FixActionsProvider';
-import { refreshRoutes } from './rails/utils';
+import { loadWithProgress } from './rails/utils';
 import Routes from './rails/routes';
 import { isARailsProject } from './Helpers';
 
@@ -88,23 +88,31 @@ class EventSubscriber {
     this.updateAllDiagnostics();
   }
 
-  private onUpdateLintConfig() {
+  private async onUpdateLintConfig() {
     this.updateAllDiagnostics();
     this.linter.loadConfigs();
   }
 
   private subscribeHamlWatchers() {
-    this.subscribeFileWatcher('**/.haml-lint.yml', this.onUpdateLintConfig);
-    this.subscribeFileWatcher('**/.rubocop.yml', this.onUpdateLintConfig);
+    const watchFiles = [
+      '**/.haml-lint.yml',
+      '**/.rubocop.yml',
+    ];
+
+    watchFiles.forEach(pattern => this.subscribeFileWatcher(pattern, () => {
+      loadWithProgress('Loading lint configs', this.onUpdateLintConfig.bind(this));
+    }));
   }
 
   private subscribeRailsWatchers() {
-    const routeFiles = [
+    const watchFiles = [
       '**/config/routes.rb',
       '**/config/routes/**/*.rb',
     ];
 
-    routeFiles.forEach(pattern => this.subscribeFileWatcher(pattern, () => refreshRoutes(this.routes)));
+    watchFiles.forEach(pattern => this.subscribeFileWatcher(pattern, () => {
+      loadWithProgress('Loading rails routes', this.routes.load);
+    }));
   }
 
   private subscribeFileWatcher(pattern: string, callback: (e: Uri) => void): void {

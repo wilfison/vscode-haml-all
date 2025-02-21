@@ -16,7 +16,7 @@ import LivePreviewPanel from './LivePreviewPanel';
 export function activate(context: vscode.ExtensionContext) {
   console.log('haml-all active!');
 
-  const outputChanel = vscode.window.createOutputChannel('Haml All');
+  const outputChanel = vscode.window.createOutputChannel('Haml');
   const config = vscode.workspace.getConfiguration('hamlAll');
   const eventSubscriber = new EventSubscriber(context, outputChanel);
 

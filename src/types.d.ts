@@ -34,6 +34,11 @@ type LinterConfigEnabler = {
   enabled: boolean;
 };
 
+export type LinterConfigWithErrors = {
+  haml_lint: { error?: string };
+  rubocop: { error?: string };
+};
+
 type LinterRubocopIgnores = {
   ignored_cops: string[];
 } & LinterConfigEnabler;

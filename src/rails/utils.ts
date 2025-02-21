@@ -3,13 +3,13 @@ import { SnippetString, ProgressLocation, window, Position, workspace, Uri } fro
 import { Route } from './router_parser';
 import Routes from './routes';
 
-export const refreshRoutes = async (routes: Routes) => {
+export const loadWithProgress = async (title: string, callback: () => Promise<void>): Promise<void> => {
   const progressOptions = {
     location: ProgressLocation.Window,
-    title: 'Loading rails routes'
+    title: title
   };
 
-  await window.withProgress(progressOptions, () => routes.load());
+  await window.withProgress(progressOptions, () => callback());
 };
 
 export function buildRouteHelperSnippet(helperPrefix: string, params: string[]): SnippetString {
