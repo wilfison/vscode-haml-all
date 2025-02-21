@@ -33,13 +33,13 @@ export default class Linter {
   }
 
   public run(document: TextDocument) {
-    if (document.languageId !== 'haml') { return; }
+    if (document.uri.scheme !== 'file' || document.languageId !== 'haml') { return; }
 
     this.lint(document);
   }
 
   public clear(document: TextDocument) {
-    if (document.uri.scheme !== 'file') {
+    if (document.uri.scheme !== 'file' || document.languageId !== 'haml') {
       return;
     }
 
