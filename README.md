@@ -1,6 +1,6 @@
 # HAML - All in One
 
-A comprehensive VS Code extension that equips you with essential tools for seamless HAML development.
+A powerful VS Code extension providing essential tools for efficient and seamless HAML development.
 
 [![VSCode Marketplace](https://img.shields.io/vscode-marketplace/v/wilfison.haml-all.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=wilfison.haml-all) [![Total Installs](https://img.shields.io/vscode-marketplace/d/wilfison.haml-all.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=wilfison.haml-all) [![Average Rating](https://img.shields.io/vscode-marketplace/r/wilfison.haml-all.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=wilfison.haml-all)
 
@@ -29,7 +29,7 @@ The following features are supported to make your HAML development effortless:
 
 ## Linting
 
-This extension utilizes the `haml-lint` and `rubocop` gems for linting HAML files.  
+This extension utilizes the `haml-lint` and `rubocop` gems for linting HAML files.
 To configure, create a `.haml-lint.yml` and `.rubocop` files in your project root. Check the [default configuration](https://github.com/sds/haml-lint/blob/main/config/default.yml).
 
 **To install the gem, add this to your `Gemfile`:**
