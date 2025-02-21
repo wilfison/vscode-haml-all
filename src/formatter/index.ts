@@ -45,7 +45,7 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
 
   const fixedText = text.split('\n').map(line => {
     if (line.trim() === '') {
-      return line;
+      return line.trim();
     }
 
     if (insideFilter) {
@@ -63,7 +63,7 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
       return line.trimEnd();
     }
 
-    let fixedLine = line;
+    let fixedLine = line.trimEnd();
 
     if (rubocopConfig) {
       rubocopFixers.forEach((fixer) => {
