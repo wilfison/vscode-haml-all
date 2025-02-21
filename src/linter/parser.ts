@@ -30,7 +30,27 @@ function parseHamllintAttributes(offense: LinterOffense) {
   };
 }
 
-export function parseLintOffence(document: TextDocument, offense: LinterOffense): Diagnostic {
+type DiagnosticCode = {
+  value: string;
+  target: Uri;
+};
+
+export class DiagnosticFull extends Diagnostic {
+  code: {
+    value: string;
+    target: Uri;
+  };
+
+  source: string;
+
+  constructor(range: Range, message: string, code: DiagnosticCode, source: string, severity?: DiagnosticSeverity) {
+    super(range, message, severity);
+    this.code = code;
+    this.source = source;
+  }
+}
+
+export function parseLintOffence(document: TextDocument, offense: LinterOffense): DiagnosticFull {
   const line = Math.max(offense.location.line - 1, 0);
   const lineText = document.lineAt(line);
   const lineTextRange = lineText.range;
@@ -41,11 +61,9 @@ export function parseLintOffence(document: TextDocument, offense: LinterOffense)
   );
 
   const severity = offense.severity === 'warning' ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error;
-  const copAttributes = offense.linter_name === 'RuboCop' ? parseRuboCopAttributes(offense) : parseHamllintAttributes(offense);
-  const diagnostic = new Diagnostic(range, copAttributes.message, severity);
+  const { message, source, code } = offense.linter_name === 'RuboCop' ? parseRuboCopAttributes(offense) : parseHamllintAttributes(offense);
 
-  diagnostic.code = copAttributes.code;
-  diagnostic.source = copAttributes.source;
+  const diagnostic = new DiagnosticFull(range, message, code, source, severity);
 
   return diagnostic;
 }

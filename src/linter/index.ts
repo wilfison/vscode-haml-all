@@ -3,17 +3,14 @@ import path from 'node:path';
 import {
   Diagnostic,
   DiagnosticCollection,
-  DiagnosticSeverity,
   languages,
   TextDocument,
   workspace,
-  Range,
-  Position,
   OutputChannel
 } from 'vscode';
 
 import { LinterConfig, LinterOutput, RuboCopConfig } from '../types';
-import { parseLintOffence } from './parser';
+import { DiagnosticFull, parseLintOffence } from './parser';
 
 export const SOURCE = 'haml-lint';
 
@@ -85,11 +82,13 @@ export default class Linter {
 
   private async lint(document: TextDocument) {
     const oldProcess = this.processes.get(document);
+
     if (oldProcess) {
       oldProcess.kill();
     }
 
     const workspaceFolder = workspace.getWorkspaceFolder(document.uri);
+
     if (!workspaceFolder) {
       return;
     }
@@ -120,15 +119,28 @@ export default class Linter {
     this.processes.set(document, process);
   }
 
-  private parse(output: string, document: TextDocument): Diagnostic[] {
+  private parse(output: string, document: TextDocument): DiagnosticFull[] {
     const json = JSON.parse(output) as LinterOutput;
     if (json.files.length < 1) {
       return [];
     }
 
-    return json.files[0].offenses.map(offense => {
-      return parseLintOffence(document, offense);
+    // set unique key for each diagnostic and line
+    const offenses = new Map<string, any>();
+
+    json.files[0].offenses.forEach(offense => {
+      const key = `${offense.location.line}:${offense.message}`;
+      console.log(key);
+      offenses.set(key, offense);
     });
+
+    const diagnostics: DiagnosticFull[] = [];
+
+    offenses.forEach(offense => {
+      diagnostics.push(parseLintOffence(document, offense));
+    });
+
+    return diagnostics;
   }
 
   private buildCommand(document: TextDocument): string {
