@@ -91,7 +91,7 @@ function fixUnnecessaryStringOutput(text: string, config: LinterConfig): string 
     return text;
   }
 
-  const regex = /=\s*["']([\w\s\d#\{\}]*)["']$/g;
+  const regex = /=\s*["']([\d\s\p{L}\{\}]*)["']$/gu;
 
   return text.replace(regex, '$1');
 }
