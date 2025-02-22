@@ -1,9 +1,14 @@
 # Change Log
 
+## [1.1.4] - 2025-02-22
+
+- Fix: grammar haml block comment syntax.
+- Feat: refactor lint configuration loading and improve error notifications
+
 ## [1.1.3] - 2025-02-21
 
 - Feat: refactor linter diagnostics to prevent duplicated diagnostics for the same line.
-- Fix: Trim whitespace from empty lines.
+- Fix: trim whitespace from empty lines.
 - Fix: update regex to support unicode letters in string output.
 - Fix: remove indentation from json output in linter logging.
 
