@@ -10,10 +10,10 @@ import {
   Position,
 } from 'vscode';
 
-import { SOURCE } from './linter';
-import { hamlLintFixes, rubocopFix } from './quick_fixes';
-import { fixAllStringLiterals } from './quick_fixes/stringLiterals';
-import { DiagnosticFull } from './linter/parser';
+import { SOURCE } from '../linter';
+import { hamlLintFixes, rubocopFix } from '../quick_fixes';
+import { fixAllStringLiterals } from '../quick_fixes/stringLiterals';
+import { DiagnosticFull } from '../linter/parser';
 
 export default class FixActionsProvider implements CodeActionProvider {
   private codeActions: CodeAction[];

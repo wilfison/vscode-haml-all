@@ -9,7 +9,7 @@ import {
 } from 'vscode';
 
 import Linter from './linter';
-import FixActionsProvider from './FixActionsProvider';
+import FixActionsProvider from './providers/FixActionsProvider';
 import { loadWithProgress } from './rails/utils';
 import Routes from './rails/routes';
 import { isARailsProject } from './Helpers';
