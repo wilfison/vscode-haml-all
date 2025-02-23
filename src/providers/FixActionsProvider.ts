@@ -8,6 +8,8 @@ import {
   CodeActionKind,
   WorkspaceEdit,
   Position,
+  Range,
+  Selection,
 } from 'vscode';
 
 import { SOURCE } from '../linter';
@@ -22,12 +24,16 @@ export default class FixActionsProvider implements CodeActionProvider {
     this.codeActions = [];
   }
 
-  provideCodeActions(document: TextDocument, range: any, context: CodeActionContext, token: any): CodeAction[] {
+  provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, token: any): CodeAction[] {
     this.codeActions = [];
-    const warnings = this.filterWarnings(context);
+    const diagnostics = this.filterWarnings(context);
 
-    this.createGlobalRubocopActions(document, warnings);
-    this.createActions(document, warnings);
+    this.createGlobalRubocopActions(document, diagnostics);
+    this.createSwitchQuotesAction(document, range);
+
+    diagnostics.forEach((diagnostic) => {
+      this.createLintAction(document, diagnostic, diagnostic.source);
+    });
 
     return this.codeActions;
   }
@@ -40,12 +46,6 @@ export default class FixActionsProvider implements CodeActionProvider {
     ) as DiagnosticFull[];
 
     return filtred;
-  }
-
-  private createActions(document: TextDocument, diagnostics: DiagnosticFull[]) {
-    diagnostics.forEach((diagnostic) => {
-      this.createLintAction(document, diagnostic, diagnostic.source);
-    });
   }
 
   private createLintAction(document: TextDocument, diagnostic: DiagnosticFull, linter: string) {
@@ -93,5 +93,24 @@ export default class FixActionsProvider implements CodeActionProvider {
     actions = actions.filter((action) => action !== null);
 
     this.codeActions.push(...actions);
+  }
+
+  private createSwitchQuotesAction(document: TextDocument, range: Range | Selection) {
+    const text = document.getText(range);
+    const quote = text[0] === text.slice(-1) ? text[0] : '';
+
+    if (['"', '\''].includes(quote) === false) {
+      return;
+    }
+
+    const inverseQuote = quote === '"' ? '\'' : '"';
+    const quoteName = inverseQuote === '"' ? 'double' : 'single';
+
+    const action = new CodeAction(`Change to ${quoteName} quotes`, CodeActionKind.QuickFix);
+    action.edit = new WorkspaceEdit();
+
+    action.edit.replace(document.uri, range, `${inverseQuote}${text.slice(1, -1)}${inverseQuote}`);
+
+    this.codeActions.push(action);
   }
 }
