@@ -1,7 +1,14 @@
-import { DocumentFormattingEditProvider, FormattingOptions, OutputChannel, Range, TextDocument, TextEdit, workspace } from 'vscode';
+import {
+  DocumentFormattingEditProvider,
+  FormattingOptions,
+  OutputChannel,
+  Range,
+  TextDocument,
+  TextEdit
+} from 'vscode';
 
-import Linter from './linter';
-import autoCorrectAll from './formatter';
+import Linter from '../linter';
+import autoCorrectAll from '../formatter';
 
 export default class FormattingEditProvider implements DocumentFormattingEditProvider {
   private linter: Linter;

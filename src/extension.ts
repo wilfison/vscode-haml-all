@@ -3,14 +3,14 @@ import * as vscode from 'vscode';
 import { hamlLintPresent } from './Helpers';
 
 import EventSubscriber from './EventSubscriber';
-import ViewCompletionProvider from './ViewCompletionProvider';
-import ViewFileDefinitionProvider from './ViewFileDefinitionProvider';
-import RoutesCompletionProvider from './RoutesCompletionProvider';
-import RoutesDefinitionProvider from './RoutesDefinitionProvider';
+import ViewCompletionProvider from './providers/ViewCompletionProvider';
+import ViewFileDefinitionProvider from './providers/ViewFileDefinitionProvider';
+import RoutesCompletionProvider from './providers/RoutesCompletionProvider';
+import RoutesDefinitionProvider from './providers/RoutesDefinitionProvider';
 
-import { ViewCodeActionProvider, createPartialFromSelection } from './ViewCodeActionProvider';
+import { ViewCodeActionProvider, createPartialFromSelection } from './providers/ViewCodeActionProvider';
 import { html2Haml } from './html2Haml';
-import FormattingEditProvider from './FormattingEditProvider';
+import FormattingEditProvider from './providers/FormattingEditProvider';
 import LivePreviewPanel from './LivePreviewPanel';
 
 export function activate(context: vscode.ExtensionContext) {

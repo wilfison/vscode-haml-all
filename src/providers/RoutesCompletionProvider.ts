@@ -11,8 +11,8 @@ import {
   workspace
 } from 'vscode';
 
-import Routes from './rails/routes';
-import { buildRouteHelperDetails, buildRouteHelperSnippet } from './rails/utils';
+import Routes from '../rails/routes';
+import { buildRouteHelperDetails, buildRouteHelperSnippet } from '../rails/utils';
 
 const LINE_REGEXP = /(?:link_to|redirect_to|button_to|form_for|visit|url|path|href)/;
 

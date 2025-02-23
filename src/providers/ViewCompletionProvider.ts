@@ -10,7 +10,7 @@ import {
   Uri
 } from 'vscode';
 
-import { CompletionItemWithScore } from './types';
+import { CompletionItemWithScore } from '../types';
 
 const RENDER_REGEXP = /[^\w.]render(?:\s+|\()['"]([\w\d_\/]*)$/;
 

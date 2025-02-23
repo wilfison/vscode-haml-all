@@ -8,8 +8,8 @@ import {
   Range,
 } from 'vscode';
 
-import Routes from './rails/routes';
-import { getActionPosition } from './rails/utils';
+import Routes from '../rails/routes';
+import { getActionPosition } from '../rails/utils';
 
 const HELPER_METHOD_REGEXP = /\w+_(?:path|url)/;
 
