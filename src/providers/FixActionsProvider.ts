@@ -64,7 +64,14 @@ export default class FixActionsProvider implements CodeActionProvider {
 
   private createWorkspaceEdit(document: TextDocument, rule: string, disable: string, enable?: string) {
     const edit = new WorkspaceEdit();
-    edit.insert(document.uri, new Position(0, 0), `-# ${disable} ${rule}\n`);
+    let position = new Position(0, 0);
+
+    // Avoid adding the disable comment at the top of `locals` comment
+    if (document.lineAt(0).text.startsWith('-# locals:')) {
+      position = new Position(1, 0);
+    }
+
+    edit.insert(document.uri, position, `-# ${disable} ${rule}\n`);
 
     if (enable) {
       edit.insert(document.uri, new Position(document.lineCount + 1, 0), `-# ${enable} ${rule}\n`);
