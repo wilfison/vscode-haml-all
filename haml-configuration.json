@@ -12,9 +12,17 @@
     ["{", "}"],
     ["[", "]"],
     ["(", ")"],
-    ["\"", "\""],
-    ["'", "'"],
-    ["`", "`"]
+    ["`", "`"],
+    {
+      "open": "'",
+      "close": "'",
+      "notIn": ["string", "comment"]
+    },
+    {
+      "open": "\"",
+      "close": "\"",
+      "notIn": ["string"]
+    }
   ],
   "surroundingPairs": [
     ["{", "}"],
@@ -24,7 +32,15 @@
     ["'", "'"],
     ["`", "`"]
   ],
-  "indentationRules": {
-    "increaseIndentPattern": "^s*(([-%#\\:\\.\\=])|(.*sdo\b))\b[^{;]*$"
-  }
+  "onEnterRules": [
+    {
+      "beforeText": {
+        "pattern": "^\\s*[%\\.#-=][_a-zA-Z][_a-zA-Z0-9-]*[^>]*$",
+        "flags": "i"
+      },
+      "action": {
+        "indent": "indent"
+      }
+    }
+  ]
 }
