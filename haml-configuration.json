@@ -35,7 +35,7 @@
   "onEnterRules": [
     {
       "beforeText": {
-        "pattern": "^\\s*[%\\.#-=][_a-zA-Z][_a-zA-Z0-9-]*[^>]*$",
+        "pattern": "^\\s*[%\\.#-=][\\w\\s][\\w\\d\\-\\|]*[^>]*[^\\)]$",
         "flags": "i"
       },
       "action": {
