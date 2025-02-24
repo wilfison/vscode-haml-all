@@ -7,6 +7,7 @@ import ViewCompletionProvider from './providers/ViewCompletionProvider';
 import ViewFileDefinitionProvider from './providers/ViewFileDefinitionProvider';
 import RoutesCompletionProvider from './providers/RoutesCompletionProvider';
 import RoutesDefinitionProvider from './providers/RoutesDefinitionProvider';
+import PartialSignatureHelpProvider from './providers/PartialSignatureHelpProvider';
 
 import { ViewCodeActionProvider, createPartialFromSelection } from './providers/ViewCodeActionProvider';
 import { html2Haml } from './html2Haml';
@@ -58,6 +59,15 @@ export function activate(context: vscode.ExtensionContext) {
       new ViewCompletionProvider(),
       '"',
       '\''
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.languages.registerSignatureHelpProvider(
+      HAML_SELECTOR,
+      new PartialSignatureHelpProvider(),
+      '(',
+      ','
     )
   );
 
