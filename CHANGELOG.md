@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.1.5] - 2025-02-24
+
+- Feat: add partialsignaturehelpprovider for enhanced signature help when use `render` method.
+  - obs: only works if partial has `locals` comment.
+- Feat: add switch quotes action action.
+- Fix: adjust position for inserting disable comment.
+- Fix: update haml configuration to enhance string handling and indentation rules
+
 ## [1.1.4] - 2025-02-22
 
 - Fix: grammar haml block comment syntax.

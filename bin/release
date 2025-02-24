@@ -18,37 +18,28 @@ def get_next_version(version, type)
   "#{major}.#{minor}.#{patch}"
 end
 
-def update_version(type)
-  package = JSON.parse(File.read('package.json'))
-  old_version = package['version']
-
-  new_version = get_next_version(old_version, type)
-  puts "Bumping version from #{old_version} to #{new_version}"
+def update_version(package, new_version)
+  puts "Bumping version from #{package['version']} to #{new_version}"
 
   package['version'] = new_version
   File.write('package.json', JSON.pretty_generate(package))
-
-  new_version
 end
 
-def unversioned_commits
-  commits = `git log --since="yesterday" --pretty=format:"%s"`.strip.split("\n")
+def unversioned_commits(old_version)
+  last_hash_commit = `git log --grep="Release #{old_version}" --pretty=format:"%H"`.strip
 
-  # Discard commits before the last release version
-  last_version = commits.select { |commit| commit.start_with?('Release ') }.last
-
-  commits = commits.reverse.drop_while { |commit| commit != last_version }
-  commits = commits.drop(1) if commits.first == last_version
-  commits
+  commits = `git log --pretty=format:"%s" #{last_hash_commit}..HEAD`.split("\n")
+  commits = commits.reject { |commit| commit.start_with?('Merge') }
+  commits.sort
 end
 
-def append_commits_to_changelog(version)
+def append_commits_to_changelog(old_version, new_version)
   changelog = File.read('CHANGELOG.md')
   changelog = changelog.split("\n")
 
   new_lines = [
-    "\n## [#{version}] - #{Time.now.strftime('%Y-%m-%d')}\n",
-    *unversioned_commits.map { |commit| "- #{commit.capitalize}" },
+    "\n## [#{new_version}] - #{Time.now.strftime('%Y-%m-%d')}\n",
+    *unversioned_commits(old_version).map { |commit| "- #{commit.capitalize}" },
   ]
 
   puts "Appending to CHANGELOG.md:\n#{new_lines.join("\n")}"
@@ -64,16 +55,19 @@ end
 
 def commit_changes(version)
   `git add .`
-  `git commit -m "Bump version to #{version}"`
+  `git commit -m "Release #{version}"`
   `git tag -a #{version} -m "Release version #{version}"`
 end
 
 def main
   type = ARGV[0] || 'patch'
 
-  version = update_version(type)
-  append_commits_to_changelog(version)
-  package_extenssion
+  package = JSON.parse(File.read('package.json'))
+  new_version = get_next_version(package['version'], type)
+
+  append_commits_to_changelog(package['version'], new_version)
+  update_version(package, new_version)
+  # package_extenssion
   # commit_changes(version)
 rescue StandardError => e
   puts e.message
