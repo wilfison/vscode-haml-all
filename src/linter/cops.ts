@@ -10,4 +10,12 @@ export const HAML_LINT_DEFAULT_COPS: LinterConfig = {
   TrailingEmptyLines: { enabled: false },
   TrailingWhitespace: { enabled: false },
   UnnecessaryStringOutput: { enabled: false },
+  StrictLocals: {
+    enabled: false,
+    file_types: 'partials',
+    matchers: {
+      all: '.*',
+      partials: '\\A_.*\\.haml\\z'
+    }
+  },
 };

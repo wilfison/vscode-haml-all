@@ -24,7 +24,7 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
 
     const text = document.getText();
     const edits: TextEdit[] = [];
-    const fixedText = autoCorrectAll(text, this.linter);
+    const fixedText = autoCorrectAll(document.fileName, text, this.linter);
 
     if (fixedText === text) {
       return [];

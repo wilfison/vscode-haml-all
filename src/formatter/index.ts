@@ -14,7 +14,7 @@ function lineIdent(line: string): number {
   return (line.match(/^\s*/)?.[0] || '').length;
 }
 
-export default function autoCorrectAll(text: string, linter: Linter): string {
+export default function autoCorrectAll(fileName: string, text: string, linter: Linter): string {
   const hamlLintConfig = linter.hamlLintConfig;
   const rubocopConfig = linter.rubocopConfig;
 
@@ -43,7 +43,7 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
   let insideFilter = false;
   let filterIdent = 0;
 
-  const fixedText = text.split('\n').map(line => {
+  let fixedText = text.split('\n').map(line => {
     if (line.trim() === '') {
       return line.trim();
     }
@@ -81,5 +81,8 @@ export default function autoCorrectAll(text: string, linter: Linter): string {
   }
   ).join('\n');
 
-  return hamlFixes.fixFinalNewline(fixedText, hamlLintConfig);
+  fixedText = hamlFixes.fixStrictLocals(fileName, fixedText, hamlLintConfig);
+  fixedText = hamlFixes.fixFinalNewline(fixedText, hamlLintConfig);
+
+  return fixedText;
 }

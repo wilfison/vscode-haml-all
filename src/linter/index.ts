@@ -64,7 +64,7 @@ export default class Linter {
     const command = `ruby ${libPath}/list_cops.rb ${workingDirectory}`;
     console.log(`Running: ${command}`);
 
-    exec(command, {}, (error, stdout, stderr) => {
+    exec(command, { cwd: workingDirectory }, (error, stdout, stderr) => {
       if (error) {
         console.error(stderr);
         return;

@@ -43,6 +43,14 @@ type LinterRubocopIgnores = {
   ignored_cops: string[];
 } & LinterConfigEnabler;
 
+type LinterMetcher = {
+  file_types: 'partials' | 'all';
+  matchers: {
+    all: string;
+    partials: string;
+  };
+} & LinterConfigEnabler;
+
 /**
  * @see https://github.com/sds/haml-lint/blob/main/lib/haml_lint/linter/README.md
  */
@@ -53,6 +61,7 @@ export type LinterConfig = {
   HtmlAttributes: LinterConfigEnabler;
   LeadingCommentSpace: LinterConfigEnabler;
   SpaceBeforeScript: LinterConfigEnabler;
+  StrictLocals: LinterMetcher;
   TrailingEmptyLines: LinterConfigEnabler;
   TrailingWhitespace: LinterConfigEnabler;
   UnnecessaryStringOutput: LinterConfigEnabler;

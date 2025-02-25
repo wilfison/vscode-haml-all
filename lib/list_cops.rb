@@ -15,6 +15,7 @@ HAML_LINT_COPS = [
   'HtmlAttributes',
   'LeadingCommentSpace',
   'SpaceBeforeScript',
+  'StrictLocals',
   'TrailingEmptyLines',
   'TrailingWhitespace',
   'UnnecessaryStringOutput'

@@ -1,5 +1,6 @@
 import { LinterConfig } from '../types';
 import { parseHtmlAttributes } from '../ultils/haml';
+import { ecmaScriptRegexFromRubyRegex } from '../ultils/regex';
 
 function fixTrailingWhitespace(text: string, config: LinterConfig): string {
   if (!config.TrailingWhitespace.enabled) {
@@ -96,6 +97,21 @@ function fixUnnecessaryStringOutput(text: string, config: LinterConfig): string 
   return text.replace(regex, '$1');
 }
 
+function fixStrictLocals(fileName: string, text: string, config: LinterConfig): string {
+  if (!config.StrictLocals.enabled || text.match(/-#\s*locals:/)) {
+    return text;
+  }
+
+  const partialName = fileName.split('/').pop() || fileName;
+  const typeFileRegex = ecmaScriptRegexFromRubyRegex(config.StrictLocals.matchers[config.StrictLocals.file_types]);
+
+  if (!typeFileRegex.test(partialName)) {
+    return text;
+  }
+
+  return `-# locals: ()\n\n${text}`;
+}
+
 export type HamlLintFixer = (text: string, config: LinterConfig) => string;
 
 export const linter_cops: [keyof LinterConfig, HamlLintFixer][] = [
@@ -111,6 +127,7 @@ export const linter_cops: [keyof LinterConfig, HamlLintFixer][] = [
 export default {
   fixTrailingWhitespace,
   fixTrailingEmptyLines,
+  fixStrictLocals,
   fixHtmlAttributes,
   fixClassBeforeId,
   fixSpaceBeforeScript,
