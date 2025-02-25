@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.6] - 2025-02-25
+
+- Add default haml lint configuration, prevent missing new cops
+- Feat: add support for `StrictLocals` cop
+
 ## [1.1.5] - 2025-02-24
 
 - Feat: add partialsignaturehelpprovider for enhanced signature help when use `render` method.
