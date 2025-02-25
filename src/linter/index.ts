@@ -11,11 +11,12 @@ import {
 
 import { LinterConfig, LinterOutput, RuboCopConfig } from '../types';
 import { DiagnosticFull, notifyErrors, parseLintOffence } from './parser';
+import { HAML_LINT_DEFAULT_COPS } from './cops';
 
 export const SOURCE = 'haml-lint';
 
 export default class Linter {
-  public hamlLintConfig: LinterConfig | null = null;
+  public hamlLintConfig: LinterConfig = HAML_LINT_DEFAULT_COPS;
   public rubocopConfig: RuboCopConfig | null = null;
 
   private outputChanel: OutputChannel;
@@ -70,7 +71,7 @@ export default class Linter {
       }
 
       const cops = JSON.parse(stdout);
-      this.hamlLintConfig = cops.haml_lint;
+      this.hamlLintConfig = { ...this.hamlLintConfig, ...cops.haml_lint };
       this.rubocopConfig = cops.rubocop;
 
       notifyErrors(cops, this.outputChanel);
