@@ -1,4 +1,5 @@
 import { RuboCopConfig } from '../types';
+import { stringContainsAny } from '../ultils/array';
 import { RESERVED_RUBY_WORDS } from '../ultils/ruby';
 
 function fixStringLiterals(text: string, config: RuboCopConfig): string {
@@ -87,11 +88,12 @@ function fixMethodCallWithArgsParentheses(text: string, config: RuboCopConfig): 
     return text;
   }
 
-  const regexLineWithScript = new RegExp(`^\\s*(?:[\\.%][\\w-]+)?[=-] +(?!${RESERVED_RUBY_WORDS.join('|')})[\\w\\.]+`);
+  const regexLineWithScript = new RegExp(`^\\s*(?:[\\.%\\#\\w-]+)?[=-]\\s+(?!${RESERVED_RUBY_WORDS.join('|')})[\\w\\.]+`);
+  const specialSymbols = ['||', '=', ' : ', ' ? '];
 
   const match = text.match(regexLineWithScript);
 
-  if (!match || text.includes('||') || text.slice(-1) === ',') {
+  if (!match || text.slice(-1) === ',' || stringContainsAny(text.split(match[0])[1], specialSymbols)) {
     return text;
   }
 
@@ -101,9 +103,10 @@ function fixMethodCallWithArgsParentheses(text: string, config: RuboCopConfig): 
     return text;
   }
 
-  if (scriptAttributes.includes(' do')) {
-    const matchBlock = scriptAttributes.match(/(.*) do \|[\w, ]+\|$|(.*) do$/);
-    scriptAttributes = matchBlock ? (matchBlock[1] || matchBlock[2]) : scriptAttributes;
+  const blockOrInlineCondition = scriptAttributes.match(/(.*)\sdo\s*(?:\|[\w, ]+\|)?$|(.*)\s+(?:if|unless)\s[\w\?\!\s\:]+$/);
+
+  if (blockOrInlineCondition) {
+    scriptAttributes = blockOrInlineCondition[1] || blockOrInlineCondition[2];
   }
 
   if (String(scriptAttributes).trim().length === 0) {

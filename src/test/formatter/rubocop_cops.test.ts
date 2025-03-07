@@ -141,7 +141,8 @@ suite('RuboCop Cops', () => {
         '= foo bar: 1, baz: "abc" || \'ABC\'',
         '- f.bar 1, "abc"',
         '- foo bar: 1, baz: "abc" do |x|',
-        '- if foo? bar'
+        '- if foo? bar',
+        '= foo bar if foo? bar'
       ];
 
       const expected = [
@@ -149,7 +150,25 @@ suite('RuboCop Cops', () => {
         '= foo bar: 1, baz: "abc" || \'ABC\'',
         '- f.bar(1, "abc")',
         '- foo(bar: 1, baz: "abc") do |x|',
-        '- if foo? bar'
+        '- if foo? bar',
+        '= foo(bar) if foo? bar'
+      ];
+
+      const result = text.map((t) => rubocopFixes.fixMethodCallWithArgsParentheses(t, config));
+      assert.deepStrictEqual(result, expected);
+    });
+
+    test('should not add parentheses to method call arguments if not a method call with args', () => {
+      const config = DEFAULT_RUBOCOP_CONFIG;
+
+      const text = [
+        '- foo ? bar : baz',
+        '- foo = bar ? baz : qux'
+      ];
+
+      const expected = [
+        '- foo ? bar : baz',
+        '- foo = bar ? baz : qux'
       ];
 
       const result = text.map((t) => rubocopFixes.fixMethodCallWithArgsParentheses(t, config));
