@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.7] - 2025-03-07
+
+- Fix: methodcallwithargsparentheses formatter one line scripts
+
 ## [1.1.6] - 2025-02-25
 
 - Add default haml lint configuration, prevent missing new cops
