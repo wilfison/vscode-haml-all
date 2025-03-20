@@ -124,8 +124,19 @@ suite('RuboCop Cops', () => {
     test('should add space after colon', () => {
       const config = DEFAULT_RUBOCOP_CONFIG;
 
-      const text = ['foo:bar', '= foo(bar:1, class:"abc:123 cde:456")', '- foo(bar:1,class:"abc:123 cde:456")'];
-      const expected = ['foo:bar', '= foo(bar: 1, class: "abc:123 cde:456")', '- foo(bar: 1,class: "abc:123 cde:456")'];
+      const text = [
+        'foo:bar',
+        '= foo(bar:1, class:"abc:123 cde:456")',
+        '- foo(bar:1,class:"abc:123 cde:456")',
+        '= link_to(\'some link\', \'https://hahah.com\')'
+      ];
+
+      const expected = [
+        'foo:bar',
+        '= foo(bar: 1, class: "abc:123 cde:456")',
+        '- foo(bar: 1,class: "abc:123 cde:456")',
+        '= link_to(\'some link\', \'https://hahah.com\')'
+      ];
 
       const result = text.map((t) => rubocopFixes.fixSpaceAfterColon(t, config));
       assert.deepStrictEqual(result, expected);
