@@ -46,7 +46,9 @@ export default class Routes {
     const { stdout, stderr } = await promiseWithChild;
     this.process = null;
 
-    if (stdout.startsWith('--[ Route')) {
+    const sanitizedStdout = stdout.slice(stdout.indexOf('--[ Route'));
+
+    if (sanitizedStdout.startsWith('--[ Route')) {
       this.process = null;
 
       return stdout;
