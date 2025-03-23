@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.1.8] - 2025-03-23
+
+- Fix: add check for rails project path before loading routes
+- Fix: resolve go to definition with multi projects/workspaces.
+- Fix: sanitize stdout before checking route prefix
+
 ## [1.1.7] - 2025-03-07
 
 - Fix: methodcallwithargsparentheses formatter one line scripts
