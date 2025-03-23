@@ -22,13 +22,13 @@ class PartialSignatureHelpProvider implements SignatureHelpProvider {
   // Read '-# locals: (option1:, option2:)' from partial file
   private loadPartialLocals(document: TextDocument, position: Position): string {
     const partialName = getPartialName(document, position);
-    const filePath = resolvePartialFilePath(partialName, document.fileName);
+    const filePaths = resolvePartialFilePath(partialName, document.fileName);
 
-    if (!fileExists(filePath)) {
+    if (filePaths.length === 0 || filePaths.length > 1) {
       return '';
     }
 
-    return fileStringLocals(filePath);
+    return fileStringLocals(filePaths[0]);
   }
 
   private createSignature(lineContent: string, document: TextDocument, position: Position, renderType: string): SignatureHelp {

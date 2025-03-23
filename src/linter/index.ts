@@ -128,7 +128,6 @@ export default class Linter {
 
     json.files[0].offenses.forEach(offense => {
       const key = `${offense.location.line}:${offense.message}`;
-      console.log(key);
       offenses.set(key, offense);
     });
 

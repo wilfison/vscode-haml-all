@@ -38,16 +38,60 @@ export function formatPartialName(partialName: string): string {
   }).join('/');
 }
 
-export function resolvePartialFilePath(partialName: string, fileBaseName: string): string {
-  const fileExtension = fileBaseName.substring(fileBaseName.indexOf('.'));
+function findFileExistsInWorkspace(workspacePath: string, partial: string, fileExtensions: string[]): string[] {
+  const possibleFileLocations: string[] = [];
 
-  if (partialName.includes('/')) {
-    return `${getWorkspaceRoot()}/app/views/${partialName}${fileExtension}`;
+  for (const extension of fileExtensions) {
+    const filePath = `${workspacePath}/${partial}${extension}`;
+
+    if (fs.existsSync(filePath)) {
+      possibleFileLocations.push(filePath);
+    }
   }
 
-  const currentDirectory = fileBaseName.substring(0, fileBaseName.lastIndexOf('/'));
+  return possibleFileLocations;
+}
 
-  return `${currentDirectory}/${partialName}${fileExtension}`;
+function findFileInProjects(partialName: string, workspacePath: string, fileExtensions: string[]): string[] {
+  const workspaceFolders = workspace.workspaceFolders;
+
+  if (workspaceFolders === undefined || workspaceFolders.length === 0) {
+    return [];
+  }
+
+  const possibleFileLocations: string[] = [];
+
+  findFileExistsInWorkspace(workspacePath, partialName, fileExtensions)
+    .forEach((filePath) => {
+      if (!possibleFileLocations.includes(filePath)) {
+        possibleFileLocations.push(filePath);
+      }
+    }
+    );
+
+  return possibleFileLocations;
+}
+
+export function resolvePartialFilePath(partialName: string, fileBaseName: string): string[] {
+  const workspaceBasePath = fileBaseName.substring(0, fileBaseName.indexOf('/views/') + 6);
+  const fileExtensions = ['.html.haml', '.haml', '.html.erb', '.erb'];
+
+  if (partialName.includes('/')) {
+    return findFileInProjects(partialName, workspaceBasePath, fileExtensions);
+  }
+
+  const possibleFileLocations: string[] = [];
+  const viewBasePath = fileBaseName.split('/').slice(0, -1).join('/');
+
+  findFileExistsInWorkspace(viewBasePath, partialName, fileExtensions)
+    .forEach((filePath) => {
+      if (!possibleFileLocations.includes(filePath)) {
+        possibleFileLocations.push(filePath);
+      }
+    }
+    );
+
+  return possibleFileLocations;
 }
 
 export function fileExists(filePath: string): boolean {
