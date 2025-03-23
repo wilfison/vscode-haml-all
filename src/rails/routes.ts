@@ -4,6 +4,7 @@ import childProcess, { ChildProcess } from 'node:child_process';
 const exec = util.promisify(childProcess.exec);
 
 import { Route, parseRoutes } from './router_parser';
+import { fileExists } from '../ultils/file';
 
 export default class Routes {
   private routes: Map<string, Route> = new Map();
@@ -16,6 +17,10 @@ export default class Routes {
   }
 
   public async load() {
+    if (!this.pathIsARailsProject()) {
+      return;
+    }
+
     const output = await this.exec();
 
     if (!output) {
@@ -33,6 +38,10 @@ export default class Routes {
 
   public get(controller: string) {
     return this.routes.get(controller);
+  }
+
+  private pathIsARailsProject() {
+    return fileExists(`${this.rootPath}/bin/rails`);
   }
 
   private async exec() {
