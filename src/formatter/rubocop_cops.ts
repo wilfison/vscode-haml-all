@@ -66,7 +66,7 @@ function fixSpaceAfterColon(text: string, config: RuboCopConfig): string {
     return text;
   }
 
-  const regex = /(?<=^\s*[=\-\.%][^#].*)(?:[,\(\{]+\s*)[\w\-'"]+:(?![\s:])(.)/g;
+  const regex = /(?<=^\s*[=\-\.%][^#].*)(?:[,\(\{]+\s*)(?:[\w\-]+|["'][\w\-]+["']):(?![\s:])(.)/g;
   const match = text.match(regex);
 
   if (!match) {
