@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.9] - 2025-03-28
+
+- Fix: update regex for unnecessary string output and enhance test cases
+- Fix: update regex to support quoted keys in rubocop cops formatter
+
 ## [1.1.8] - 2025-03-23
 
 - Fix: add check for rails project path before loading routes
