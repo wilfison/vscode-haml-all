@@ -157,21 +157,21 @@ suite('Haml-Lint Cops', () => {
     test('should remove unnecessary string output indicators', () => {
       const config = { ...HAML_LINT_DEFAULT_COPS, UnnecessaryStringOutput: { enabled: true } };
 
-      const text = '= "foo"';
-      const expected = 'foo';
-      const result = hamlFixes.fixUnnecessaryStringOutput(text, config);
+      const text = ['= "foo"', '- if foo == \'bar\''];
+      const expected = ['foo', '- if foo == \'bar\''];
+      const result = text.map((t) => hamlFixes.fixUnnecessaryStringOutput(t, config));
 
-      assert.strictEqual(result, expected);
+      assert.deepStrictEqual(result, expected);
     });
 
     test('should not remove unnecessary string output indicators when disabled', () => {
       const config = HAML_LINT_DEFAULT_COPS;
 
-      const text = '= "foo"';
+      const text = ['= "foo"', '- if foo == \'bar\''];
       const expected = text;
-      const result = hamlFixes.fixUnnecessaryStringOutput(text, config);
+      const result = text.map((t) => hamlFixes.fixUnnecessaryStringOutput(t, config));
 
-      assert.strictEqual(result, expected);
+      assert.deepStrictEqual(result, expected);
     });
   });
 
