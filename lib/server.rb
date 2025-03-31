@@ -1,35 +1,37 @@
+# frozen_string_literal: true
+
+# Check if Bundler is being used
+if ARGV.include?('--use-bundler')
+  require 'bundler/setup'
+end
+
 require 'socket'
 require 'json'
+require 'haml_lint'
 
-use_bundle = ARGV.include?('--use-bundler')
+require_relative 'lint_server/report'
 
-if use_bundle
-  begin
-    require 'bundler/setup'
-    Bundler.require(:default)
-  rescue LoadError
-    puts "Bundler not found. Please install it with `gem install bundler`."
-    exit 1
-  rescue Bundler::GemfileNotFound
-    puts "Gemfile not found. Please create a Gemfile with the required gems."
-    use_bundle = false
-  end
-end
+port = 7654
 
+# Check if the port is already in use
 begin
-  require 'haml_lint'
-rescue LoadError
-  if use_bundle
-    puts "HAML Lint not found. Please add it to your Gemfile and run `bundle install`."
-  else
-    puts "HAML Lint not found. Please install it with `gem install haml-lint`."
+  if `lsof -i :#{port}`.include?('TCP')
+    puts "Port #{port} is already in use. Please choose another port."
   end
+rescue StandardError
+  port += 1
+  retry
 end
 
-PORT = 7654
-server = TCPServer.new('127.0.0.1', PORT)
-
-puts "HAML Lint server running on port #{PORT}..."
+server = TCPServer.new('127.0.0.1', port)
+puts(
+  {
+    status: 'success',
+    message: "Server started on port #{port}.",
+    port: port,
+    pid: Process.pid,
+  }.to_json
+)
 
 loop do
   client = server.accept
@@ -43,29 +45,10 @@ loop do
     next
   end
 
-  file_path = request['file_path']
-  options = request['options'] || {}
-  config_file = options['config_file'] if options['config_file'] && File.exist?(options['config_file'])
-
   result = nil
-  log = HamlLint::Logger.new($stderr)
 
   begin
-    runner = HamlLint::Runner.new
-    report = runner.run(
-      files: [file_path],
-      config_file: config_file,
-      reporter: HamlLint::Reporter::JsonReporter.new(log),
-    )
-
-    result = report.lints.map do |lint|
-      {
-        location: { line: lint.line },
-        severity: lint.severity,
-        message: lint.message,
-        linter_name: lint.linter.name
-      }
-    end
+    result = LintServer::Report.lint(request)
     status = 'success'
   rescue => e
     result = "#{e.message}\n#{e.backtrace.join("\n")}"
