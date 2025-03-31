@@ -9,9 +9,10 @@ import {
   OutputChannel
 } from 'vscode';
 
-import { LinterConfig, LinterOutput, RuboCopConfig } from '../types';
+import { LinterConfig, LinterOffense, LinterOutput, RuboCopConfig } from '../types';
 import { DiagnosticFull, notifyErrors, parseLintOffence } from './parser';
 import { HAML_LINT_DEFAULT_COPS } from './cops';
+import LintServer from './server';
 
 export const SOURCE = 'haml-lint';
 
@@ -20,11 +21,13 @@ export default class Linter {
   public rubocopConfig: RuboCopConfig | null = null;
 
   private outputChanel: OutputChannel;
+  private lintServer: LintServer;
   private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
   private processes: WeakMap<TextDocument, any> = new WeakMap();
 
-  constructor(outputChanel: OutputChannel) {
+  constructor(outputChanel: OutputChannel, lintServer: LintServer) {
     this.outputChanel = outputChanel;
+    this.lintServer = lintServer;
 
     this.loadConfigs();
   }
@@ -91,42 +94,26 @@ export default class Linter {
       return;
     }
 
-    const command = this.buildCommand(document);
-    const text = document.getText();
+    const filePath = document.uri.fsPath;
+    const configPath = path.join(workspaceFolder.uri.fsPath, '.haml-lint.yml');
 
-    this.outputChanel.appendLine(`Linting ${document.uri.scheme}:${document.uri.path}`);
-    const process = exec(command, { cwd: workspaceFolder.uri.fsPath }, (error, stdout, stderr) => {
-      this.processes.delete(document);
-
-      // NOTE: The document may have been modified since the lint was triggered.
-      if (text !== document.getText()) { return; }
-
+    await this.lintServer.lint(filePath, configPath, (data: LinterOffense[]) => {
       this.collection.delete(document.uri);
-      if (!error) {
-        return;
-      }
 
-      if (error.code === 1 && stderr.length > 0) {
-        console.error(stderr);
-        return;
+      if (data.length > 0) {
+        const diagnostics = this.parse(data, document);
+        this.collection.set(document.uri, diagnostics);
+      } else {
+        this.collection.delete(document.uri);
       }
-
-      this.collection.set(document.uri, this.parse(stdout, document));
     });
-
-    this.processes.set(document, process);
   }
 
-  private parse(output: string, document: TextDocument): DiagnosticFull[] {
-    const json = JSON.parse(output) as LinterOutput;
-    if (json.files.length < 1) {
-      return [];
-    }
-
+  private parse(lintOffenses: LinterOffense[], document: TextDocument): DiagnosticFull[] {
     // set unique key for each diagnostic and line
     const offenses = new Map<string, any>();
 
-    json.files[0].offenses.forEach(offense => {
+    lintOffenses.forEach(offense => {
       const key = `${offense.location.line}:${offense.message}`;
       offenses.set(key, offense);
     });
