@@ -1,7 +1,5 @@
-import { exec } from 'node:child_process';
 import path from 'node:path';
 import {
-  Diagnostic,
   DiagnosticCollection,
   languages,
   TextDocument,
@@ -9,8 +7,8 @@ import {
   OutputChannel
 } from 'vscode';
 
-import { LinterConfig, LinterOffense, LinterOutput, RuboCopConfig } from '../types';
-import { DiagnosticFull, notifyErrors, parseLintOffence } from './parser';
+import { LinterConfig, LinterOffense, RuboCopConfig } from '../types';
+import { DiagnosticFull, parseLintOffence } from './parser';
 import { HAML_LINT_DEFAULT_COPS } from './cops';
 import LintServer from './server';
 

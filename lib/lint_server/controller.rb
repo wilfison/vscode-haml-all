@@ -37,6 +37,8 @@ module LintServer
         LintServer::Report.lint(request)
       when 'list_cops'
         LintServer::Cops.list_cops
+      when 'compile'
+        LintServer::Compile.call(request)
       else
         raise "Unknown action: #{request['action']}"
       end

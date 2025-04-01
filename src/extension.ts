@@ -16,7 +16,7 @@ import LivePreviewPanel from './LivePreviewPanel';
 import LintServer from './linter/server';
 import { getWorkspaceRoot } from './ultils/file';
 
-let lintServer: LintServer | null = null;
+let lintServer: LintServer = new LintServer(getWorkspaceRoot(), false);
 
 export async function activate(context: vscode.ExtensionContext) {
   console.log('haml-all active!');
@@ -104,7 +104,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('hamlAll.livePreview', () => {
-      LivePreviewPanel.createOrShow(context.extensionUri);
+      LivePreviewPanel.createOrShow(context.extensionUri, lintServer);
     })
   );
 

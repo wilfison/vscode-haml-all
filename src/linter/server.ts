@@ -46,6 +46,24 @@ class LintServer {
     });
   }
 
+  async compileHaml(template: string, callback: (data: any) => void): Promise<void> {
+    if (!this.rubyServerProcess) {
+      callback({ error: 'Server not started' });
+
+      return;
+    }
+
+    const params = {
+      action: 'compile',
+      workspace: this.workingDirectory,
+      template: template,
+    };
+
+    this.serverGet(params, (response: any) => {
+      callback(response || {});
+    });
+  }
+
   async start(): Promise<ChildProcessWithoutNullStreams | null> {
     if (this.rubyServerProcess) {
       return Promise.resolve(this.rubyServerProcess);

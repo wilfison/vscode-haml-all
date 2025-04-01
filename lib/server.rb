@@ -12,13 +12,14 @@ require 'haml_lint'
 require_relative 'lint_server/controller'
 require_relative 'lint_server/report'
 require_relative 'lint_server/cops'
+require_relative 'lint_server/compile'
 
 port = 7654
 
 # Check if the port is already in use
 begin
   if `lsof -i :#{port}`.include?('TCP')
-    puts "Port #{port} is already in use. Please choose another port."
+    raise "Port #{port} is already in use. Please choose another port."
   end
 rescue StandardError
   port += 1
