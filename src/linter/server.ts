@@ -5,7 +5,7 @@ import net from 'node:net';
 import { LinterOffense } from '../types';
 
 class LintServer {
-  private rubyServerProcess: ChildProcessWithoutNullStreams | null = null;
+  public rubyServerProcess: ChildProcessWithoutNullStreams | null = null;
   private serverPort = 7654;
 
   private readonly workingDirectory: string;
@@ -18,7 +18,7 @@ class LintServer {
 
   async lint(filePath: string, configPath: string, callback: (data: LinterOffense[]) => void): Promise<void> {
     const params = {
-      type: 'lint',
+      action: 'lint',
       file_path: filePath,
       config_file: configPath,
       workspace: this.workingDirectory,
@@ -35,7 +35,18 @@ class LintServer {
     });
   }
 
-  async start(): Promise<ChildProcessWithoutNullStreams> {
+  async listCops(callback: (data: any) => void): Promise<void> {
+    const params = {
+      action: 'list_cops',
+      workspace: this.workingDirectory,
+    };
+
+    this.serverGet(params, (response: any) => {
+      callback(response.result || {});
+    });
+  }
+
+  async start(): Promise<ChildProcessWithoutNullStreams | null> {
     if (this.rubyServerProcess) {
       return Promise.resolve(this.rubyServerProcess);
     }
@@ -54,11 +65,11 @@ class LintServer {
       this.rubyServerProcess.stdout.on('data', (data) => {
         console.log(`Server output: ${data}`);
 
-        if (data.toString().includes('HAML Lint server running')) {
+        if (data.toString().includes('Server started')) {
           const response = JSON.parse(data.toString());
           this.serverPort = response.port;
 
-          resolve(this.rubyServerProcess!);
+          resolve(this.rubyServerProcess);
         }
       });
 
@@ -78,7 +89,7 @@ class LintServer {
         } else {
           reject(new Error('Timeout starting Ruby server'));
         }
-      }, 3000);
+      }, 10000);
     });
   }
 

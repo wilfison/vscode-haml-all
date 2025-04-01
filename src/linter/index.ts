@@ -23,13 +23,10 @@ export default class Linter {
   private outputChanel: OutputChannel;
   private lintServer: LintServer;
   private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
-  private processes: WeakMap<TextDocument, any> = new WeakMap();
 
   constructor(outputChanel: OutputChannel, lintServer: LintServer) {
     this.outputChanel = outputChanel;
     this.lintServer = lintServer;
-
-    this.loadConfigs();
   }
 
   public dispose() {
@@ -55,39 +52,24 @@ export default class Linter {
     this.collection.clear();
   }
 
-  public loadConfigs() {
-    const libPath = path.join(__dirname, '..', '..', 'lib');
-    const workspaceFolder = workspace.workspaceFolders?.[0];
+  public async loadConfigs() {
+    console.log('Loading haml-lint config...');
 
-    if (!workspaceFolder) {
-      return;
-    }
-
-    const workingDirectory = workspaceFolder.uri.fsPath;
-    const command = `ruby ${libPath}/list_cops.rb ${workingDirectory}`;
-    console.log(`Running: ${command}`);
-
-    exec(command, { cwd: workingDirectory }, (error, stdout, stderr) => {
-      if (error) {
-        console.error(stderr);
-        return;
-      }
-
-      const cops = JSON.parse(stdout);
-      this.hamlLintConfig = { ...this.hamlLintConfig, ...cops.haml_lint };
-      this.rubocopConfig = cops.rubocop;
-
-      notifyErrors(cops, this.outputChanel);
+    await this.lintServer.listCops((data: any) => {
+      this.hamlLintConfig = { ...this.hamlLintConfig, ...data.haml_lint };
+      this.rubocopConfig = data.rubocop;
     });
   }
 
+  public async startServer() {
+    this.outputChanel.appendLine('Starting Haml Lint server...');
+    await this.lintServer.start();
+    this.outputChanel.appendLine('Haml Lint server started');
+
+    return Promise.resolve();
+  }
+
   private async lint(document: TextDocument) {
-    const oldProcess = this.processes.get(document);
-
-    if (oldProcess) {
-      oldProcess.kill();
-    }
-
     const workspaceFolder = workspace.getWorkspaceFolder(document.uri);
 
     if (!workspaceFolder) {
@@ -96,6 +78,10 @@ export default class Linter {
 
     const filePath = document.uri.fsPath;
     const configPath = path.join(workspaceFolder.uri.fsPath, '.haml-lint.yml');
+
+    if (!this.lintServer.rubyServerProcess) {
+      return;
+    }
 
     await this.lintServer.lint(filePath, configPath, (data: LinterOffense[]) => {
       this.collection.delete(document.uri);
@@ -125,18 +111,5 @@ export default class Linter {
     });
 
     return diagnostics;
-  }
-
-  private buildCommand(document: TextDocument): string {
-    const config = workspace.getConfiguration('hamlAll');
-    const args = '--parallel --reporter json';
-
-    let linterExecutablePath = config.linterExecutablePath || SOURCE;
-
-    if (config.useBundler) {
-      linterExecutablePath = `bundle exec ${SOURCE}`;
-    }
-
-    return `${linterExecutablePath} ${args} ${document.uri.fsPath}`;
   }
 }

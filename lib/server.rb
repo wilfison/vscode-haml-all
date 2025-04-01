@@ -9,7 +9,9 @@ require 'socket'
 require 'json'
 require 'haml_lint'
 
+require_relative 'lint_server/controller'
 require_relative 'lint_server/report'
+require_relative 'lint_server/cops'
 
 port = 7654
 
@@ -34,28 +36,9 @@ puts(
 )
 
 loop do
-  client = server.accept
-  request = {}
-
   begin
-    request = JSON.parse(client.gets)
-  rescue JSON::ParserError
-    client.puts({ status: 'error', result: 'Invalid JSON' }.to_json)
-    client.close
-    next
+    LintServer::Controller.call(server)
+  rescue StandardError => e
+    puts({ status: 'error', message: e.message }.to_json)
   end
-
-  result = nil
-
-  begin
-    result = LintServer::Report.lint(request)
-    status = 'success'
-  rescue => e
-    result = "#{e.message}\n#{e.backtrace.join("\n")}"
-    status = 'error'
-  end
-
-  response = { status: status, result: result }.to_json
-  client.puts response
-  client.close
 end

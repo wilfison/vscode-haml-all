@@ -57,7 +57,7 @@ class EventSubscriber {
     workspace.textDocuments.forEach(document => this.linter.run(document));
   }
 
-  private subscribeToEvents() {
+  private async subscribeToEvents() {
     const updateDiagnostics = (document: TextDocument) => this.linter.run(document);
 
     this.context.subscriptions.push(this.linter);
@@ -86,7 +86,9 @@ class EventSubscriber {
       )
     );
 
-    this.updateAllDiagnostics();
+    this.linter.startServer().then(() => {
+      this.updateAllDiagnostics();
+    });
   }
 
   private async onUpdateLintConfig() {

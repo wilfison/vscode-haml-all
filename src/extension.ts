@@ -25,7 +25,6 @@ export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration('hamlAll');
 
   lintServer = new LintServer(getWorkspaceRoot(), config.useBundler);
-  lintServer.start();
 
   const eventSubscriber = new EventSubscriber(context, outputChanel, lintServer);
 
