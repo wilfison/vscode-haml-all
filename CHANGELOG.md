@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.2] - 2025-04-05
+
+- Feat: add `CodeLens` support for navigating to controller actions.
+
 ## [1.2.1] - 2025-04-02
 
 - Feat: create background server for haml-lint to improve performance.
