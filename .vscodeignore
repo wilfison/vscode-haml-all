@@ -16,3 +16,4 @@ vsc-extension-quickstart.md
 node_modules
 .ruby-lsp
 Gemfile*
+out/test/**

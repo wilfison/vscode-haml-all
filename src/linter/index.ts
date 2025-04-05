@@ -1,7 +1,5 @@
-import { exec } from 'node:child_process';
 import path from 'node:path';
 import {
-  Diagnostic,
   DiagnosticCollection,
   languages,
   TextDocument,
@@ -9,9 +7,10 @@ import {
   OutputChannel
 } from 'vscode';
 
-import { LinterConfig, LinterOutput, RuboCopConfig } from '../types';
-import { DiagnosticFull, notifyErrors, parseLintOffence } from './parser';
+import { LinterConfig, LinterOffense, RuboCopConfig } from '../types';
+import { DiagnosticFull, parseLintOffence } from './parser';
 import { HAML_LINT_DEFAULT_COPS } from './cops';
+import LintServer from './server';
 
 export const SOURCE = 'haml-lint';
 
@@ -20,13 +19,12 @@ export default class Linter {
   public rubocopConfig: RuboCopConfig | null = null;
 
   private outputChanel: OutputChannel;
+  private lintServer: LintServer;
   private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
-  private processes: WeakMap<TextDocument, any> = new WeakMap();
 
-  constructor(outputChanel: OutputChannel) {
+  constructor(outputChanel: OutputChannel, lintServer: LintServer) {
     this.outputChanel = outputChanel;
-
-    this.loadConfigs();
+    this.lintServer = lintServer;
   }
 
   public dispose() {
@@ -52,81 +50,54 @@ export default class Linter {
     this.collection.clear();
   }
 
-  public loadConfigs() {
-    const libPath = path.join(__dirname, '..', '..', 'lib');
-    const workspaceFolder = workspace.workspaceFolders?.[0];
+  public async loadConfigs() {
+    console.log('Loading haml-lint config...');
 
-    if (!workspaceFolder) {
-      return;
-    }
-
-    const workingDirectory = workspaceFolder.uri.fsPath;
-    const command = `ruby ${libPath}/list_cops.rb ${workingDirectory}`;
-    console.log(`Running: ${command}`);
-
-    exec(command, { cwd: workingDirectory }, (error, stdout, stderr) => {
-      if (error) {
-        console.error(stderr);
-        return;
-      }
-
-      const cops = JSON.parse(stdout);
-      this.hamlLintConfig = { ...this.hamlLintConfig, ...cops.haml_lint };
-      this.rubocopConfig = cops.rubocop;
-
-      notifyErrors(cops, this.outputChanel);
+    await this.lintServer.listCops((data: any) => {
+      this.hamlLintConfig = { ...this.hamlLintConfig, ...data.haml_lint };
+      this.rubocopConfig = data.rubocop;
     });
   }
 
+  public async startServer() {
+    this.outputChanel.appendLine('Starting Haml Lint server...');
+    await this.lintServer.start();
+    this.outputChanel.appendLine('Haml Lint server started');
+
+    return Promise.resolve();
+  }
+
   private async lint(document: TextDocument) {
-    const oldProcess = this.processes.get(document);
-
-    if (oldProcess) {
-      oldProcess.kill();
-    }
-
     const workspaceFolder = workspace.getWorkspaceFolder(document.uri);
 
     if (!workspaceFolder) {
       return;
     }
 
-    const command = this.buildCommand(document);
-    const text = document.getText();
+    const filePath = document.uri.fsPath;
+    const configPath = path.join(workspaceFolder.uri.fsPath, '.haml-lint.yml');
 
-    this.outputChanel.appendLine(`Linting ${document.uri.scheme}:${document.uri.path}`);
-    const process = exec(command, { cwd: workspaceFolder.uri.fsPath }, (error, stdout, stderr) => {
-      this.processes.delete(document);
-
-      // NOTE: The document may have been modified since the lint was triggered.
-      if (text !== document.getText()) { return; }
-
-      this.collection.delete(document.uri);
-      if (!error) {
-        return;
-      }
-
-      if (error.code === 1 && stderr.length > 0) {
-        console.error(stderr);
-        return;
-      }
-
-      this.collection.set(document.uri, this.parse(stdout, document));
-    });
-
-    this.processes.set(document, process);
-  }
-
-  private parse(output: string, document: TextDocument): DiagnosticFull[] {
-    const json = JSON.parse(output) as LinterOutput;
-    if (json.files.length < 1) {
-      return [];
+    if (!this.lintServer.rubyServerProcess) {
+      return;
     }
 
+    await this.lintServer.lint(filePath, configPath, (data: LinterOffense[]) => {
+      this.collection.delete(document.uri);
+
+      if (data.length > 0) {
+        const diagnostics = this.parse(data, document);
+        this.collection.set(document.uri, diagnostics);
+      } else {
+        this.collection.delete(document.uri);
+      }
+    });
+  }
+
+  private parse(lintOffenses: LinterOffense[], document: TextDocument): DiagnosticFull[] {
     // set unique key for each diagnostic and line
     const offenses = new Map<string, any>();
 
-    json.files[0].offenses.forEach(offense => {
+    lintOffenses.forEach(offense => {
       const key = `${offense.location.line}:${offense.message}`;
       offenses.set(key, offense);
     });
@@ -138,18 +109,5 @@ export default class Linter {
     });
 
     return diagnostics;
-  }
-
-  private buildCommand(document: TextDocument): string {
-    const config = workspace.getConfiguration('hamlAll');
-    const args = '--parallel --reporter json';
-
-    let linterExecutablePath = config.linterExecutablePath || SOURCE;
-
-    if (config.useBundler) {
-      linterExecutablePath = `bundle exec ${SOURCE}`;
-    }
-
-    return `${linterExecutablePath} ${args} ${document.uri.fsPath}`;
   }
 }

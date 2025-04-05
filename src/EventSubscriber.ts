@@ -13,6 +13,7 @@ import FixActionsProvider from './providers/FixActionsProvider';
 import { loadWithProgress } from './rails/utils';
 import Routes from './rails/routes';
 import { isARailsProject } from './Helpers';
+import LintServer from './linter/server';
 
 class EventSubscriber {
   public routes: Routes;
@@ -23,14 +24,14 @@ class EventSubscriber {
   private outputChanel: OutputChannel;
   private rootPath: Uri;
 
-  constructor(context: ExtensionContext, outputChanel: OutputChannel) {
+  constructor(context: ExtensionContext, outputChanel: OutputChannel, lintServer: LintServer) {
     this.context = context;
     this.outputChanel = outputChanel;
     this.rootPath = workspace.workspaceFolders![0].uri;
 
     this.isARailsProject = isARailsProject();
 
-    this.linter = new Linter(outputChanel);
+    this.linter = new Linter(this.outputChanel, lintServer);
     this.routes = new Routes(this.rootPath.fsPath);
   }
 
@@ -56,7 +57,7 @@ class EventSubscriber {
     workspace.textDocuments.forEach(document => this.linter.run(document));
   }
 
-  private subscribeToEvents() {
+  private async subscribeToEvents() {
     const updateDiagnostics = (document: TextDocument) => this.linter.run(document);
 
     this.context.subscriptions.push(this.linter);
@@ -85,7 +86,9 @@ class EventSubscriber {
       )
     );
 
-    this.updateAllDiagnostics();
+    this.linter.startServer().then(() => {
+      this.updateAllDiagnostics();
+    });
   }
 
   private async onUpdateLintConfig() {

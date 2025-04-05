@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.1] - 2025-04-02
+
+- Feat: create background server for haml-lint to improve performance.
+
 ## [1.1.9] - 2025-03-28
 
 - Fix: update regex for unnecessary string output and enhance test cases

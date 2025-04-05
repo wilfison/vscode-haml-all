@@ -13,13 +13,20 @@ import { ViewCodeActionProvider, createPartialFromSelection } from './providers/
 import { html2Haml } from './html2Haml';
 import FormattingEditProvider from './providers/FormattingEditProvider';
 import LivePreviewPanel from './LivePreviewPanel';
+import LintServer from './linter/server';
+import { getWorkspaceRoot } from './ultils/file';
 
-export function activate(context: vscode.ExtensionContext) {
+let lintServer: LintServer = new LintServer(getWorkspaceRoot(), false);
+
+export async function activate(context: vscode.ExtensionContext) {
   console.log('haml-all active!');
 
   const outputChanel = vscode.window.createOutputChannel('Haml');
   const config = vscode.workspace.getConfiguration('hamlAll');
-  const eventSubscriber = new EventSubscriber(context, outputChanel);
+
+  lintServer = new LintServer(getWorkspaceRoot(), config.useBundler);
+
+  const eventSubscriber = new EventSubscriber(context, outputChanel, lintServer);
 
   const HAML_SELECTOR = { language: 'haml', scheme: 'file' };
   const RUBY_SELECTOR = { language: 'ruby', scheme: 'file' };
@@ -97,7 +104,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('hamlAll.livePreview', () => {
-      LivePreviewPanel.createOrShow(context.extensionUri);
+      LivePreviewPanel.createOrShow(context.extensionUri, lintServer);
     })
   );
 
@@ -113,5 +120,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export function deactivate() {
+  if (lintServer) {
+    lintServer.stop();
+  }
+
   console.log('haml-all deactivated!');
 }

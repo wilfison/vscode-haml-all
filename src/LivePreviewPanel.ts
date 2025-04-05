@@ -1,17 +1,17 @@
-import { execSync } from 'node:child_process';
-import path from 'node:path';
-
 import * as vscode from 'vscode';
+import LintServer from './linter/server';
 
 export default class LivePreviewPanel {
   public static currentPanel: LivePreviewPanel | undefined;
 
+  private lintServer: LintServer;
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
 
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, lintServer: LintServer) {
     this._panel = panel;
     this._extensionUri = extensionUri;
+    this.lintServer = lintServer;
 
     const hamlContent = vscode.window.activeTextEditor?.document.getText();
     this.update(hamlContent);
@@ -26,10 +26,16 @@ export default class LivePreviewPanel {
       return;
     }
 
-    this._panel.webview.html = await this._getHtmlForWebview(hamlContent || '');
+    await this.lintServer.compileHaml(hamlContent, (result: any) => {
+      if (result.error) {
+        this._panel.webview.html = `<h1>${result.error}</h1>`;
+      } else {
+        this._panel.webview.html = result.result;
+      }
+    });
   }
 
-  public static createOrShow(extensionUri: vscode.Uri) {
+  public static createOrShow(extensionUri: vscode.Uri, lintServer: LintServer) {
     const column = vscode.ViewColumn.Two;
 
     if (LivePreviewPanel.currentPanel) {
@@ -46,22 +52,7 @@ export default class LivePreviewPanel {
       }
     );
 
-    LivePreviewPanel.currentPanel = new LivePreviewPanel(panel, extensionUri);
-  }
-
-  // transform haml to html
-  private async _getHtmlForWebview(hamlContent: string) {
-    const libPath = path.join(__dirname, '..', 'lib');
-    const command = `ruby ${libPath}/compile.rb`;
-
-    try {
-      const result = execSync(command, { input: hamlContent });
-
-      return result.toString();
-    }
-    catch (error) {
-      return String(error);
-    }
+    LivePreviewPanel.currentPanel = new LivePreviewPanel(panel, extensionUri, lintServer);
   }
 
   private _watchFile() {
