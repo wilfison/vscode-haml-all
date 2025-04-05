@@ -1,8 +1,26 @@
 import fs from 'node:fs';
-import { Position, TextDocument, workspace } from 'vscode';
+import { Position, Range, TextDocument, Uri, window, workspace } from 'vscode';
 
 const PARTIAL_EXPLICIT_REGEX = /partial\:\s*["':\/\-_]?([\/\-_\w]+)/;
 const PARTIAL_IMPLICIT_REGEX = /["':\/\-_]([\/\-_\w]+)/;
+
+export function openFile(path: string, lineNumber: number): void {
+  const uri = Uri.file(path);
+
+  workspace.openTextDocument(uri).then((document) => {
+    window.showTextDocument(document, {
+      selection: new Range(lineNumber, 0, lineNumber, 0)
+    });
+  });
+}
+
+export function isPartialDocument(document: TextDocument): boolean {
+  if (document.languageId !== 'haml') {
+    return false;
+  }
+
+  return (document.fileName.split('/').pop() || '')?.startsWith('_');
+}
 
 export function getWorkspaceRoot(): string {
   return workspace.workspaceFolders?.[0]?.uri.path || '';

@@ -8,13 +8,14 @@ import ViewFileDefinitionProvider from './providers/ViewFileDefinitionProvider';
 import RoutesCompletionProvider from './providers/RoutesCompletionProvider';
 import RoutesDefinitionProvider from './providers/RoutesDefinitionProvider';
 import PartialSignatureHelpProvider from './providers/PartialSignatureHelpProvider';
+import CodeLensProvider from './providers/CodeLensProvider';
 
 import { ViewCodeActionProvider, createPartialFromSelection } from './providers/ViewCodeActionProvider';
 import { html2Haml } from './html2Haml';
 import FormattingEditProvider from './providers/FormattingEditProvider';
 import LivePreviewPanel from './LivePreviewPanel';
 import LintServer from './linter/server';
-import { getWorkspaceRoot } from './ultils/file';
+import { getWorkspaceRoot, openFile } from './ultils/file';
 
 let lintServer: LintServer = new LintServer(getWorkspaceRoot(), false);
 
@@ -89,6 +90,13 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider(
+      HAML_SELECTOR,
+      new CodeLensProvider()
+    )
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand(
       'hamlAll.createPartialFromSelection',
       createPartialFromSelection
@@ -105,6 +113,14 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('hamlAll.livePreview', () => {
       LivePreviewPanel.createOrShow(context.extensionUri, lintServer);
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('hamlAll.openFile', (path, lineNumber) => {
+      outputChanel.appendLine(`Opening file: ${path}:${lineNumber}`);
+
+      openFile(path, lineNumber);
     })
   );
 
