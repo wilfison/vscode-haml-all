@@ -7,7 +7,13 @@ end
 
 require 'socket'
 require 'json'
-require 'haml_lint'
+
+begin
+  require 'haml_lint'
+rescue LoadError
+  gem install haml_lint
+  retry
+end
 
 require_relative 'lint_server/controller'
 require_relative 'lint_server/report'
