@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.2.3] - 2025-04-08
+
+- Fix: handle loaderror for `haml_lint` dependency
+- Fix: handle errors during haml lint server startup and improve logging
+- Fix: update diagnostics on linter server start
+- Refactor: remove deprecated haml compilation code
+
 ## [1.2.2] - 2025-04-05
 
 - Feat: add `CodeLens` support for navigating to controller actions.
