@@ -92,7 +92,7 @@ class LintServer {
       });
 
       this.rubyServerProcess.stderr.on('data', (data) => {
-        console.error(`Server error: ${data}`);
+        reject(`Server error: ${data}`);
       });
 
       this.rubyServerProcess.on('close', (code) => {

@@ -60,11 +60,17 @@ export default class Linter {
   }
 
   public async startServer() {
-    this.outputChanel.appendLine('Starting Haml Lint server...');
-    await this.lintServer.start();
-    this.outputChanel.appendLine('Haml Lint server started');
+    try {
+      this.outputChanel.appendLine('Starting Haml Lint server...');
+      await this.lintServer.start();
+      this.outputChanel.appendLine('Haml Lint server started');
 
-    return Promise.resolve();
+      return Promise.resolve();
+    }
+    catch (error) {
+      this.outputChanel.appendLine(`Error starting Haml Lint server: ${error}`);
+      return Promise.reject(error);
+    }
   }
 
   private async lint(document: TextDocument) {
@@ -80,6 +86,8 @@ export default class Linter {
     if (!this.lintServer.rubyServerProcess) {
       return;
     }
+
+    this.outputChanel.appendLine(`Linting ${document.uri.scheme}:${document.uri.path}`);
 
     await this.lintServer.lint(filePath, configPath, (data: LinterOffense[]) => {
       this.collection.delete(document.uri);
