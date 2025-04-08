@@ -87,7 +87,7 @@ class EventSubscriber {
     );
 
     this.linter.startServer().then(() => {
-      this.updateAllDiagnostics();
+      this.onUpdateLintConfig();
     });
   }
 
