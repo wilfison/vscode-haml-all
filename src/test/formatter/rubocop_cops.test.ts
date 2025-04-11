@@ -29,11 +29,18 @@ suite('RuboCop Cops', () => {
     test('should convert single quotes to double quotes when EnforcedStyle is double_quotes', () => {
       const config = DEFAULT_RUBOCOP_CONFIG;
 
-      const text = '= render(\'form\', locals: { user: user, title: \'No "update" this content\'  })';
-      const expected = '= render("form", locals: { user: user, title: \'No "update" this content\'  })';
-      const result = rubocopFixes.fixStringLiterals(text, config);
+      const text = [
+        '= render(\'form\', locals: { user: user, title: \'No "update" this content\'  })',
+        '= number_to_currency(billing.amount, unit: \'R$\', separator: \',\', delimiter: \'\')'
+      ];
 
-      assert.strictEqual(result, expected);
+      const expected = [
+        '= render("form", locals: { user: user, title: \'No "update" this content\'  })',
+        '= number_to_currency(billing.amount, unit: "R$", separator: \',\', delimiter: "")'
+      ];
+
+      const result = text.map((t) => rubocopFixes.fixStringLiterals(t, config));
+      assert.deepStrictEqual(result, expected);
     });
 
     test('should convert double quotes to single quotes when EnforcedStyle is single_quotes', () => {
@@ -45,11 +52,18 @@ suite('RuboCop Cops', () => {
         },
       } as RuboCopConfig;
 
-      const text = '= render("form", locals: { user: user, title: "No \'update\' this content"  })';
-      const expected = '= render(\'form\', locals: { user: user, title: "No \'update\' this content"  })';
-      const result = rubocopFixes.fixStringLiterals(text, config);
+      const text = [
+        '= render("form", locals: { user: user, title: "No \'update\' this content"  })',
+        '= number_to_currency(billing.amount, unit: "R$", separator: ",", delimiter: "")'
+      ];
 
-      assert.strictEqual(result, expected);
+      const expected = [
+        '= render(\'form\', locals: { user: user, title: "No \'update\' this content"  })',
+        '= number_to_currency(billing.amount, unit: \'R$\', separator: ",", delimiter: \'\')'
+      ];
+
+      const result = text.map((t) => rubocopFixes.fixStringLiterals(t, config));
+      assert.deepStrictEqual(result, expected);
     });
   });
 
@@ -61,14 +75,16 @@ suite('RuboCop Cops', () => {
         '= render(foo: "bar")',
         '= render( foo: "bar")',
         '= render(foo: "bar" )',
-        '= render( foo: "bar" )'
+        '= render( foo: "bar" )',
+        '= number_to_currency(billing.amount, unit: \'R$\', separator: ",", delimiter: \'\')'
       ];
 
       const expected = [
         '= render( foo: "bar" )',
         '= render( foo: "bar" )',
         '= render( foo: "bar" )',
-        '= render( foo: "bar" )'
+        '= render( foo: "bar" )',
+        '= number_to_currency( billing.amount, unit: \'R$\', separator: ",", delimiter: \'\' )'
       ];
 
       const result = text.map((t) => rubocopFixes.fixSpaceInsideParens(t, config));
@@ -93,14 +109,16 @@ suite('RuboCop Cops', () => {
         '= render(foo: "bar")',
         '= render( foo: "bar")',
         '= render(foo: "bar" )',
-        '= render( foo: "bar" )'
+        '= render( foo: "bar" )',
+        '= number_to_currency( billing.amount, unit: \'R$\', separator: ",", delimiter: \'\' )'
       ];
 
       const expected = [
         '= render(foo: "bar")',
         '= render(foo: "bar")',
         '= render(foo: "bar")',
-        '= render(foo: "bar")'
+        '= render(foo: "bar")',
+        '= number_to_currency(billing.amount, unit: \'R$\', separator: ",", delimiter: \'\')'
       ];
 
       const result = text.map((t) => rubocopFixes.fixSpaceInsideParens(t, config));

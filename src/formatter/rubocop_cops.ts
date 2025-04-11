@@ -1,5 +1,6 @@
 import { RuboCopConfig } from '../types';
 import { stringContainsAny } from '../ultils/array';
+import { stringReplace } from '../ultils/regex';
 import { RESERVED_RUBY_WORDS } from '../ultils/ruby';
 
 function fixStringLiterals(text: string, config: RuboCopConfig): string {
@@ -10,7 +11,7 @@ function fixStringLiterals(text: string, config: RuboCopConfig): string {
   const enforcedStyle = config['Style/StringLiterals'].EnforcedStyle;
   const wrongQuote = enforcedStyle === 'double_quotes' ? '\'' : '"';
   const rightQuote = enforcedStyle === 'double_quotes' ? '"' : '\'';
-  const regex = new RegExp(`(?<!#{\\w+\\()${wrongQuote}([^'",\\n#]*)${wrongQuote}`, 'g');
+  const regex = new RegExp(`${wrongQuote}{2}|(?<!#{\\w+\\()${wrongQuote}([^'",\\n#]*)${wrongQuote}`, 'g');
 
   return text.replace(regex, (textMatch) => {
     if (textMatch.includes('#{')) {
@@ -33,7 +34,7 @@ function fixSpaceInsideParens(text: string, config: RuboCopConfig): string {
   }
 
   const space = enforcedStyle === 'space' ? ' ' : '';
-  const regex = /\((.*)\)$/;
+  const regex = /\((.*?)\)$/;
 
   const match = text.match(regex);
 
@@ -42,8 +43,9 @@ function fixSpaceInsideParens(text: string, config: RuboCopConfig): string {
   }
 
   const code = match[1].trim();
+  const finalText = stringReplace(text, match[0], `(${space}${code}${space})`);
 
-  return text.replace(match[0], `(${space}${code}${space})`);
+  return finalText;
 }
 
 function fixSpaceBeforeComma(text: string, config: RuboCopConfig): string {

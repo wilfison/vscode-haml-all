@@ -9,3 +9,9 @@ export function ecmaScriptRegexFromRubyRegex(regex: string): RegExp {
 
   return new RegExp(ecmaReg);
 }
+
+export function stringReplace(text: string, regex: RegExp | string, replacement: string): string {
+  const satitizedReplacement = replacement.replace('$', '$$$');
+
+  return text.replace(regex, satitizedReplacement);
+}
