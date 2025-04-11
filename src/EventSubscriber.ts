@@ -6,6 +6,7 @@ import {
   ExtensionContext,
   Uri,
   OutputChannel,
+  window,
 } from 'vscode';
 
 import Linter from './linter';
@@ -70,6 +71,14 @@ class EventSubscriber {
     this.context.subscriptions.push(
       workspace.onDidSaveTextDocument(async (document: TextDocument) => {
         updateDiagnostics(document);
+      })
+    );
+
+    this.context.subscriptions.push(
+      workspace.onDidChangeTextDocument(async (event) => {
+        if (event.contentChanges.length > 0 && event.document === window.activeTextEditor?.document) {
+          updateDiagnostics(event.document);
+        }
       })
     );
 

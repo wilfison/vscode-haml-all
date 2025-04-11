@@ -16,10 +16,11 @@ class LintServer {
     this.useBundler = useBundler;
   }
 
-  async lint(filePath: string, configPath: string, callback: (data: LinterOffense[]) => void): Promise<void> {
+  async lint(template: string, filePath: string, configPath: string, callback: (data: LinterOffense[]) => void): Promise<void> {
     const params = {
       action: 'lint',
       file_path: filePath,
+      template: template,
       config_file: configPath,
       workspace: this.workingDirectory,
     };
@@ -123,7 +124,6 @@ class LintServer {
 
     client.connect(this.serverPort, '127.0.0.1', () => {
       const request = JSON.stringify(params);
-      console.log(`Sending request: ${request}`);
       client.write(request + '\n');
     });
 
@@ -135,7 +135,6 @@ class LintServer {
 
     client.on('end', () => {
       try {
-        console.log(`Received data: ${data}`);
         const response = JSON.parse(data);
 
         if (response.status !== 'success') {

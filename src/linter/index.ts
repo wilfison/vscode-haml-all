@@ -89,7 +89,7 @@ export default class Linter {
 
     this.outputChanel.appendLine(`Linting ${document.uri.scheme}:${document.uri.path}`);
 
-    await this.lintServer.lint(filePath, configPath, (data: LinterOffense[]) => {
+    await this.lintServer.lint(document.getText(), filePath, configPath, (data: LinterOffense[]) => {
       this.collection.delete(document.uri);
 
       if (data.length > 0) {
