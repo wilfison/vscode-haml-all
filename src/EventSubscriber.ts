@@ -35,6 +35,11 @@ class EventSubscriber {
     this.routes = new Routes(this.rootPath.fsPath);
   }
 
+  public subscribe(): void {
+    this.subscribeHaml();
+    this.subscribeRails();
+  }
+
   public subscribeHaml() {
     this.subscribeToEvents();
     this.subscribeHamlWatchers();
