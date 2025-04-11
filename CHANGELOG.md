@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.4] - 2025-04-10
+
+- Fix: formating bug when have `$` sign in string.
+- Feat: implement event subscription management in extensionactivator
+
 ## [1.2.3] - 2025-04-08
 
 - Fix: handle loaderror for `haml_lint` dependency
