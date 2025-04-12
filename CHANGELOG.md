@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.5] - 2025-04-12
+
+- Feat: realtime linter.
+
 ## [1.2.4] - 2025-04-10
 
 - Fix: formating bug when have `$` sign in string.
