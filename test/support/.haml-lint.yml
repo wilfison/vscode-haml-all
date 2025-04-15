@@ -1,0 +1,19 @@
+linters:
+  LineLength:
+    enabled: true
+    max: 200
+
+  SpaceInsideHashAttributes:
+    enabled: false
+    style: space
+
+  IdNames:
+    enabled: false
+    style: camel_case
+
+  InlineStyles:
+    enabled: false
+
+  ViewLength:
+    enabled: false
+    max: 200
