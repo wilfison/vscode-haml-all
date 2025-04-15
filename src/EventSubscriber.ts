@@ -7,6 +7,7 @@ import {
   Uri,
   OutputChannel,
   window,
+  ProgressLocation,
 } from 'vscode';
 
 import Linter from './linter';
@@ -100,9 +101,16 @@ class EventSubscriber {
       )
     );
 
-    this.linter.startServer().then(() => {
-      this.onUpdateLintConfig();
-    });
+    window.withProgress(
+      {
+        location: ProgressLocation.Window,
+        title: 'Initializing HAML Lint',
+      },
+      async () => {
+        await this.linter.startServer();
+        await this.onUpdateLintConfig();
+      },
+    );
   }
 
   private async onUpdateLintConfig() {

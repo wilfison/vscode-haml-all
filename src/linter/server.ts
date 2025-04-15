@@ -4,6 +4,12 @@ import net from 'node:net';
 
 import { LinterOffense } from '../types';
 
+type CallbakFunc<T> = (data: T) => void;
+type ServerResponse<T> = {
+  status: string;
+  result: T;
+}
+
 class LintServer {
   public rubyServerProcess: ChildProcessWithoutNullStreams | null = null;
   private serverPort = 7654;
@@ -16,7 +22,7 @@ class LintServer {
     this.useBundler = useBundler;
   }
 
-  async lint(template: string, filePath: string, configPath: string, callback: (data: LinterOffense[]) => void): Promise<void> {
+  async lint(template: string, filePath: string, configPath: string, callback: CallbakFunc<LinterOffense[]>): Promise<void> {
     const params = {
       action: 'lint',
       file_path: filePath,
@@ -25,15 +31,44 @@ class LintServer {
       workspace: this.workingDirectory,
     };
 
-    this.serverGet(params, (response: any) => {
-      const result = response.result as LinterOffense[];
+    try {
+      const response = await this.serverGet(params) as ServerResponse<LinterOffense[]>;
 
-      if (result.length > 0) {
-        callback(result);
-      } else {
+      if (response.status !== 'success') {
+        console.error(`Error from server: ${response.result}`);
         callback([]);
+        return;
       }
-    });
+
+      callback(response.result);
+    } catch (error) {
+      console.error(`Error while linting: ${error}`);
+      callback([]);
+    }
+  }
+
+  async autocorrect(template: string, filePath: string, configPath: string): Promise<string> {
+    const params = {
+      action: 'autocorrect',
+      file_path: filePath,
+      template: template,
+      config_file: configPath,
+      workspace: this.workingDirectory,
+    };
+
+    try {
+      const response = await this.serverGet(params) as ServerResponse<string>;
+
+      if (response.status !== 'success') {
+        console.error(`Error from server: ${response.result}`);
+        return '';
+      }
+
+      return response.result;
+    } catch (error) {
+      console.error(`Error while autocorrecting: ${error}`);
+      return '';
+    }
   }
 
   async listCops(callback: (data: any) => void): Promise<void> {
@@ -42,9 +77,20 @@ class LintServer {
       workspace: this.workingDirectory,
     };
 
-    this.serverGet(params, (response: any) => {
-      callback(response.result || {});
-    });
+    try {
+      const response = await this.serverGet(params) as ServerResponse<any>;
+
+      if (response.status !== 'success') {
+        console.error(`Error from server: ${response.result}`);
+        callback([]);
+        return;
+      }
+
+      callback(response.result);
+    } catch (error) {
+      console.error(`Error while listing cops: ${error}`);
+      callback([]);
+    }
   }
 
   async compileHaml(template: string, callback: (data: any) => void): Promise<void> {
@@ -60,9 +106,20 @@ class LintServer {
       template: template,
     };
 
-    this.serverGet(params, (response: any) => {
-      callback(response || {});
-    });
+    try {
+      const response = await this.serverGet(params) as ServerResponse<any>;
+
+      if (response.status !== 'success') {
+        console.error(`Error from server: ${response.result}`);
+        callback([]);
+        return;
+      }
+
+      callback(response.result);
+    } catch (error) {
+      console.error(`Error while compiling HAML: ${error}`);
+      callback([]);
+    }
   }
 
   async start(): Promise<ChildProcessWithoutNullStreams | null> {
@@ -71,7 +128,7 @@ class LintServer {
     }
 
     const libPath = path.join(__dirname, '..', '..', 'lib');
-    const args = [`${libPath}/server.rb`];
+    const args = [`${libPath}/server.rb`, 'start'];
 
     if (this.useBundler) {
       args.push('--use-bundler');
@@ -119,37 +176,41 @@ class LintServer {
     }
   }
 
-  private serverGet(params: any, callback: (data: any) => void): void {
-    const client = new net.Socket();
+  private serverGet(params: any): Promise<ServerResponse<any>> {
+    return new Promise((resolve, reject) => {
+      const client = new net.Socket();
 
-    client.connect(this.serverPort, '127.0.0.1', () => {
-      const request = JSON.stringify(params);
-      client.write(request + '\n');
-    });
+      console.log(`Server request: ${JSON.stringify(params)}`);
+      client.connect(this.serverPort, '127.0.0.1', () => {
+        const request = JSON.stringify(params);
+        client.write(request + '\n');
+      });
 
-    let data = '';
+      let data = '';
 
-    client.on('data', (chunk) => {
-      data += chunk.toString();
-    });
+      client.on('data', (chunk) => {
+        data += chunk.toString();
+      });
 
-    client.on('end', () => {
-      try {
-        const response = JSON.parse(data);
+      client.on('end', () => {
+        try {
+          console.log(`Server response: ${data}`);
+          const response = JSON.parse(data) as ServerResponse<any>;
 
-        if (response.status !== 'success') {
-          console.error(`Error from server: ${response.error}`);
-          return {};
+          if (response.status !== 'success') {
+            console.error(`Error from server: ${response.result}`);
+            return {};
+          }
+
+          resolve(response);
+        } catch (e: any) {
+          reject(new Error(`Failed to parse response: ${e.message}`));
         }
+      });
 
-        callback(response);
-      } catch (e: any) {
-        Promise.reject(new Error(`Failed to parse response: ${e.message}`));
-      }
-    });
-
-    client.on('error', (err) => {
-      Promise.reject(err);
+      client.on('error', (err) => {
+        reject(err);
+      });
     });
   }
 }

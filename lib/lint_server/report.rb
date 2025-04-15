@@ -1,37 +1,34 @@
+# frozen_string_literal: true
+
 module LintServer
   module Report
-    class HamlLintRunner < HamlLint::Runner
-      def run(template, file_path, options = {})
-        @config = load_applicable_config(options)
-        @sources = extract_sources(template, file_path)
-        @linter_selector = HamlLint::LinterSelector.new(config, options)
-        @fail_fast = options.fetch(:fail_fast, false)
-        @cache = {}
-        @autocorrect = options[:autocorrect]
-        @autocorrect_only = options[:autocorrect_only]
-        @autocorrect_stdout = options[:stdin] && options[:stderr]
+    def self.options_from_request(request)
+      template = request["template"]
+      file_path = request["file_path"]
+      config_file = request["config_file"] if request["config_file"] && File.exist?(request["config_file"])
 
-        report(options)
-      end
-
-      private
-
-      def extract_sources(template, file_path)
-        [HamlLint::Source.new(io: StringIO.new(template), path: file_path)]
-      end
+      {
+        template: template,
+        file_path: file_path,
+        config_file: config_file,
+        reporter: json_reporter
+      }
     end
 
+    # @param [Hash] options
+    # @option options [String] :template The HAML template to lint.
+    # @option options [String] :file_path The path to the file being linted.
+    # @option options [String] :config_file The path to the HAML lint config file.
+    # @return [Array<Hash>] An array of hashes containing linting results.
     def self.lint(request = {})
-      template = request['template']
-      file_path = request['file_path']
-      config_file = request['config_file'] if request['config_file'] && File.exist?(request['config_file'])
+      options = options_from_request(request)
 
-      runner = HamlLintRunner.new
+      runner = LintServer::Runner.new
       report = runner.run(
-        template,
-        file_path,
-        config_file: config_file,
-        reporter: HamlLint::Reporter::JsonReporter.new(HamlLint::Logger.new($stderr)),
+        options[:template],
+        options[:file_path],
+        config_file: options[:config_file],
+        reporter: options[:reporter]
       )
 
       report.lints.map do |lint|
@@ -42,6 +39,23 @@ module LintServer
           linter_name: lint.linter.name
         }
       end
+    end
+
+    # @return String the autocorrected source code
+    def self.autocorrect(request = {})
+      options = options_from_request(request)
+
+      runner = LintServer::Runner.new
+      runner.run_autocorrect(
+        options[:template],
+        options[:file_path],
+        config_file: options[:config_file],
+        reporter: options[:reporter]
+      )
+    end
+
+    def self.json_reporter
+      HamlLint::Reporter::JsonReporter.new(HamlLint::Logger.new($stderr))
     end
   end
 end

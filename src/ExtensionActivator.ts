@@ -61,7 +61,7 @@ export class ExtensionActivator {
     this.context.subscriptions.push(
       vscode.languages.registerDocumentFormattingEditProvider(
         this.HAML_SELECTOR,
-        new FormattingEditProvider(eventSubscriber.linter, this.outputChannel)
+        new FormattingEditProvider(eventSubscriber.linter, this.outputChannel, this.lintServer)
       )
     );
 

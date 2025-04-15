@@ -73,20 +73,28 @@ export default class Linter {
     }
   }
 
-  private async lint(document: TextDocument) {
+  public configFilePath(document: TextDocument) {
     const workspaceFolder = workspace.getWorkspaceFolder(document.uri);
 
     if (!workspaceFolder) {
-      return;
+      return '';
     }
 
-    const filePath = document.uri.fsPath;
-    const configPath = path.join(workspaceFolder.uri.fsPath, '.haml-lint.yml');
+    return path.join(workspaceFolder.uri.fsPath, '.haml-lint.yml');
+  }
+
+  private async lint(document: TextDocument) {
+    const configPath = this.configFilePath(document);
+
+    if (!configPath) {
+      return;
+    }
 
     if (!this.lintServer.rubyServerProcess) {
       return;
     }
 
+    const filePath = document.uri.fsPath;
     this.outputChanel.appendLine(`Linting ${document.uri.scheme}:${document.uri.path}`);
 
     await this.lintServer.lint(document.getText(), filePath, configPath, (data: LinterOffense[]) => {
