@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.6] - 2025-04-15
+
+- Feat: implement lint server with autocorrect using `haml_lint` gem.
+- Refactor: remove rubocop autoformat without server.
+
 ## [1.2.5] - 2025-04-12
 
 - Feat: realtime linter.
