@@ -36,7 +36,6 @@ type LinterConfigEnabler = {
 
 export type LinterConfigWithErrors = {
   haml_lint: { error?: string };
-  rubocop: { error?: string };
 };
 
 type LinterRubocopIgnores = {
@@ -66,28 +65,3 @@ export type LinterConfig = {
   TrailingWhitespace: LinterConfigEnabler;
   UnnecessaryStringOutput: LinterConfigEnabler;
 }
-
-type RuboCopConfigEnabler = {
-  Enabled: boolean;
-};
-
-/**
- * @see https://github.com/sds/haml-lint/blob/main/lib/haml_lint/linter/README.md
- */
-export type RuboCopConfig = {
-  'Layout/SpaceBeforeComma': RuboCopConfigEnabler;
-
-  'Style/StringLiterals': RuboCopConfigEnabler & {
-    EnforcedStyle: 'double_quotes' | 'single_quotes';
-  };
-
-  'Layout/SpaceAfterColon': RuboCopConfigEnabler;
-
-  'Layout/SpaceInsideParens': RuboCopConfigEnabler & {
-    EnforcedStyle: 'space' | 'no_space' | 'compact';
-  };
-
-  'Style/MethodCallWithArgsParentheses': RuboCopConfigEnabler & {
-    EnforcedStyle: 'require_parentheses' | 'require_no_parentheses';
-  };
-};

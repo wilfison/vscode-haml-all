@@ -92,9 +92,9 @@ function fixUnnecessaryStringOutput(text: string, config: LinterConfig): string 
     return text;
   }
 
-  const regex = /^\s*=\s*["']([\w\d\s\p{L}\{\}\.]*)["']$/gu;
+  const regex = /^(\s*)=\s*["']([\w\d\s\p{L}\{\}\.]*)["']$/gu;
 
-  return text.replace(regex, '$1');
+  return text.replace(regex, '$1$2');
 }
 
 function fixStrictLocals(fileName: string, text: string, config: LinterConfig): string {
@@ -118,7 +118,7 @@ export const linter_cops: [keyof LinterConfig, HamlLintFixer][] = [
   ['TrailingWhitespace', fixTrailingWhitespace],
   ['TrailingEmptyLines', fixTrailingEmptyLines],
   ['ClassesBeforeIds', fixClassBeforeId],
-  ['SpaceBeforeScript', fixSpaceBeforeScript],
+  // ['SpaceBeforeScript', fixSpaceBeforeScript],
   ['LeadingCommentSpace', fixLeadingCommentSpace],
   ['HtmlAttributes', fixHtmlAttributes],
   ['UnnecessaryStringOutput', fixUnnecessaryStringOutput],

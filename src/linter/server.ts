@@ -32,15 +32,16 @@ class LintServer {
     };
 
     try {
-      const response = await this.serverGet(params) as ServerResponse<LinterOffense[]>;
+      const response = await this.serverGet(params);
+      const data = JSON.parse(response) as ServerResponse<LinterOffense[]>;
 
-      if (response.status !== 'success') {
-        console.error(`Error from server: ${response.result}`);
+      if (data.status !== 'success') {
+        console.error(`Error from server: ${data.result}`);
         callback([]);
         return;
       }
 
-      callback(response.result);
+      callback(data.result);
     } catch (error) {
       console.error(`Error while linting: ${error}`);
       callback([]);
@@ -57,14 +58,15 @@ class LintServer {
     };
 
     try {
-      const response = await this.serverGet(params) as ServerResponse<string>;
+      const response = await this.serverGet(params);
+      const data = JSON.parse(response) as ServerResponse<string>;
 
-      if (response.status !== 'success') {
-        console.error(`Error from server: ${response.result}`);
+      if (data.status !== 'success') {
+        console.error(`autocorrect error: ${data.result}`);
         return '';
       }
 
-      return response.result;
+      return data.result;
     } catch (error) {
       console.error(`Error while autocorrecting: ${error}`);
       return '';
@@ -78,15 +80,16 @@ class LintServer {
     };
 
     try {
-      const response = await this.serverGet(params) as ServerResponse<any>;
+      const response = await this.serverGet(params);
+      const data = JSON.parse(response) as ServerResponse<any>;
 
-      if (response.status !== 'success') {
-        console.error(`Error from server: ${response.result}`);
+      if (data.status !== 'success') {
+        console.error(`Lint error from server: ${data}`);
         callback([]);
         return;
       }
 
-      callback(response.result);
+      callback(data.result);
     } catch (error) {
       console.error(`Error while listing cops: ${error}`);
       callback([]);
@@ -107,15 +110,16 @@ class LintServer {
     };
 
     try {
-      const response = await this.serverGet(params) as ServerResponse<any>;
+      const response = await this.serverGet(params);
+      const data = JSON.parse(response) as ServerResponse<any>;
 
-      if (response.status !== 'success') {
-        console.error(`Error from server: ${response.result}`);
+      if (data.status !== 'success') {
+        console.error(`Error from server: ${data.result}`);
         callback([]);
         return;
       }
 
-      callback(response.result);
+      callback(data.result);
     } catch (error) {
       console.error(`Error while compiling HAML: ${error}`);
       callback([]);
@@ -176,11 +180,11 @@ class LintServer {
     }
   }
 
-  private serverGet(params: any): Promise<ServerResponse<any>> {
+  private serverGet(params: any): Promise<string> {
     return new Promise((resolve, reject) => {
       const client = new net.Socket();
 
-      console.log(`Server request: ${JSON.stringify(params)}`);
+      console.log(`Server request: ${params.action}`);
       client.connect(this.serverPort, '127.0.0.1', () => {
         const request = JSON.stringify(params);
         client.write(request + '\n');
@@ -194,13 +198,7 @@ class LintServer {
 
       client.on('end', () => {
         try {
-          console.log(`Server response: ${data}`);
-          const response = JSON.parse(data) as ServerResponse<any>;
-
-          if (response.status !== 'success') {
-            console.error(`Error from server: ${response.result}`);
-            return {};
-          }
+          const response = JSON.parse(data);
 
           resolve(response);
         } catch (e: any) {

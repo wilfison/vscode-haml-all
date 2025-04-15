@@ -157,8 +157,8 @@ suite('Haml-Lint Cops', () => {
     test('should remove unnecessary string output indicators', () => {
       const config = { ...HAML_LINT_DEFAULT_COPS, UnnecessaryStringOutput: { enabled: true } };
 
-      const text = ['= "foo"', '- if foo == \'bar\''];
-      const expected = ['foo', '- if foo == \'bar\''];
+      const text = ['= "foo"', '- if foo == \'bar\'', '  = "foo"'];
+      const expected = ['foo', '- if foo == \'bar\'', '  foo'];
       const result = text.map((t) => hamlFixes.fixUnnecessaryStringOutput(t, config));
 
       assert.deepStrictEqual(result, expected);

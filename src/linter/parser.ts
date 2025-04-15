@@ -1,20 +1,6 @@
 import { Diagnostic, DiagnosticSeverity, OutputChannel, Position, Range, TextDocument, Uri } from 'vscode';
 import { LinterConfigWithErrors, LinterOffense } from '../types';
-import { hamlCopUrl, rubocopUrl } from '../ultils/uris';
-
-function parseRuboCopAttributes(offense: LinterOffense) {
-  const copName = offense.message.match(/([A-Z]\w+\/[A-Z]\w+)/);
-  const message = offense.message.replace(/\s\((https.*)\)$/, '');
-
-  return {
-    message: message,
-    source: 'Rubocop',
-    code: {
-      value: copName ? copName[0] : '',
-      target: Uri.parse(rubocopUrl(copName ? copName[0] : ''))
-    }
-  };
-}
+import { hamlCopUrl } from '../ultils/uris';
 
 function parseHamllintAttributes(offense: LinterOffense) {
   const message = offense.message.replace(/\s\((https.*)\)$/, '');
@@ -57,7 +43,7 @@ export function parseLintOffence(document: TextDocument, offense: LinterOffense)
   );
 
   const severity = offense.severity === 'warning' ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error;
-  const { message, source, code } = offense.linter_name === 'RuboCop' ? parseRuboCopAttributes(offense) : parseHamllintAttributes(offense);
+  const { message, source, code } = parseHamllintAttributes(offense);
 
   const diagnostic = new DiagnosticFull(range, message, code, source, severity);
 
@@ -68,11 +54,6 @@ export function parseLintOffence(document: TextDocument, offense: LinterOffense)
 export function notifyErrors(configs: LinterConfigWithErrors, outputChanel: OutputChannel) {
   if (configs.haml_lint.error) {
     outputChanel.appendLine(`Haml-Lint: ${configs.haml_lint.error}`);
-    outputChanel.show();
-  }
-
-  if (configs.rubocop.error) {
-    outputChanel.appendLine(`RuboCop: ${configs.rubocop.error}`);
     outputChanel.show();
   }
 }
