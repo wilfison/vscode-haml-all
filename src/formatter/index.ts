@@ -2,7 +2,6 @@ import Linter from '../linter';
 import { HAML_FILTERS } from '../ultils/haml';
 
 import hamlFixes, { HamlLintFixer, linter_cops } from './haml_lint_cops';
-import { RuboCopFixer, rubocops } from './rubocop_cops';
 
 function isFilter(line: string): boolean {
   const filter = line.trim().match(/^:(\w+)$/);
@@ -16,26 +15,13 @@ function lineIdent(line: string): number {
 
 export default function autoCorrectAll(fileName: string, text: string, linter: Linter): string {
   const hamlLintConfig = linter.hamlLintConfig;
-  const rubocopConfig = linter.rubocopConfig;
 
   let hamlFixers: HamlLintFixer[] = [];
-  let rubocopFixers: RuboCopFixer[] = [];
 
   if (hamlLintConfig) {
     linter_cops.forEach(([copName, fixer]) => {
       if (hamlLintConfig[copName].enabled) {
         hamlFixers.push(fixer);
-      }
-    });
-  }
-
-  // Only run RuboCop fixes if RuboCop is enabled in the Haml-Lint config
-  if (hamlLintConfig?.RuboCop.enabled && rubocopConfig) {
-    const ignoredCops = hamlLintConfig.RuboCop.ignored_cops;
-
-    rubocops.forEach(([copName, fixer]) => {
-      if (rubocopConfig[copName].Enabled && !ignoredCops.includes(copName)) {
-        rubocopFixers.push(fixer);
       }
     });
   }
@@ -64,12 +50,6 @@ export default function autoCorrectAll(fileName: string, text: string, linter: L
     }
 
     let fixedLine = line.trimEnd();
-
-    if (rubocopConfig) {
-      rubocopFixers.forEach((fixer) => {
-        fixedLine = fixer(fixedLine, rubocopConfig);
-      });
-    }
 
     if (hamlLintConfig) {
       hamlFixers.forEach((fixer) => {

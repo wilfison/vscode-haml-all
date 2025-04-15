@@ -121,7 +121,6 @@ class EventSubscriber {
   private subscribeHamlWatchers() {
     const watchFiles = [
       '**/.haml-lint.yml',
-      '**/.rubocop.yml',
     ];
 
     watchFiles.forEach(pattern => this.subscribeFileWatcher(pattern, () => {

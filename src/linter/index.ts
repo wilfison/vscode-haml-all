@@ -7,7 +7,7 @@ import {
   OutputChannel
 } from 'vscode';
 
-import { LinterConfig, LinterOffense, RuboCopConfig } from '../types';
+import { LinterConfig, LinterOffense } from '../types';
 import { DiagnosticFull, parseLintOffence } from './parser';
 import { HAML_LINT_DEFAULT_COPS } from './cops';
 import LintServer from './server';
@@ -16,7 +16,6 @@ export const SOURCE = 'haml-lint';
 
 export default class Linter {
   public hamlLintConfig: LinterConfig = HAML_LINT_DEFAULT_COPS;
-  public rubocopConfig: RuboCopConfig | null = null;
 
   private outputChanel: OutputChannel;
   private lintServer: LintServer;
@@ -55,7 +54,6 @@ export default class Linter {
 
     await this.lintServer.listCops((data: any) => {
       this.hamlLintConfig = { ...this.hamlLintConfig, ...data.haml_lint };
-      this.rubocopConfig = data.rubocop;
     });
   }
 
