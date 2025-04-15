@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+def run_tests(specific_file = nil)
+  if specific_file
+    if File.exist?(specific_file)
+      system("ruby -Ilib:test #{specific_file}")
+    else
+      puts "Erro: Arquivo '#{specific_file}' não encontrado"
+      exit 1
+    end
+  else
+    system("ruby -Ilib:test test/**/*_test.rb")
+  end
+end
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Uso: #{File.basename($0)} [arquivo_de_teste]"
+
+  opts.on("-h", "--help", "Mostra esta mensagem de ajuda") do
+    puts opts
+    exit
+  end
+end.parse!
+
+test_file = ARGV[0]
+run_tests(test_file)

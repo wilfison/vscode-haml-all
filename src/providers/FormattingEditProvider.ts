@@ -9,22 +9,27 @@ import {
 
 import Linter from '../linter';
 import autoCorrectAll from '../formatter';
+import LintServer from '../linter/server';
 
 export default class FormattingEditProvider implements DocumentFormattingEditProvider {
   private linter: Linter;
   private outputChanel: OutputChannel;
+  private lintServer: LintServer;
 
-  constructor(linter: Linter, outputChanel: OutputChannel) {
+  constructor(linter: Linter, outputChanel: OutputChannel, lintServer: LintServer) {
     this.linter = linter;
     this.outputChanel = outputChanel;
+    this.lintServer = lintServer;
   }
 
-  public provideDocumentFormattingEdits(document: TextDocument, _options: FormattingOptions, _token: any) {
+  public async provideDocumentFormattingEdits(document: TextDocument, _options: FormattingOptions, _token: any) {
     this.outputChanel.appendLine('Haml All: Formatting document');
 
     const text = document.getText();
     const edits: TextEdit[] = [];
-    const fixedText = autoCorrectAll(document.fileName, text, this.linter);
+
+    let fixedText = await this.lintServer.autocorrect(text, document.fileName, this.linter.configFilePath(document));
+    fixedText = autoCorrectAll(document.fileName, fixedText, this.linter);
 
     if (fixedText === text) {
       return [];

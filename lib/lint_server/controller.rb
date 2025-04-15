@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module LintServer
   module Controller
     def self.call(server)
@@ -7,13 +9,16 @@ module LintServer
       begin
         request = JSON.parse(client.gets)
       rescue JSON::ParserError
-        client.puts({ status: 'error', result: 'Invalid JSON' }.to_json)
-        client.close
+        send_response(client, { status: "error", result: "Invalid JSON" })
         return
       end
 
       response = build_response(request).to_json
-      client.puts response
+      send_response(client, response)
+    end
+
+    def self.send_response(client, response)
+      client.puts response.to_json
       client.close
     end
 
@@ -22,22 +27,24 @@ module LintServer
 
       begin
         result = run_action(request)
-        status = 'success'
-      rescue => e
+        status = "success"
+      rescue StandardError => e
         result = "#{e.message}\n#{e.backtrace.join("\n")}"
-        status = 'error'
+        status = "error"
       end
 
       { status: status, result: result }
     end
 
     def self.run_action(request)
-      case request['action']
-      when 'lint'
+      case request["action"]
+      when "lint"
         LintServer::Report.lint(request)
-      when 'list_cops'
+      when "autocorrect"
+        LintServer::Report.autocorrect(request)
+      when "list_cops"
         LintServer::Cops.list_cops
-      when 'compile'
+      when "compile"
         LintServer::Compile.call(request)
       else
         raise "Unknown action: #{request['action']}"
