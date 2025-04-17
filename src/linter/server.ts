@@ -58,18 +58,22 @@ class LintServer {
     };
 
     try {
-      const response = await this.serverGet(params);
+      const response = await Promise.race([
+        this.serverGet(params),
+        new Promise<string>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000)),
+      ]);
+
       const data = JSON.parse(response) as ServerResponse<string>;
 
       if (data.status !== 'success') {
         console.error(`autocorrect error: ${data.result}`);
-        return '';
+        return template;
       }
 
       return data.result;
     } catch (error) {
       console.error(`Error while autocorrecting: ${error}`);
-      return '';
+      return template;
     }
   }
 
@@ -198,6 +202,7 @@ class LintServer {
 
       client.on('end', () => {
         try {
+          console.log(`Server response: ${data}`);
           const response = JSON.parse(data);
 
           resolve(response);
