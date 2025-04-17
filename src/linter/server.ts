@@ -3,6 +3,7 @@ import path from 'node:path';
 import net from 'node:net';
 
 import { LinterOffense } from '../types';
+import { OutputChannel } from 'vscode';
 
 type CallbakFunc<T> = (data: T) => void;
 type ServerResponse<T> = {
@@ -16,10 +17,20 @@ class LintServer {
 
   private readonly workingDirectory: string;
   private readonly useBundler: Boolean;
+  private readonly outputChanel: OutputChannel | null = null;
 
-  constructor(workingDirectory: string, useBundler: Boolean) {
+  constructor(workingDirectory: string, useBundler: Boolean, outputChanel: OutputChannel | null = null) {
     this.workingDirectory = workingDirectory;
     this.useBundler = useBundler;
+    this.outputChanel = outputChanel;
+  }
+
+  printOutput(message: string): void {
+    if (this.outputChanel) {
+      this.outputChanel.appendLine(message);
+    } else {
+      console.log(message);
+    }
   }
 
   async lint(template: string, filePath: string, configPath: string, callback: CallbakFunc<LinterOffense[]>): Promise<void> {
@@ -36,14 +47,14 @@ class LintServer {
       const data = JSON.parse(response) as ServerResponse<LinterOffense[]>;
 
       if (data.status !== 'success') {
-        console.error(`Error from server: ${data.result}`);
+        this.printOutput(`Error from server: ${data.result}`);
         callback([]);
         return;
       }
 
       callback(data.result);
     } catch (error) {
-      console.error(`Error while linting: ${error}`);
+      this.printOutput(`Error while linting: ${error}`);
       callback([]);
     }
   }
@@ -66,13 +77,13 @@ class LintServer {
       const data = JSON.parse(response) as ServerResponse<string>;
 
       if (data.status !== 'success') {
-        console.error(`autocorrect error: ${data.result}`);
+        this.printOutput(`autocorrect error: ${data.result}`);
         return template;
       }
 
       return data.result;
     } catch (error) {
-      console.error(`Error while autocorrecting: ${error}`);
+      this.printOutput(`Error while autocorrecting: ${error}`);
       return template;
     }
   }
@@ -88,14 +99,14 @@ class LintServer {
       const data = JSON.parse(response) as ServerResponse<any>;
 
       if (data.status !== 'success') {
-        console.error(`Lint error from server: ${data}`);
+        this.printOutput(`Lint error from server: ${data}`);
         callback([]);
         return;
       }
 
       callback(data.result);
     } catch (error) {
-      console.error(`Error while listing cops: ${error}`);
+      this.printOutput(`Error while listing cops: ${error}`);
       callback([]);
     }
   }
@@ -118,14 +129,14 @@ class LintServer {
       const data = JSON.parse(response) as ServerResponse<any>;
 
       if (data.status !== 'success') {
-        console.error(`Error from server: ${data.result}`);
+        this.printOutput(`Error from server: ${data.result}`);
         callback([]);
         return;
       }
 
       callback(data.result);
     } catch (error) {
-      console.error(`Error while compiling HAML: ${error}`);
+      this.printOutput(`Error while compiling HAML: ${error}`);
       callback([]);
     }
   }
@@ -147,7 +158,7 @@ class LintServer {
       this.rubyServerProcess = spawn('ruby', args, { cwd: this.workingDirectory });
 
       this.rubyServerProcess.stdout.on('data', (data) => {
-        console.log(`Server output: ${data}`);
+        this.printOutput(`Server output: ${data}`);
 
         if (data.toString().includes('Server started')) {
           const response = JSON.parse(data.toString());
@@ -162,7 +173,7 @@ class LintServer {
       });
 
       this.rubyServerProcess.on('close', (code) => {
-        console.log(`Server process exited with code ${code}`);
+        this.printOutput(`Server process exited with code ${code}`);
         this.rubyServerProcess = null;
       });
 
@@ -207,6 +218,8 @@ class LintServer {
 
           resolve(response);
         } catch (e: any) {
+          this.printOutput(`Error parsing server response: ${e.message}`);
+
           reject(new Error(`Failed to parse response: ${e.message}`));
         }
       });

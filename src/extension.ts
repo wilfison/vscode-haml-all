@@ -13,7 +13,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const outputChanel = vscode.window.createOutputChannel('Haml');
   const config = vscode.workspace.getConfiguration('hamlAll');
 
-  lintServer = new LintServer(getWorkspaceRoot(), config.useBundler);
+  lintServer = new LintServer(getWorkspaceRoot(), config.useBundler, outputChanel);
 
   if (!hamlLintPresent()) {
     vscode.window.showErrorMessage('haml-lint not found. Please install haml-lint gem to use this extension.');
