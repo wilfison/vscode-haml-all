@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.7] - 2025-04-17
+
+- Feat: add timeout handling for autocorrect and improve error logging
+- Feat: enhance lintserver to support output channel for improved logging
+
 ## [1.2.6] - 2025-04-15
 
 - Feat: implement lint server with autocorrect using `haml_lint` gem.
