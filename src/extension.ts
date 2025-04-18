@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { hamlLintPresent } from './Helpers';
 import { getWorkspaceRoot } from './ultils/file';
 import { ExtensionActivator } from './ExtensionActivator';
-import LintServer from './linter/server';
+import LintServer from './server';
 
 let lintServer: LintServer = new LintServer(getWorkspaceRoot(), false);
 

@@ -9,7 +9,7 @@ import {
 
 import Linter from '../linter';
 import autoCorrectAll from '../formatter';
-import LintServer from '../linter/server';
+import LintServer from '../server';
 
 export default class FormattingEditProvider implements DocumentFormattingEditProvider {
   private linter: Linter;

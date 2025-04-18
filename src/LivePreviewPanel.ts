@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import LintServer from './linter/server';
+import LintServer from './server';
 
 export default class LivePreviewPanel {
   public static currentPanel: LivePreviewPanel | undefined;

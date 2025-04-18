@@ -15,7 +15,7 @@ import FixActionsProvider from './providers/FixActionsProvider';
 import { loadWithProgress } from './rails/utils';
 import Routes from './rails/routes';
 import { isARailsProject } from './Helpers';
-import LintServer from './linter/server';
+import LintServer from './server';
 
 class EventSubscriber {
   public routes: Routes;

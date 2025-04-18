@@ -10,7 +10,7 @@ import {
 import { LinterConfig, LinterOffense } from '../types';
 import { DiagnosticFull, parseLintOffence } from './parser';
 import { HAML_LINT_DEFAULT_COPS } from './cops';
-import LintServer from './server';
+import LintServer from '../server';
 
 export const SOURCE = 'haml-lint';
 

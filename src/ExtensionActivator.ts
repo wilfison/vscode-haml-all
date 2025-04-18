@@ -11,7 +11,7 @@ import FormattingEditProvider from './providers/FormattingEditProvider';
 import { ViewCodeActionProvider, createPartialFromSelection } from './providers/ViewCodeActionProvider';
 
 import LivePreviewPanel from './LivePreviewPanel';
-import LintServer from './linter/server';
+import LintServer from './server';
 
 import { html2Haml } from './html2Haml';
 import { openFile } from './ultils/file';
