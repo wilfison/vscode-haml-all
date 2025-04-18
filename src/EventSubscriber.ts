@@ -34,7 +34,7 @@ class EventSubscriber {
     this.isARailsProject = isARailsProject();
 
     this.linter = new Linter(this.outputChanel, lintServer);
-    this.routes = new Routes(this.rootPath.fsPath);
+    this.routes = new Routes(this.rootPath.fsPath, this.outputChanel);
   }
 
   public subscribe(): void {

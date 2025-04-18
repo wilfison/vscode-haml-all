@@ -1,16 +1,20 @@
-import util from 'node:util';
-import childProcess, { ChildProcess } from 'node:child_process';
-
-const exec = util.promisify(childProcess.exec);
+import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 
 import { Route, parseRoutes } from './router_parser';
 import { fileExists } from '../ultils/file';
+import { OutputChannel } from 'vscode';
 
 export default class Routes {
   private routes: Map<string, Route> = new Map();
-  private process?: ChildProcess | null;
+  private process?: ChildProcessWithoutNullStreams | null = null;
 
-  constructor(private rootPath: string) { }
+  private rootPath: string = '';
+  private outputChanel: OutputChannel | null = null;
+
+  constructor(rootPath: string, outputChanel: OutputChannel) {
+    this.rootPath = rootPath;
+    this.outputChanel = outputChanel;
+  }
 
   public dispose() {
     this.routes.clear();
@@ -21,7 +25,7 @@ export default class Routes {
       return;
     }
 
-    const output = await this.exec();
+    const output = await this.execCmd();
 
     if (!output) {
       return;
@@ -29,7 +33,7 @@ export default class Routes {
 
     this.routes.clear();
     this.routes = parseRoutes(output);
-    console.log('Routes loaded');
+    this.outputChanel?.appendLine(`Loaded ${this.routes.size} routes`);
   }
 
   public getAll() {
@@ -44,27 +48,34 @@ export default class Routes {
     return fileExists(`${this.rootPath}/bin/rails`);
   }
 
-  private async exec() {
+  private async execCmd() {
     if (this.process) {
-      this.process.kill('SIGTERM');
-    }
-
-    const promiseWithChild = exec('bin/rails routes -E', { cwd: this.rootPath });
-    this.process = promiseWithChild.child;
-
-    const { stdout, stderr } = await promiseWithChild;
-    this.process = null;
-
-    const sanitizedStdout = stdout.slice(stdout.indexOf('--[ Route'));
-
-    if (sanitizedStdout.startsWith('--[ Route')) {
+      this.process.kill();
       this.process = null;
-
-      return stdout;
     }
 
-    console.error(`Error loading routes on ${this.rootPath}:\n${stderr || stdout}`);
+    const command = 'bin/rails';
+    const args = ['routes', '-E'];
+    const options = { cwd: this.rootPath };
 
-    return '';
+    return new Promise<string>((resolve, reject) => {
+      this.process = spawn(command, args, options);
+
+      let output = '';
+
+      this.process.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      this.process.stderr.on('data', (data) => {
+        console.error(`Error: ${data}`);
+        reject(data.toString());
+      });
+
+      this.process.on('close', () => {
+        this.process = null;
+        resolve(output);
+      });
+    });
   }
 }
