@@ -2,7 +2,7 @@
   "Image Path": {
     "prefix": "image_path",
     "body": [
-      "= image_path('${1:src}')"
+      "= image_path('${1:src}', alt: '${2:alt}'${3:, class: '${4:class}'})"
     ]
   },
   "Javascript Include Tag": {
@@ -23,17 +23,9 @@
     ]
   },
   "Turbo Frame Tag with Source": {
-    "prefix": "turbo_frame_tag_with_source",
+    "prefix": "turbo_frame_tag_lazy",
     "body": [
       "= turbo_frame_tag('${1:id}', src: '${2:src}'${3:, loading: '${4:lazy}'}) do",
-      "  $0"
-    ]
-  },
-  "Inject in Head": {
-    "prefix": "head",
-    "body": [
-      "-# Inject content in head",
-      "- content_for :head do",
       "  $0"
     ]
   },
