@@ -488,7 +488,7 @@
     "rubyline": {
       "begin": "(&amp|!)?(=|-|~)",
       "contentName": "source.ruby.embedded.haml",
-      "end": "((do|\\{)( \\|[.*]+\\|)?)$|$|^(?!.*\\|\\s*)$\\n?",
+      "end": "((do|\\{)( \\|[.*]+\\|)?)$|[^,]$|^(?!.*\\|\\s*)$\\n?",
       "endCaptures": {
         "1": {
           "name": "source.ruby.embedded.html"
