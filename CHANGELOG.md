@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.8] - 2025-06-30
+
+- [#6](https://github.com/wilfison/vscode-haml-all/pull/6) Fix multi-line ruby highlighting
+
 ## [1.2.7] - 2025-04-17
 
 - Feat: add timeout handling for autocorrect and improve error logging
