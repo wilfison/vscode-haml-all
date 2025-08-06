@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.9] - 2025-08-06
+
+- Refactor: improve lints messagens and rubocop lint url.
+- Refactor: update output channel usage and improve logging in various components.
+
 ## [1.2.8] - 2025-06-30
 
 - [#6](https://github.com/wilfison/vscode-haml-all/pull/6) Fix multi-line ruby highlighting
