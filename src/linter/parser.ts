@@ -2,16 +2,35 @@ import { Diagnostic, DiagnosticSeverity, OutputChannel, Position, Range, TextDoc
 import { LinterConfigWithErrors, LinterOffense } from '../types';
 import { hamlCopUrl } from '../ultils/uris';
 
+const RUBOCOP_COP_NAME_REGEX = /([\w\/]*):/;
+
+function rubocopCopUrl(copName: string): Uri {
+  const copModule = copName.toLowerCase().split('/')[0];
+  const copAnchor = copName.toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+  return Uri.parse(`https://docs.rubocop.org/rubocop/cops_${copModule}.html#${copAnchor}`);
+}
+
 function parseHamllintAttributes(offense: LinterOffense) {
-  const message = offense.message.replace(/\s\((https.*)\)$/, '');
   const code = offense.linter_name;
+  const rubocopLint = offense.linter_name === 'RuboCop';
+  const copName = rubocopLint ? String(offense.message.match(RUBOCOP_COP_NAME_REGEX)?.at(1)) : code;
+
+  let targetUri: Uri | undefined = Uri.parse(hamlCopUrl(code));
+  let message = offense.message;
+
+  if (rubocopLint) {
+    targetUri = rubocopCopUrl(copName);
+  } else {
+    message = `${code}: ${message}`;
+  }
 
   return {
     message: message,
-    source: 'haml-lint',
+    source: rubocopLint ? 'RuboCop' : 'haml-lint',
     code: {
-      value: code,
-      target: Uri.parse(hamlCopUrl(code))
+      value: copName,
+      target: targetUri
     }
   };
 }
