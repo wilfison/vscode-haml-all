@@ -7,10 +7,9 @@ import LintServer from './server';
 
 let lintServer: LintServer = new LintServer(getWorkspaceRoot(), false);
 
-export async function activate(context: vscode.ExtensionContext) {
-  console.log('haml-all active!');
+let outputChanel = vscode.window.createOutputChannel('Haml');
 
-  const outputChanel = vscode.window.createOutputChannel('Haml');
+export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration('hamlAll');
 
   lintServer = new LintServer(getWorkspaceRoot(), config.useBundler, outputChanel);
@@ -28,5 +27,5 @@ export function deactivate() {
     lintServer.stop();
   }
 
-  console.log('haml-all deactivated');
+  outputChanel.appendLine('Haml All extension deactivated.');
 }

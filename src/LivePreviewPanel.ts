@@ -74,7 +74,5 @@ export default class LivePreviewPanel {
   public dispose() {
     LivePreviewPanel.currentPanel = undefined;
     this._panel.dispose();
-
-    console.log('dispose LivePreviewPanel');
   }
 }

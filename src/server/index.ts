@@ -154,7 +154,7 @@ class LintServer {
     }
 
     return new Promise((resolve, reject) => {
-      console.log(`Starting Ruby server with args: ${args.join(' ')}`);
+      this.printOutput(`Starting Ruby server with args: ${args.join(' ')}`);
       this.rubyServerProcess = spawn('ruby', args, { cwd: this.workingDirectory });
 
       this.rubyServerProcess.stdout.on('data', (data) => {
@@ -199,7 +199,7 @@ class LintServer {
     return new Promise((resolve, reject) => {
       const client = new net.Socket();
 
-      console.log(`Server request: ${params.action}`);
+      this.printOutput(`Server request: ${params.action}`);
       client.connect(this.serverPort, '127.0.0.1', () => {
         const request = JSON.stringify(params);
         client.write(request + '\n');
@@ -213,8 +213,8 @@ class LintServer {
 
       client.on('end', () => {
         try {
-          console.log(`Server response: ${data}`);
           const response = JSON.parse(data);
+          this.printOutput(`Server response: ${response}`);
 
           resolve(response);
         } catch (e: any) {

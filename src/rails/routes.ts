@@ -3,6 +3,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { Route, parseRoutes } from './router_parser';
 import { fileExists } from '../ultils/file';
 import { OutputChannel } from 'vscode';
+import { isARailsProject } from '../Helpers';
 
 export default class Routes {
   private routes: Map<string, Route> = new Map();
@@ -21,7 +22,7 @@ export default class Routes {
   }
 
   public async load() {
-    if (!this.pathIsARailsProject()) {
+    if (isARailsProject(this.outputChanel)) {
       return;
     }
 
@@ -44,10 +45,6 @@ export default class Routes {
     return this.routes.get(controller);
   }
 
-  private pathIsARailsProject() {
-    return fileExists(`${this.rootPath}/bin/rails`);
-  }
-
   private async execCmd() {
     if (this.process) {
       this.process.kill();
@@ -68,7 +65,7 @@ export default class Routes {
       });
 
       this.process.stderr.on('data', (data) => {
-        console.error(`Error: ${data}`);
+        this.outputChanel?.appendLine(`Error: ${data}`);
         reject(data.toString());
       });
 

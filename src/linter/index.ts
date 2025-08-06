@@ -50,7 +50,7 @@ export default class Linter {
   }
 
   public async loadConfigs() {
-    console.log('Loading haml-lint config...');
+    this.outputChanel.appendLine('Loading haml-lint config...');
 
     await this.lintServer.listCops((data: any) => {
       this.hamlLintConfig = { ...this.hamlLintConfig, ...data.haml_lint };

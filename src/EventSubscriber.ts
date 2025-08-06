@@ -31,7 +31,7 @@ class EventSubscriber {
     this.outputChanel = outputChanel;
     this.rootPath = workspace.workspaceFolders![0].uri;
 
-    this.isARailsProject = isARailsProject();
+    this.isARailsProject = isARailsProject(outputChanel);
 
     this.linter = new Linter(this.outputChanel, lintServer);
     this.routes = new Routes(this.rootPath.fsPath, this.outputChanel);

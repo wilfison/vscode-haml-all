@@ -1,5 +1,5 @@
 import { exec } from 'node:child_process';
-import { workspace } from 'vscode';
+import { OutputChannel, workspace } from 'vscode';
 
 import { SOURCE } from './linter';
 
@@ -15,13 +15,14 @@ export function hamlLintPresent(): boolean {
   }
 }
 
-export function isARailsProject(): boolean {
+export function isARailsProject(outputChanel: OutputChannel | null): boolean {
   const config = workspace.getConfiguration('railsRoutes');
   let executable = config.railsCommand || 'bin/rails';
 
   try {
     exec(`${executable} --version`);
-    console.log('Rails project detected');
+    outputChanel?.appendLine('Rails project detected.');
+
     return true;
   } catch (e) {
     return false;
