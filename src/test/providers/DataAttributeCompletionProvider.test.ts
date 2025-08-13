@@ -120,4 +120,83 @@ suite('DataAttributeCompletionProvider Tests', () => {
     // Should not provide completion in text content
     assert.equal(items, null);
   });
+
+  test('Should provide completion for Rails helpers - link_to', async () => {
+    const document = await vscode.workspace.openTextDocument({
+      content: '= link_to "Delete", user_path(@user), data_',
+      language: 'haml'
+    });
+
+    const position = new vscode.Position(0, 43); // After 'data_'
+    const items = provider.provideCompletionItems(document, position);
+
+    assert.notEqual(items, null);
+    if (items) {
+      const itemsArray = Array.isArray(items) ? items : items.items;
+      assert.ok(itemsArray.length > 0);
+
+      const itemNames = itemsArray.map(item => item.label);
+      assert.ok(itemNames.includes('data-confirm'));
+      assert.ok(itemNames.includes('data-method'));
+    }
+  });
+
+  test('Should provide completion for Rails helpers - form_with', async () => {
+    const document = await vscode.workspace.openTextDocument({
+      content: '= form_with model: @user, data_',
+      language: 'haml'
+    });
+
+    const position = new vscode.Position(0, 30); // After 'data_'
+    const items = provider.provideCompletionItems(document, position);
+
+    assert.notEqual(items, null);
+    if (items) {
+      const itemsArray = Array.isArray(items) ? items : items.items;
+      assert.ok(itemsArray.length > 0);
+
+      const itemNames = itemsArray.map(item => item.label);
+      assert.ok(itemNames.includes('data-remote'));
+      assert.ok(itemNames.includes('data-turbo'));
+    }
+  });
+
+  test('Should provide completion for Rails helpers with hash syntax', async () => {
+    const document = await vscode.workspace.openTextDocument({
+      content: '= button_to "Delete", user_path(@user), { method: :delete, data_',
+      language: 'haml'
+    });
+
+    const position = new vscode.Position(0, 65); // After 'data_'
+    const items = provider.provideCompletionItems(document, position);
+
+    assert.notEqual(items, null);
+    if (items) {
+      const itemsArray = Array.isArray(items) ? items : items.items;
+      assert.ok(itemsArray.length > 0);
+
+      const itemNames = itemsArray.map(item => item.label);
+      assert.ok(itemNames.includes('data-confirm'));
+      assert.ok(itemNames.includes('data-disable-with'));
+    }
+  });
+
+  test('Should work with text_field helper', async () => {
+    const document = await vscode.workspace.openTextDocument({
+      content: '= text_field :user, :name, data_',
+      language: 'haml'
+    });
+
+    const position = new vscode.Position(0, 32); // After 'data_'
+    const items = provider.provideCompletionItems(document, position);
+
+    assert.notEqual(items, null);
+    if (items) {
+      const itemsArray = Array.isArray(items) ? items : items.items;
+      assert.ok(itemsArray.length > 0);
+
+      const itemNames = itemsArray.map(item => item.label);
+      assert.ok(itemNames.some(name => name.startsWith('data-')));
+    }
+  });
 });

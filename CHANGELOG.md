@@ -10,6 +10,7 @@
   - Turbo Rails attributes (`data-turbo`, `data-turbo-action`, `data-turbo-frame`, `data-turbo-stream`, etc.)
   - Stimulus attributes (`data-controller`, `data-action`, `data-target`, etc.)
 - Support for all HAML attribute syntaxes (hash, parentheses, symbols, new Ruby syntax)
+- **Rails Helpers Support**: Auto-completion works with Rails helpers like `link_to`, `button_to`, `form_with`, `text_field`, etc.
 - Context-aware suggestions with descriptions for each attribute
 
 ## [1.2.9] - 2025-08-06

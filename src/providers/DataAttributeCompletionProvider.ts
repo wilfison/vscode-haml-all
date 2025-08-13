@@ -11,6 +11,14 @@ import {
 
 import { HTML_DATA_ATTRIBUTES, RAILS_UJS_DATA_ATTRIBUTES, STIMULUS_DATA_ATTRIBUTES, TURBO_DATA_ATTRIBUTES } from '../data/html_attributes';
 
+// Common Rails helpers that accept HTML options/data attributes
+const RAILS_HELPERS = [
+  'link_to', 'button_to', 'form_with', 'form_for', 'form_tag',
+  'text_field', 'text_area', 'select', 'check_box', 'radio_button',
+  'submit', 'button', 'image_tag', 'content_tag', 'div_for',
+  'mail_to', 'url_for', 'redirect_to', 'render'
+];
+
 export default class DataAttributeCompletionProvider implements CompletionItemProvider {
   private allDataAttributes = [
     ...HTML_DATA_ATTRIBUTES,
@@ -71,16 +79,24 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
     // %tag{data-  or %tag{ data-  or %tag{attr: 'value', data-
     // %tag(data-  or %tag( data-  or %tag(attr: 'value', data-
     // .class{data-  or #id{data-
+    // Rails helpers: link_to "text", path, data_ or form_with model: @model, data_
 
     // Remove any quoted strings to avoid false matches
     const cleanedCursor = beforeCursor.replace(/(['"]).*?\1/g, '');
+
+    // Check for Rails helpers with data attributes
+    // Examples: link_to @foo, data_ | form_with model: @model, data_ | button_to "Delete", path, data_
+    const railsHelperMatch = this.checkRailsHelperContext(cleanedCursor);
+    if (railsHelperMatch) {
+      return railsHelperMatch;
+    }
 
     // Check for {} attribute format
     const braceMatch = cleanedCursor.match(/[%#.]?\w*\s*\{[^}]*?(?:,\s*)?(?:["']?)([^"',}:\s]*)\s*$/);
     if (braceMatch) {
       const potentialAttr = braceMatch[1];
-      if (potentialAttr.startsWith('data-') || potentialAttr === 'data' || potentialAttr === '') {
-        return { isDataAttribute: true, prefix: potentialAttr };
+      if (potentialAttr.startsWith('data-') || potentialAttr.startsWith('data_') || potentialAttr === 'data' || potentialAttr === '') {
+        return { isDataAttribute: true, prefix: potentialAttr.replace(/_/g, '-') };
       }
     }
 
@@ -88,8 +104,8 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
     const parenMatch = cleanedCursor.match(/[%#.]?\w*\s*\([^)]*?(?:,\s*)?(?:["']?)([^"',):\s]*)\s*$/);
     if (parenMatch) {
       const potentialAttr = parenMatch[1];
-      if (potentialAttr.startsWith('data-') || potentialAttr === 'data' || potentialAttr === '') {
-        return { isDataAttribute: true, prefix: potentialAttr };
+      if (potentialAttr.startsWith('data-') || potentialAttr.startsWith('data_') || potentialAttr === 'data' || potentialAttr === '') {
+        return { isDataAttribute: true, prefix: potentialAttr.replace(/_/g, '-') };
       }
     }
 
@@ -106,8 +122,45 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
     const stringKeyMatch = cleanedCursor.match(/[{\(][^}\)]*["']([^"']*?)$/);
     if (stringKeyMatch) {
       const potentialAttr = stringKeyMatch[1];
-      if (potentialAttr.startsWith('data-') || potentialAttr === 'data' || potentialAttr === '') {
-        return { isDataAttribute: true, prefix: potentialAttr };
+      if (potentialAttr.startsWith('data-') || potentialAttr.startsWith('data_') || potentialAttr === 'data' || potentialAttr === '') {
+        return { isDataAttribute: true, prefix: potentialAttr.replace(/_/g, '-') };
+      }
+    }
+
+    return null;
+  }
+
+  private checkRailsHelperContext(cleanedCursor: string): { isDataAttribute: boolean; prefix: string } | null {
+    // Create a regex pattern to match Rails helpers with data attributes
+    // Examples:
+    // = link_to "Text", path, data_
+    // = form_with model: @model, data_
+    // = button_to "Delete", path, method: :delete, data_
+    // = text_field :user, :name, data_
+    const helperPattern = new RegExp(
+      `(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS.join('|')})\\b.*?(?:,\\s*|\\s+)([^,\\s]*)$`
+    );
+
+    const match = cleanedCursor.match(helperPattern);
+    if (match) {
+      const potentialAttr = match[1];
+
+      // Check if it looks like a data attribute
+      if (potentialAttr.startsWith('data_') || potentialAttr.startsWith('data-') || potentialAttr === 'data' || potentialAttr === '') {
+        return { isDataAttribute: true, prefix: potentialAttr.replace(/_/g, '-') };
+      }
+
+      // Also check for hash-like syntax within helpers
+      // = link_to "Text", path, { data_
+      const hashInHelperPattern = new RegExp(
+        `(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS.join('|')})\\b.*?\\{\\s*([^,}]*)$`
+      );
+      const hashInHelperMatch = cleanedCursor.match(hashInHelperPattern);
+      if (hashInHelperMatch) {
+        const hashAttr = hashInHelperMatch[1];
+        if (hashAttr.startsWith('data_') || hashAttr.startsWith('data-') || hashAttr === 'data' || hashAttr === '') {
+          return { isDataAttribute: true, prefix: hashAttr.replace(/_/g, '-') };
+        }
       }
     }
 
@@ -117,6 +170,14 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
   private getInsertText(attributeName: string, beforeCursor: string): string {
     // Remove any quoted strings to avoid false matches
     const cleanedCursor = beforeCursor.replace(/(['"]).*?\1/g, '');
+
+    // Check if we're in a Rails helper context
+    const isRailsHelper = this.isInRailsHelperContext(cleanedCursor);
+    if (isRailsHelper) {
+      // For Rails helpers, use underscore format
+      const keyName = attributeName.replace(/-/g, '_');
+      return `${keyName}: `;
+    }
 
     // Check if we're in a symbol context (:attr => value)
     if (cleanedCursor.match(/:([^,}\)\s:=]*)$/)) {
@@ -152,5 +213,10 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
     // Default to new hash syntax
     const keyName = attributeName.replace(/-/g, '_');
     return `${keyName}: `;
+  }
+
+  private isInRailsHelperContext(cleanedCursor: string): boolean {
+    const helperPattern = new RegExp(`(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS.join('|')})\\b`);
+    return helperPattern.test(cleanedCursor);
   }
 }
