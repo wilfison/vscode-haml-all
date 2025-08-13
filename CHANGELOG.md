@@ -1,5 +1,17 @@
 # Change Log
 
+## [Unreleased]
+
+### Added
+
+- **Data Attributes Auto-completion**: Intelligent auto-completion for HTML data attributes including:
+  - Common HTML data attributes (`data-toggle`, `data-target`, `data-dismiss`, etc.)
+  - Rails UJS attributes (`data-confirm`, `data-method`, `data-remote`, `data-disable-with`, etc.)
+  - Turbo Rails attributes (`data-turbo`, `data-turbo-action`, `data-turbo-frame`, `data-turbo-stream`, etc.)
+  - Stimulus attributes (`data-controller`, `data-action`, `data-target`, etc.)
+- Support for all HAML attribute syntaxes (hash, parentheses, symbols, new Ruby syntax)
+- Context-aware suggestions with descriptions for each attribute
+
 ## [1.2.9] - 2025-08-06
 
 - Refactor: improve lints messagens and rubocop lint url.

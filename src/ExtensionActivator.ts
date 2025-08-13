@@ -9,6 +9,7 @@ import PartialSignatureHelpProvider from './providers/PartialSignatureHelpProvid
 import CodeLensProvider from './providers/CodeLensProvider';
 import FormattingEditProvider from './providers/FormattingEditProvider';
 import { ViewCodeActionProvider, createPartialFromSelection } from './providers/ViewCodeActionProvider';
+import DataAttributeCompletionProvider from './providers/DataAttributeCompletionProvider';
 
 import LivePreviewPanel from './LivePreviewPanel';
 import LintServer from './server';
@@ -75,6 +76,18 @@ export class ExtensionActivator {
         new ViewCompletionProvider(),
         '"',
         '\''
+      )
+    );
+
+    this.context.subscriptions.push(
+      vscode.languages.registerCompletionItemProvider(
+        this.HAML_SELECTOR,
+        new DataAttributeCompletionProvider(),
+        ',',
+        '-',
+        '_',
+        '{',
+        '('
       )
     );
 

@@ -10,20 +10,21 @@ A powerful VS Code extension providing essential tools for efficient and seamles
 
 The following features are supported to make your HAML development effortless:
 
-| Status | Feature                   | Requirement/Infos                                    |
-| ------ | ------------------------- | ---------------------------------------------------- |
-| ✅     | Syntax Highlighting       |                                                      |
-| ✅     | Linter                    | Rquire `haml_lint` gem                               |
-| ✅     | HAML Formatter            | Rquires `haml_lint` e `rubocop` gems                 |
-| ✅     | Partial: Go to Definition |                                                      |
-| ✅     | Partial: Autocompletion   |                                                      |
-| ✅     | Routes: Autocompletion    | Rails Project                                        |
-| ✅     | Routes: Go to Definition  | Rails Project                                        |
-| ✅     | Split to Partial          |                                                      |
-| ✅     | Convert HTML/ERB to HAML  | [`html2haml`](https://github.com/haml/html2haml) gem |
-| ✅     | Snippets - HAML           |                                                      |
-| ✅     | Snippets - Rails          |                                                      |
-| ✅     | Live Preview              | Use `HAML: Open Live Preview` command                |
+| Status | Feature                    | Requirement/Infos                                    |
+| ------ | -------------------------- | ---------------------------------------------------- |
+| ✅     | Syntax Highlighting        |                                                      |
+| ✅     | Linter                     | Rquire `haml_lint` gem                               |
+| ✅     | HAML Formatter             | Rquires `haml_lint` e `rubocop` gems                 |
+| ✅     | Partial: Go to Definition  |                                                      |
+| ✅     | Partial: Autocompletion    |                                                      |
+| ✅     | Data Attributes Completion | HTML, Rails UJS, Turbo Rails & Stimulus              |
+| ✅     | Routes: Autocompletion     | Rails Project                                        |
+| ✅     | Routes: Go to Definition   | Rails Project                                        |
+| ✅     | Split to Partial           |                                                      |
+| ✅     | Convert HTML/ERB to HAML   | [`html2haml`](https://github.com/haml/html2haml) gem |
+| ✅     | Snippets - HAML            |                                                      |
+| ✅     | Snippets - Rails           |                                                      |
+| ✅     | Live Preview               | Use `HAML: Open Live Preview` command                |
 
 ---
 
@@ -62,6 +63,25 @@ Easily extract content into a new partial. Select the content, click the `Create
 Autocomplete for partials based on the `app/views` directory in your project.
 
 ![Partial Completion](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/partial-completion.gif)
+
+### Data Attributes Completion
+
+Smart autocompletion for HTML data attributes, with specific support for:
+
+- **HTML Common Attributes**: `data-toggle`, `data-target`, `data-dismiss`, etc.
+- **Rails UJS**: `data-confirm`, `data-method`, `data-remote`, `data-disable-with`, etc.
+- **Turbo Rails**: `data-turbo`, `data-turbo-action`, `data-turbo-frame`, `data-turbo-stream`, etc.
+- **Stimulus**: `data-controller`, `data-action`, `data-target`, etc.
+
+Works with all HAML attribute syntaxes:
+
+```haml
+%div{data_confirm: "Are you sure?"}
+%form(data_remote: true, data_turbo_action: "replace")
+%button{:data_disable_with => "Processing..."}
+```
+
+Simply start typing `data-` in any attribute context and get intelligent suggestions with descriptions.
 
 ### Convert HTML/ERB to HAML
 
