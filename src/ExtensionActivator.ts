@@ -18,19 +18,23 @@ import LintServer from './server';
 
 import { html2Haml } from './html2Haml';
 import { openFile } from './ultils/file';
+import * as helpers from './Helpers';
 
 export class ExtensionActivator {
   private readonly HAML_SELECTOR = { language: 'haml', scheme: 'file' };
   private readonly RUBY_SELECTOR = { language: 'ruby', scheme: 'file' };
+  private isARailsProject: boolean = false;
 
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly outputChannel: vscode.OutputChannel,
     private readonly lintServer: LintServer
-  ) { }
+  ) {
+    this.isARailsProject = helpers.isARailsProject(this.outputChannel);
+  }
 
   public async activate(): Promise<void> {
-    const eventSubscriber = new EventSubscriber(this.context, this.outputChannel, this.lintServer);
+    const eventSubscriber = new EventSubscriber(this.context, this.outputChannel, this.lintServer, this.isARailsProject);
     eventSubscriber.subscribe();
 
     this.registerCommands();
@@ -66,12 +70,26 @@ export class ExtensionActivator {
       )
     );
 
-    this.context.subscriptions.push(
-      vscode.languages.registerCodeLensProvider(
-        this.HAML_SELECTOR,
-        new ImagePreviewCodeLensProvider()
-      )
-    );
+    if (this.isARailsProject) {
+      this.context.subscriptions.push(
+        vscode.languages.registerCompletionItemProvider(
+          this.HAML_SELECTOR,
+          new DataAttributeCompletionProvider(),
+          ',',
+          '-',
+          '_',
+          '{',
+          '('
+        )
+      );
+
+      this.context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider(
+          this.HAML_SELECTOR,
+          new ImagePreviewCodeLensProvider()
+        )
+      );
+    }
 
     eventSubscriber.subscribeRails();
   }
@@ -94,18 +112,6 @@ export class ExtensionActivator {
         new ViewCompletionProvider(),
         '"',
         '\''
-      )
-    );
-
-    this.context.subscriptions.push(
-      vscode.languages.registerCompletionItemProvider(
-        this.HAML_SELECTOR,
-        new DataAttributeCompletionProvider(),
-        ',',
-        '-',
-        '_',
-        '{',
-        '('
       )
     );
 
