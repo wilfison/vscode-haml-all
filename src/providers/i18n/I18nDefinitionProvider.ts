@@ -1,4 +1,5 @@
-import * as fs from 'fs';
+import * as fs from 'node:fs';
+
 import {
   TextDocument,
   Position,
@@ -6,14 +7,15 @@ import {
   DefinitionLink,
   Location,
   Range,
-  Uri,
-  workspace
+  Uri
 } from 'vscode';
 
-const I18N_KEY_REGEXP = /(?:I18n\.t|t)\(['"]([^'"]+)['"]/;
+import { CacheLocaleType, loadLocalesData } from '../../ultils/yaml';
+
+const I18N_KEY_REGEXP = /(?:I18n\.t|t)\(['"]([^'"]*)$/;
 
 export default class I18nDefinitionProvider implements DefinitionProvider {
-  private localesCache: Map<string, { data: any; file: string }> = new Map();
+  private localesCache: CacheLocaleType = new Map();
   private lastCacheUpdate = 0;
   private readonly CACHE_TTL = 5000;
 
@@ -24,7 +26,7 @@ export default class I18nDefinitionProvider implements DefinitionProvider {
     const beforeCursor = line.substring(0, character);
     const afterCursor = line.substring(character);
 
-    const beforeMatch = beforeCursor.match(/(?:I18n\.t|t)\(['"]([^'"]*)$/);
+    const beforeMatch = beforeCursor.match(I18N_KEY_REGEXP);
     const afterMatch = afterCursor.match(/^([^'"]*)['"]/);
 
     if (!beforeMatch || !afterMatch) {
@@ -118,7 +120,7 @@ export default class I18nDefinitionProvider implements DefinitionProvider {
     return depth * 2;
   }
 
-  private async loadLocalesData(): Promise<Map<string, { data: any; file: string }>> {
+  private async loadLocalesData(): Promise<CacheLocaleType> {
     const now = Date.now();
 
     if (now - this.lastCacheUpdate < this.CACHE_TTL && this.localesCache.size > 0) {
@@ -128,69 +130,8 @@ export default class I18nDefinitionProvider implements DefinitionProvider {
     this.localesCache.clear();
     this.lastCacheUpdate = now;
 
-    const localeFiles = await workspace.findFiles('config/locales/**/*.{yml,yaml}');
-
-    for (const file of localeFiles) {
-      try {
-        const content = fs.readFileSync(file.fsPath, 'utf8');
-        const data = this.parseYaml(content);
-
-        if (data && typeof data === 'object') {
-          for (const [locale, localeData] of Object.entries(data)) {
-            this.localesCache.set(locale, { data: localeData, file: file.fsPath });
-          }
-        }
-      } catch (error) {
-        console.error(`Error loading locale file ${file.fsPath}:`, error);
-      }
-    }
+    await loadLocalesData(this.localesCache);
 
     return this.localesCache;
-  }
-
-  private parseYaml(content: string): any {
-    try {
-      const lines = content.split('\n');
-      const result: any = {};
-      const stack: any[] = [result];
-      let currentIndent = 0;
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) {
-          continue;
-        }
-
-        const indent = line.length - line.trimStart().length;
-        const colonIndex = trimmed.indexOf(':');
-
-        if (colonIndex === -1) {
-          continue;
-        }
-
-        const key = trimmed.substring(0, colonIndex).trim();
-        const value = trimmed.substring(colonIndex + 1).trim();
-
-        while (stack.length > 1 && indent <= currentIndent) {
-          stack.pop();
-          currentIndent -= 2;
-        }
-
-        const current = stack[stack.length - 1];
-
-        if (value === '' || value === '{}') {
-          current[key] = {};
-          stack.push(current[key]);
-          currentIndent = indent;
-        } else {
-          current[key] = value.replace(/^['"]|['"]$/g, '');
-        }
-      }
-
-      return result;
-    } catch (error) {
-      console.error('YAML parsing error:', error);
-      return {};
-    }
   }
 }

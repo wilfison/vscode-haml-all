@@ -1,4 +1,5 @@
-import * as fs from 'fs';
+import * as fs from 'node:fs';
+
 import {
   CompletionItemProvider,
   TextDocument,
@@ -10,10 +11,12 @@ import {
   MarkdownString
 } from 'vscode';
 
+import { CacheLocaleType, loadLocalesData } from '../../ultils/yaml';
+
 const I18N_REGEXP = /(?:I18n\.t|t)\s*\(?['"]([^'"]*)/;
 
 export default class I18nCompletionProvider implements CompletionItemProvider {
-  private localesCache: Map<string, any> = new Map();
+  private localesCache: CacheLocaleType = new Map();
   private lastCacheUpdate = 0;
   private readonly CACHE_TTL = 5000;
   private defaultLocale: string | null = null;
@@ -38,11 +41,11 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
     const completions: CompletionItem[] = [];
     const addedKeys = new Set<string>();
 
-    // Priorizar o locale padrão
+    // Priorize default locale
     const preferredLocale = localesData.get(defaultLocale) ? defaultLocale : localesData.keys().next().value;
 
     if (preferredLocale && localesData.has(preferredLocale)) {
-      const data = localesData.get(preferredLocale);
+      const data = localesData.get(preferredLocale)?.data;
       const keys = this.extractKeys(data, partialKey);
 
       for (const key of keys) {
@@ -60,9 +63,8 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
       }
     }
 
-    // Se não houver chaves suficientes, adicionar de outros locales
     if (completions.length === 0) {
-      for (const [locale, data] of localesData) {
+      for (const [locale, { data }] of localesData) {
         if (locale === preferredLocale) {
           continue;
         }
@@ -88,7 +90,7 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
     return completions;
   }
 
-  private async loadLocalesData(): Promise<Map<string, any>> {
+  private async loadLocalesData(): Promise<CacheLocaleType> {
     const now = Date.now();
 
     if (now - this.lastCacheUpdate < this.CACHE_TTL && this.localesCache.size > 0) {
@@ -98,22 +100,7 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
     this.localesCache.clear();
     this.lastCacheUpdate = now;
 
-    const localeFiles = await workspace.findFiles('config/locales/**/*.{yml,yaml}');
-
-    for (const file of localeFiles) {
-      try {
-        const content = fs.readFileSync(file.fsPath, 'utf8');
-        const data = this.parseYaml(content);
-
-        if (data && typeof data === 'object') {
-          for (const [locale, localeData] of Object.entries(data)) {
-            this.localesCache.set(locale, localeData);
-          }
-        }
-      } catch (error) {
-        console.error(`Error loading locale file ${file.fsPath}:`, error);
-      }
-    }
+    await loadLocalesData(this.localesCache);
 
     return this.localesCache;
   }
@@ -164,7 +151,7 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
       return this.defaultLocale;
     }
 
-    // Tentar encontrar configuração do Rails
+    // Try to find Rails configuration
     try {
       const configFiles = await workspace.findFiles('config/**/*.rb');
 
@@ -174,7 +161,6 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
 
         if (match) {
           this.defaultLocale = match[1];
-          console.log(`Default locale found in Rails config: ${this.defaultLocale}`);
           return this.defaultLocale;
         }
       }
@@ -182,7 +168,7 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
       console.error('Error reading Rails config files:', error);
     }
 
-    // Fallback para locales comuns
+    // Fallback for common locales
     const localesData = await this.loadLocalesData();
     const preferredOrder = ['en', 'pt', 'pt-BR', 'es', 'fr'];
 
@@ -193,55 +179,9 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
       }
     }
 
-    // Se não encontrar nenhum dos preferidos, usar o primeiro disponível
+    // If none of the preferred locales are found, use the first available
     const firstLocale = localesData.keys().next().value;
     this.defaultLocale = firstLocale || 'en';
     return this.defaultLocale;
-  }
-
-  private parseYaml(content: string): any {
-    try {
-      const lines = content.split('\n');
-      const result: any = {};
-      const stack: any[] = [result];
-      let currentIndent = 0;
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) {
-          continue;
-        }
-
-        const indent = line.length - line.trimStart().length;
-        const colonIndex = trimmed.indexOf(':');
-
-        if (colonIndex === -1) {
-          continue;
-        }
-
-        const key = trimmed.substring(0, colonIndex).trim();
-        const value = trimmed.substring(colonIndex + 1).trim();
-
-        while (stack.length > 1 && indent <= currentIndent) {
-          stack.pop();
-          currentIndent -= 2;
-        }
-
-        const current = stack[stack.length - 1];
-
-        if (value === '' || value === '{}') {
-          current[key] = {};
-          stack.push(current[key]);
-          currentIndent = indent;
-        } else {
-          current[key] = value.replace(/^['"]|['"]$/g, '');
-        }
-      }
-
-      return result;
-    } catch (error) {
-      console.error('YAML parsing error:', error);
-      return {};
-    }
   }
 }
