@@ -2,7 +2,6 @@ import {
   CompletionItemProvider,
   TextDocument,
   Position,
-  Range,
   CompletionItem,
   CompletionItemKind,
   MarkdownString,
@@ -10,14 +9,7 @@ import {
 } from 'vscode';
 
 import { HTML_DATA_ATTRIBUTES, RAILS_UJS_DATA_ATTRIBUTES, STIMULUS_DATA_ATTRIBUTES, TURBO_DATA_ATTRIBUTES } from '../data/html_attributes';
-
-// Common Rails helpers that accept HTML options/data attributes
-const RAILS_HELPERS = [
-  'link_to', 'button_to', 'form_with', 'form_for', 'form_tag',
-  'text_field', 'text_area', 'select', 'check_box', 'radio_button',
-  'submit', 'button', 'image_tag', 'content_tag', 'div_for',
-  'mail_to', 'url_for', 'redirect_to', 'render'
-];
+import { RAILS_HELPERS } from '../data/rails_helpers';
 
 export default class DataAttributeCompletionProvider implements CompletionItemProvider {
   private allDataAttributes = [

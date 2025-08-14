@@ -13,6 +13,7 @@
 - **Rails Helpers Support**: Auto-completion works with Rails helpers like `link_to`, `button_to`, `form_with`, `text_field`, etc.
 - Context-aware suggestions with descriptions for each attribute
 - Add assets auto-completion for Rails asset pipeline
+- Add image preview with CodeLens support for Rails image helpers
 
 ## [1.2.9] - 2025-08-06
 

@@ -11,6 +11,7 @@ import FormattingEditProvider from './providers/FormattingEditProvider';
 import { ViewCodeActionProvider, createPartialFromSelection } from './providers/ViewCodeActionProvider';
 import DataAttributeCompletionProvider from './providers/DataAttributeCompletionProvider';
 import AssetsCompletionProvider from './providers/AssetsCompletionProvider';
+import ImagePreviewCodeLensProvider from './providers/ImagePreviewCodeLensProvider';
 
 import LivePreviewPanel from './LivePreviewPanel';
 import LintServer from './server';
@@ -62,6 +63,13 @@ export class ExtensionActivator {
         new AssetsCompletionProvider(),
         '"',
         '\''
+      )
+    );
+
+    this.context.subscriptions.push(
+      vscode.languages.registerCodeLensProvider(
+        this.HAML_SELECTOR,
+        new ImagePreviewCodeLensProvider()
       )
     );
 
@@ -147,6 +155,10 @@ export class ExtensionActivator {
       vscode.commands.registerCommand('hamlAll.openFile', (path, lineNumber) => {
         this.outputChannel.appendLine(`Opening file: ${path}:${lineNumber}`);
         openFile(path, lineNumber);
+      }),
+
+      vscode.commands.registerCommand('hamlAll.previewImage', (imagePath: string, imageName: string) => {
+        ImagePreviewCodeLensProvider.showImagePreview(imagePath, imageName);
       })
     );
   }
