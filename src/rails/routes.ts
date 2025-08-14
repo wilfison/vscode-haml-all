@@ -1,7 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 
 import { Route, parseRoutes } from './router_parser';
-import { fileExists } from '../ultils/file';
 import { OutputChannel } from 'vscode';
 import { isARailsProject } from '../Helpers';
 
@@ -11,10 +10,12 @@ export default class Routes {
 
   private rootPath: string = '';
   private outputChanel: OutputChannel | null = null;
+  private isARailsProject: boolean = false;
 
-  constructor(rootPath: string, outputChanel: OutputChannel) {
+  constructor(rootPath: string, outputChanel: OutputChannel, isARailsProject: boolean) {
     this.rootPath = rootPath;
     this.outputChanel = outputChanel;
+    this.isARailsProject = isARailsProject;
   }
 
   public dispose() {
@@ -22,7 +23,7 @@ export default class Routes {
   }
 
   public async load() {
-    if (isARailsProject(this.outputChanel)) {
+    if (this.isARailsProject) {
       return;
     }
 

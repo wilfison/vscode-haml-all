@@ -14,7 +14,6 @@ import Linter from './linter';
 import FixActionsProvider from './providers/FixActionsProvider';
 import { loadWithProgress } from './rails/utils';
 import Routes from './rails/routes';
-import { isARailsProject } from './Helpers';
 import LintServer from './server';
 
 class EventSubscriber {
@@ -26,15 +25,15 @@ class EventSubscriber {
   private outputChanel: OutputChannel;
   private rootPath: Uri;
 
-  constructor(context: ExtensionContext, outputChanel: OutputChannel, lintServer: LintServer) {
+  constructor(context: ExtensionContext, outputChanel: OutputChannel, lintServer: LintServer, isARailsProject: boolean) {
     this.context = context;
     this.outputChanel = outputChanel;
     this.rootPath = workspace.workspaceFolders![0].uri;
 
-    this.isARailsProject = isARailsProject(outputChanel);
+    this.isARailsProject = isARailsProject;
 
     this.linter = new Linter(this.outputChanel, lintServer);
-    this.routes = new Routes(this.rootPath.fsPath, this.outputChanel);
+    this.routes = new Routes(this.rootPath.fsPath, this.outputChanel, isARailsProject);
   }
 
   public subscribe(): void {
