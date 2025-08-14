@@ -12,6 +12,7 @@
 - Support for all HAML attribute syntaxes (hash, parentheses, symbols, new Ruby syntax)
 - **Rails Helpers Support**: Auto-completion works with Rails helpers like `link_to`, `button_to`, `form_with`, `text_field`, etc.
 - Context-aware suggestions with descriptions for each attribute
+- Add assets auto-completion for Rails asset pipeline
 
 ## [1.2.9] - 2025-08-06
 
@@ -20,7 +21,7 @@
 
 ## [1.2.8] - 2025-06-30
 
-- [#6](https://github.com/wilfison/vscode-haml-all/pull/6) Fix multi-line ruby highlighting
+- [#6](https://github.com/wilfison/vscode-haml-all/pull/6) `kamen-hursev`: Fix multi-line ruby highlighting
 
 ## [1.2.7] - 2025-04-17
 

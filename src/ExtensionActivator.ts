@@ -10,6 +10,7 @@ import CodeLensProvider from './providers/CodeLensProvider';
 import FormattingEditProvider from './providers/FormattingEditProvider';
 import { ViewCodeActionProvider, createPartialFromSelection } from './providers/ViewCodeActionProvider';
 import DataAttributeCompletionProvider from './providers/DataAttributeCompletionProvider';
+import AssetsCompletionProvider from './providers/AssetsCompletionProvider';
 
 import LivePreviewPanel from './LivePreviewPanel';
 import LintServer from './server';
@@ -52,6 +53,15 @@ export class ExtensionActivator {
       vscode.languages.registerDefinitionProvider(
         this.HAML_SELECTOR,
         new RoutesDefinitionProvider(eventSubscriber.routes)
+      )
+    );
+
+    this.context.subscriptions.push(
+      vscode.languages.registerCompletionItemProvider(
+        this.HAML_SELECTOR,
+        new AssetsCompletionProvider(),
+        '"',
+        '\''
       )
     );
 

@@ -2,17 +2,49 @@
   "Image Path": {
     "prefix": "image_path",
     "body": [
-      "= image_path('${1:src}', alt: '${2:alt}'${3:, class: '${4:class}'})"
+      "= image_path('${1:image_name}')$0"
+    ]
+  },
+  "Asset Path": {
+    "prefix": "asset_path",
+    "body": [
+      "= asset_path('${1:asset_name}')$0"
+    ]
+  },
+  "Vite Asset Path": {
+    "prefix": "vite_asset_path",
+    "body": [
+      "= vite_asset_path('${1:asset_name}')$0"
     ]
   },
   "Javascript Include Tag": {
     "prefix": "javascript_include_tag",
     "body": "= javascript_include_tag('${1:application}'${2:, 'data-turbo-track': 'reload'}${3:, type: 'module'})"
   },
+  "Javascript Pack Tag": {
+    "prefix": "javascript_pack_tag",
+    "body": "= javascript_pack_tag('${1:application}'${2:, 'data-turbo-track': 'reload'})"
+  },
+  "Vite Javascript Tag": {
+    "prefix": "vite_javascript_tag",
+    "body": "= vite_javascript_tag('${1:application}'${2:, 'data-turbo-track': 'reload'})"
+  },
   "Stylesheet Link Tag": {
     "prefix": "stylesheet_link_tag",
     "body": [
       "= stylesheet_link_tag('${1:application}', media: '${2:all}'${3:, 'data-turbo-track': 'reload'})"
+    ]
+  },
+  "Stylesheet Pack Tag": {
+    "prefix": "stylesheet_pack_tag",
+    "body": [
+      "= stylesheet_pack_tag('${1:application}'${2:, 'data-turbo-track': 'reload'})"
+    ]
+  },
+  "Vite Stylesheet Tag": {
+    "prefix": "vite_stylesheet_tag",
+    "body": [
+      "= vite_stylesheet_tag('${1:application}', media: '${2:all}'${3:, 'data-turbo-track': 'reload'})"
     ]
   },
   "Turbo Frame Tag": {
