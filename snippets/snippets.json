@@ -1,31 +1,31 @@
 {
   "if": {
-    "prefix": "if",
-    "description": "if",
+    "prefix": "- if",
+    "description": "Multiline if statement",
     "body": [
       "- if ${1:condition}",
       "  $0"
     ]
   },
   "else": {
-    "prefix": "else",
-    "description": "else",
+    "prefix": "- else",
+    "description": "Multiline else statement",
     "body": [
       "- else",
       "  $0"
     ]
   },
   "elsif": {
-    "prefix": "elsif",
-    "description": "elsif",
+    "prefix": "- elsif",
+    "description": "Multiline elsif statement",
     "body": [
       "- elsif ${1:condition}",
       "  $0"
     ]
   },
   "unless": {
-    "prefix": "unless",
-    "description": "unless",
+    "prefix": "- unless",
+    "description": "Multiline unless statement",
     "body": [
       "- unless ${1:condition}",
       "  $0"
@@ -33,9 +33,9 @@
   },
   "each": {
     "prefix": "each",
-    "description": "each",
+    "description": "Iterate over a collection",
     "body": [
-      "- ${1:resource}s.each do |${1:resource}|",
+      "- ${1:${TM_DIRECTORY/.+\\/(.*)$/$1/}}.each do |${2:${TM_DIRECTORY/.+\\/(.*)\\w$/$1/}}|",
       "  $0"
     ]
   },
@@ -59,24 +59,24 @@
     ]
   },
   "Filter: JavaScript": {
-    "prefix": "javascript",
-    "description": "Inline JavaScript Tag",
+    "prefix": ":javascript",
+    "description": "Inline JavaScript Filter Tag",
     "body": [
       ":javascript",
       "  $1"
     ]
   },
   "Filter: CSS": {
-    "prefix": "css",
-    "description": "Inline CSS Tag",
+    "prefix": ":css",
+    "description": "Inline CSS Filter Tag",
     "body": [
       ":css",
       "  $1"
     ]
   },
   "Filter: Ruby": {
-    "prefix": "ruby",
-    "description": "Inline Ruby Block",
+    "prefix": ":ruby",
+    "description": "Inline Ruby Filter Block",
     "body": [
       ":ruby",
       "  $1"
