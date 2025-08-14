@@ -223,106 +223,19 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     imageUri: vscode.Uri,
     imageName: string,
     imagePath: string,
-    sizeKB: number,
+    imageSize: number,
     imageExt: string
   ): string {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Preview</title>
-    <style>
-        body {
-            font-family: var(--vscode-font-family);
-            background-color: var(--vscode-editor-background);
-            color: var(--vscode-editor-foreground);
-            padding: 20px;
-            margin: 0;
-        }
+    const template = fs.readFileSync(
+      path.join(__dirname, '..', '..', 'templates', 'webview_image_preview.html'),
+      'utf8'
+    );
 
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-        }
-
-        .image-info {
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: var(--vscode-textBlockQuote-background);
-            border-radius: 4px;
-            border-left: 4px solid var(--vscode-textBlockQuote-border);
-        }
-
-        .image-info h2 {
-            margin: 0 0 10px 0;
-            color: var(--vscode-textPreformat-foreground);
-        }
-
-        .image-info p {
-            margin: 5px 0;
-            font-family: var(--vscode-editor-font-family);
-        }
-
-        .image-container {
-            text-align: center;
-            background-color: var(--vscode-input-background);
-            border: 1px solid var(--vscode-input-border);
-            border-radius: 4px;
-            padding: 20px;
-            overflow: auto;
-        }
-
-        .image-container img {
-            max-width: 100%;
-            max-height: 80vh;
-            height: auto;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            border-radius: 6px;
-            transition: transform 0.2s ease;
-        }
-
-        .image-container img:hover {
-            transform: scale(1.02);
-        }
-
-        .error {
-            color: var(--vscode-errorForeground);
-            text-align: center;
-            padding: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="image-info">
-            <h2>📷 ${imageName}</h2>
-            <p><strong>Path:</strong> ${imagePath}</p>
-            <p><strong>Type:</strong> ${imageExt.toUpperCase().substring(1)} Image</p>
-            <p><strong>Size:</strong> ${sizeKB} KB</p>
-            <p><strong>Dimensions:</strong> <span id="dimensions">Loading...</span></p>
-        </div>
-
-        <div class="image-container">
-            <img src="${imageUri}" alt="${imageName}"
-                onload="showImageInfo(this)"
-                onerror="this.style.display='none'; document.getElementById('error').style.display='block'">
-            <div id="error" class="error" style="display: none;">
-                ❌ Unable to load image
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function showImageInfo(img) {
-            img.style.display = 'block';
-            const dimensionsElement = document.getElementById('dimensions');
-            if (dimensionsElement) {
-                dimensionsElement.textContent = img.naturalWidth + ' x ' + img.naturalHeight + ' pixels';
-            }
-        }
-    </script>
-</body>
-</html>`;
+    return template
+      .replace(/{{imageUri}}/g, imageUri.toString())
+      .replace(/{{imageName}}/g, imageName)
+      .replace(/{{imagePath}}/g, imagePath)
+      .replace(/{{imageSize}}/g, `${imageSize} KB`)
+      .replace(/{{imageExt}}/g, imageExt.toUpperCase().substring(1));
   }
 }
