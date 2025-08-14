@@ -6,6 +6,7 @@ import { ExtensionActivator } from './ExtensionActivator';
 import LintServer from './server';
 
 let lintServer: LintServer = new LintServer(getWorkspaceRoot(), false);
+let activator: ExtensionActivator | undefined;
 
 let outputChanel = vscode.window.createOutputChannel('Haml');
 
@@ -18,13 +19,17 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.window.showErrorMessage('haml-lint not found. Please install haml-lint gem to use this extension.');
   }
 
-  const activator = new ExtensionActivator(context, outputChanel, lintServer);
+  activator = new ExtensionActivator(context, outputChanel, lintServer);
   await activator.activate();
 }
 
 export function deactivate() {
   if (lintServer) {
     lintServer.stop();
+  }
+
+  if (activator) {
+    activator.dispose();
   }
 
   outputChanel.appendLine('Haml All extension deactivated.');
