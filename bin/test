@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
-require 'optparse'
+require "optparse"
 
 def run_tests(specific_file = nil)
   if specific_file
@@ -14,10 +15,8 @@ def run_tests(specific_file = nil)
     system("ruby -Ilib:test test/**/*_test.rb")
   end
 end
-
-options = {}
 OptionParser.new do |opts|
-  opts.banner = "Uso: #{File.basename($0)} [arquivo_de_teste]"
+  opts.banner = "Uso: #{File.basename($PROGRAM_NAME)} [arquivo_de_teste]"
 
   opts.on("-h", "--help", "Mostra esta mensagem de ajuda") do
     puts opts

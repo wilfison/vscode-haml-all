@@ -6,7 +6,7 @@ AllCops:
 
 Style/FrozenStringLiteralComment:
   Enabled: true
-  EnforcedStyle: always
+  SafeAutoCorrect: true
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes

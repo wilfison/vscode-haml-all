@@ -1,18 +1,19 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
-require 'json'
+require "json"
 
 def get_next_version(version, type)
-  major, minor, patch = version.split('.').map(&:to_i)
+  major, minor, patch = version.split(".").map(&:to_i)
   case type
-  when 'major'
+  when "major"
     major += 1
     minor = 0
     patch = 0
-  when 'minor'
+  when "minor"
     minor += 1
     patch = 0
-  when 'patch'
+  when "patch"
     patch += 1
   end
   "#{major}.#{minor}.#{patch}"
@@ -21,31 +22,31 @@ end
 def update_version(package, new_version)
   puts "Bumping version from #{package['version']} to #{new_version}"
 
-  package['version'] = new_version
-  File.write('package.json', JSON.pretty_generate(package))
+  package["version"] = new_version
+  File.write("package.json", JSON.pretty_generate(package))
 end
 
 def unversioned_commits(old_version)
   last_hash_commit = `git log --grep="Release #{old_version}" --pretty=format:"%H"`.strip
 
   commits = `git log --pretty=format:"%s" #{last_hash_commit}..HEAD`.split("\n")
-  commits = commits.reject { |commit| commit.start_with?('Merge') }
+  commits = commits.reject { |commit| commit.start_with?("Merge") }
   commits.sort
 end
 
 def append_commits_to_changelog(old_version, new_version)
-  changelog = File.read('CHANGELOG.md')
+  changelog = File.read("CHANGELOG.md")
   changelog = changelog.split("\n")
 
   new_lines = [
     "\n## [#{new_version}] - #{Time.now.strftime('%Y-%m-%d')}\n",
-    *unversioned_commits(old_version).map { |commit| "- #{commit.capitalize}" },
+    *unversioned_commits(old_version).map { |commit| "- #{commit.capitalize}" }
   ]
 
   puts "Appending to CHANGELOG.md:\n#{new_lines.join("\n")}"
   changelog.insert(1, *new_lines)
 
-  File.write('CHANGELOG.md', changelog.join("\n"))
+  File.write("CHANGELOG.md", changelog.join("\n"))
 end
 
 def package_extenssion
@@ -60,12 +61,12 @@ def commit_changes(version)
 end
 
 def main
-  type = ARGV[0] || 'patch'
+  type = ARGV[0] || "patch"
 
-  package = JSON.parse(File.read('package.json'))
-  new_version = get_next_version(package['version'], type)
+  package = JSON.parse(File.read("package.json"))
+  new_version = get_next_version(package["version"], type)
 
-  append_commits_to_changelog(package['version'], new_version)
+  append_commits_to_changelog(package["version"], new_version)
   update_version(package, new_version)
   # package_extenssion
   # commit_changes(version)
