@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased]
+## [2.0.0] - 2025-08-15
 
 - Add **Data Attributes Auto-completion**: Intelligent auto-completion for HTML data attributes including:
   - Common HTML data attributes (`data-toggle`, `data-target`, `data-dismiss`, etc.)
