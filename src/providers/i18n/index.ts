@@ -1,5 +1,5 @@
 import * as fs from 'node:fs';
-import { OutputChannel, workspace } from 'vscode';
+import { FileSystemWatcher, OutputChannel, workspace } from 'vscode';
 
 import I18nDiagnosticsProvider from './I18nDiagnosticsProvider';
 import I18nCompletionProvider from './I18nCompletionProvider';
@@ -26,10 +26,14 @@ class I18nProvider {
     this.i18nCompletionProvider = new I18nCompletionProvider(this.localesData, this.localeConfig);
     this.i18nDefinitionProvider = new I18nDefinitionProvider(this.localesData);
 
-    this.loadLocalesData().then(async () => {
-      await this.setDefaultLocale();
-      this.outputChannel.appendLine(`Default I18n locale set to: ${this.localeConfig.defaultLocale}`);
-    });
+    this.setupData();
+  }
+
+  async setupData(): Promise<void> {
+    await this.loadLocalesData();
+
+    await this.setDefaultLocale();
+    this.outputChannel.appendLine(`Default I18n locale set to: ${this.localeConfig.defaultLocale}`);
   }
 
   async loadLocalesData(): Promise<void> {
@@ -46,6 +50,15 @@ class I18nProvider {
   dispose(): void {
     this.localesData.clear();
     this.i18nDiagnosticsProvider.dispose();
+  }
+
+  subscribeFileWatcher(): FileSystemWatcher {
+    const watcher = workspace.createFileSystemWatcher('**/config/locales/**/*.yml');
+
+    watcher.onDidChange(this.setupData.bind(this));
+    watcher.onDidCreate(this.setupData.bind(this));
+
+    return watcher;
   }
 
   private async setDefaultLocale(): Promise<void> {

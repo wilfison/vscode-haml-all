@@ -38,7 +38,10 @@ export class ExtensionActivator {
 
   public async activate(): Promise<void> {
     const eventSubscriber = new EventSubscriber(this.context, this.outputChannel, this.lintServer, this.isARailsProject);
-    eventSubscriber.subscribe();
+
+    eventSubscriber.subscribe([
+      this.i18nProvider.subscribeFileWatcher()
+    ]);
 
     this.registerCommands();
     this.registerHamlProviders(eventSubscriber);

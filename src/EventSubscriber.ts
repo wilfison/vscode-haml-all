@@ -8,6 +8,7 @@ import {
   OutputChannel,
   window,
   ProgressLocation,
+  FileSystemWatcher,
 } from 'vscode';
 
 import Linter from './linter';
@@ -36,9 +37,11 @@ class EventSubscriber {
     this.routes = new Routes(this.rootPath.fsPath, this.outputChanel, isARailsProject);
   }
 
-  public subscribe(): void {
+  public subscribe(otherEvents: any[] = []): void {
     this.subscribeHaml();
     this.subscribeRails();
+
+    otherEvents.forEach(event => this.context.subscriptions.push(event));
   }
 
   public subscribeHaml() {
@@ -128,12 +131,12 @@ class EventSubscriber {
   }
 
   private subscribeRailsWatchers() {
-    const watchFiles = [
+    const watchRouteFiles = [
       '**/config/routes.rb',
       '**/config/routes/**/*.rb',
     ];
 
-    watchFiles.forEach(pattern => this.subscribeFileWatcher(pattern, () => {
+    watchRouteFiles.forEach(pattern => this.subscribeFileWatcher(pattern, () => {
       loadWithProgress('Loading rails routes', this.routes.load);
     }));
   }
