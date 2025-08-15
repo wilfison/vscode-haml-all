@@ -214,7 +214,6 @@ class LintServer {
       client.on('end', () => {
         try {
           const response = JSON.parse(data);
-          this.printOutput(`Server response: ${response}`);
 
           resolve(response);
         } catch (e: any) {
