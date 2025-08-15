@@ -2,18 +2,15 @@
 
 ## [Unreleased]
 
-### Added
-
-- **Data Attributes Auto-completion**: Intelligent auto-completion for HTML data attributes including:
+- Add **Data Attributes Auto-completion**: Intelligent auto-completion for HTML data attributes including:
   - Common HTML data attributes (`data-toggle`, `data-target`, `data-dismiss`, etc.)
   - Rails UJS attributes (`data-confirm`, `data-method`, `data-remote`, `data-disable-with`, etc.)
   - Turbo Rails attributes (`data-turbo`, `data-turbo-action`, `data-turbo-frame`, `data-turbo-stream`, etc.)
   - Stimulus attributes (`data-controller`, `data-action`, `data-target`, etc.)
-- Support for all HAML attribute syntaxes (hash, parentheses, symbols, new Ruby syntax)
-- **Rails Helpers Support**: Auto-completion works with Rails helpers like `link_to`, `button_to`, `form_with`, `text_field`, etc.
-- Context-aware suggestions with descriptions for each attribute
-- Add assets auto-completion for Rails asset pipeline
-- Add image preview with CodeLens support for Rails image helpers
+- Add **Rails Helpers Support**: Auto-completion works with Rails helpers like `link_to`, `button_to`, `form_with`, `text_field`, etc.
+- Add **assets auto-completion** for Rails asset pipeline.
+- Add **image preview** with CodeLens support for Rails image helpers.
+- Add support for `I18n.t` and `I18n.translate` methods with auto-completion, go to definition and validation.
 
 ## [1.2.9] - 2025-08-06
 
