@@ -12,7 +12,7 @@ import { ViewCodeActionProvider, createPartialFromSelection } from './providers/
 import DataAttributeCompletionProvider from './providers/DataAttributeCompletionProvider';
 import AssetsCompletionProvider from './providers/AssetsCompletionProvider';
 import ImagePreviewCodeLensProvider from './providers/ImagePreviewCodeLensProvider';
-import { I18nCompletionProvider, I18nDiagnosticsProvider, I18nDefinitionProvider } from './providers/i18n';
+import I18nProvider from './providers/i18n';
 
 import LivePreviewPanel from './LivePreviewPanel';
 import LintServer from './server';
@@ -25,7 +25,7 @@ export class ExtensionActivator {
   private readonly HAML_SELECTOR = { language: 'haml', scheme: 'file' };
   private readonly RUBY_SELECTOR = { language: 'ruby', scheme: 'file' };
   private isARailsProject: boolean = false;
-  private i18nDiagnosticsProvider: I18nDiagnosticsProvider;
+  private i18nProvider: I18nProvider;
 
   constructor(
     private readonly context: vscode.ExtensionContext,
@@ -33,7 +33,7 @@ export class ExtensionActivator {
     private readonly lintServer: LintServer
   ) {
     this.isARailsProject = helpers.isARailsProject(this.outputChannel);
-    this.i18nDiagnosticsProvider = new I18nDiagnosticsProvider();
+    this.i18nProvider = new I18nProvider(this.outputChannel);
   }
 
   public async activate(): Promise<void> {
@@ -93,7 +93,7 @@ export class ExtensionActivator {
       this.context.subscriptions.push(
         vscode.languages.registerCompletionItemProvider(
           this.HAML_SELECTOR,
-          new I18nCompletionProvider(),
+          this.i18nProvider.i18nCompletionProvider,
           '.',
           '_',
           '\'',
@@ -104,19 +104,19 @@ export class ExtensionActivator {
       this.context.subscriptions.push(
         vscode.languages.registerDefinitionProvider(
           this.HAML_SELECTOR,
-          new I18nDefinitionProvider()
+          this.i18nProvider.i18nDefinitionProvider
         )
       );
 
       vscode.workspace.onDidChangeTextDocument((event) => {
         if (event.document.languageId === 'haml') {
-          this.i18nDiagnosticsProvider.validateDocument(event.document);
+          this.i18nProvider.i18nDiagnosticsProvider.validateDocument(event.document);
         }
       });
 
       vscode.workspace.onDidOpenTextDocument((document) => {
         if (document.languageId === 'haml') {
-          this.i18nDiagnosticsProvider.validateDocument(document);
+          this.i18nProvider.i18nDiagnosticsProvider.validateDocument(document);
         }
       });
     }
@@ -200,6 +200,6 @@ export class ExtensionActivator {
   }
 
   public dispose(): void {
-    this.i18nDiagnosticsProvider.dispose();
+    this.i18nProvider.dispose();
   }
 }

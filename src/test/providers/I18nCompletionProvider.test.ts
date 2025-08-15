@@ -1,12 +1,19 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import I18nCompletionProvider from '../../providers/i18n/I18nCompletionProvider';
+import { CacheLocaleType } from '../../ultils/yaml';
 
 suite('I18nCompletionProvider Tests', () => {
   let provider: I18nCompletionProvider;
+  let localesData: CacheLocaleType;
 
   setup(() => {
-    provider = new I18nCompletionProvider();
+    localesData = new Map([
+      ['en', { data: { 'user.name': 'User Name', 'admin.dashboard': 'Admin Dashboard' }, file: 'en.yml' }],
+      ['fr', { data: { 'user.name': 'Nom d\'utilisateur', 'admin.dashboard': 'Tableau de bord admin' }, file: 'fr.yml' }]
+    ]);
+
+    provider = new I18nCompletionProvider(localesData);
   });
 
   test('should provide completions for I18n.t helper', async () => {

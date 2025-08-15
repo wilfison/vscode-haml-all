@@ -11,15 +11,15 @@ import {
   MarkdownString
 } from 'vscode';
 
-import { CacheLocaleType, loadLocalesData } from '../../ultils/yaml';
+import { CacheLocaleType } from '../../ultils/yaml';
 
 const I18N_REGEXP = /(?:I18n\.t|t)\s*\(?['"]([^'"]*)/;
 
 export default class I18nCompletionProvider implements CompletionItemProvider {
-  private localesCache: CacheLocaleType = new Map();
-  private lastCacheUpdate = 0;
-  private readonly CACHE_TTL = 5000;
   private defaultLocale: string | null = null;
+
+  constructor(private localesData: CacheLocaleType) {
+  }
 
   public async provideCompletionItems(document: TextDocument, position: Position): Promise<CompletionItem[] | null> {
     const line = document.getText(new Range(new Position(position.line, 0), position));
@@ -36,16 +36,15 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
   }
 
   private async getI18nCompletions(partialKey: string): Promise<CompletionItem[]> {
-    const localesData = await this.loadLocalesData();
     const defaultLocale = await this.getDefaultLocale();
     const completions: CompletionItem[] = [];
     const addedKeys = new Set<string>();
 
     // Priorize default locale
-    const preferredLocale = localesData.get(defaultLocale) ? defaultLocale : localesData.keys().next().value;
+    const preferredLocale = this.localesData.get(defaultLocale) ? defaultLocale : this.localesData.keys().next().value;
 
-    if (preferredLocale && localesData.has(preferredLocale)) {
-      const data = localesData.get(preferredLocale)?.data;
+    if (preferredLocale && this.localesData.has(preferredLocale)) {
+      const data = this.localesData.get(preferredLocale)?.data;
       const keys = this.extractKeys(data, partialKey);
 
       for (const key of keys) {
@@ -64,7 +63,7 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
     }
 
     if (completions.length === 0) {
-      for (const [locale, { data }] of localesData) {
+      for (const [locale, { data }] of this.localesData) {
         if (locale === preferredLocale) {
           continue;
         }
@@ -88,21 +87,6 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
     }
 
     return completions;
-  }
-
-  private async loadLocalesData(): Promise<CacheLocaleType> {
-    const now = Date.now();
-
-    if (now - this.lastCacheUpdate < this.CACHE_TTL && this.localesCache.size > 0) {
-      return this.localesCache;
-    }
-
-    this.localesCache.clear();
-    this.lastCacheUpdate = now;
-
-    await loadLocalesData(this.localesCache);
-
-    return this.localesCache;
   }
 
   private extractKeys(data: any, partialKey: string, prefix = ''): string[] {
@@ -169,18 +153,17 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
     }
 
     // Fallback for common locales
-    const localesData = await this.loadLocalesData();
     const preferredOrder = ['en', 'pt', 'pt-BR', 'es', 'fr'];
 
     for (const locale of preferredOrder) {
-      if (localesData.has(locale)) {
+      if (this.localesData.has(locale)) {
         this.defaultLocale = locale;
         return this.defaultLocale;
       }
     }
 
     // If none of the preferred locales are found, use the first available
-    const firstLocale = localesData.keys().next().value;
+    const firstLocale = this.localesData.keys().next().value;
     this.defaultLocale = firstLocale || 'en';
     return this.defaultLocale;
   }

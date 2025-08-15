@@ -10,14 +10,13 @@ import {
   Uri
 } from 'vscode';
 
-import { CacheLocaleType, loadLocalesData } from '../../ultils/yaml';
+import { CacheLocaleType } from '../../ultils/yaml';
 
 const I18N_KEY_REGEXP = /(?:I18n\.t|t)\(['"]([^'"]*)$/;
 
 export default class I18nDefinitionProvider implements DefinitionProvider {
-  private localesCache: CacheLocaleType = new Map();
-  private lastCacheUpdate = 0;
-  private readonly CACHE_TTL = 5000;
+  constructor(private localesData: CacheLocaleType) {
+  }
 
   public async provideDefinition(document: TextDocument, position: Position): Promise<DefinitionLink[]> {
     const line = document.lineAt(position.line).text;
@@ -53,10 +52,9 @@ export default class I18nDefinitionProvider implements DefinitionProvider {
   }
 
   private async findKeyDefinitions(key: string): Promise<Location[]> {
-    const localesData = await this.loadLocalesData();
     const definitions: Location[] = [];
 
-    for (const [locale, { data, file }] of localesData) {
+    for (const [locale, { data, file }] of this.localesData) {
       const location = this.findKeyInData(data, key, file);
       if (location) {
         definitions.push(location);
@@ -118,20 +116,5 @@ export default class I18nDefinitionProvider implements DefinitionProvider {
 
   private getIndentForDepth(depth: number): number {
     return depth * 2;
-  }
-
-  private async loadLocalesData(): Promise<CacheLocaleType> {
-    const now = Date.now();
-
-    if (now - this.lastCacheUpdate < this.CACHE_TTL && this.localesCache.size > 0) {
-      return this.localesCache;
-    }
-
-    this.localesCache.clear();
-    this.lastCacheUpdate = now;
-
-    await loadLocalesData(this.localesCache);
-
-    return this.localesCache;
   }
 }
