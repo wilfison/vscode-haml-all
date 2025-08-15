@@ -73,6 +73,7 @@ class I18nProvider {
         if (match) {
           this.localeConfig.defaultLocale = match[1];
           this.outputChannel.appendLine(`Default locale (${this.localeConfig.defaultLocale}) found in Rails config (${file.fsPath})`);
+          return;
         }
       }
     } catch (error) {
