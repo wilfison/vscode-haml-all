@@ -1,15 +1,31 @@
 import fs from 'node:fs';
 import { workspace } from 'vscode';
 
-export function parseYaml(content: string): any {
+export type CacheLocaledataType = {
+  [key: string]: {
+    value: string;
+    file_path: string;
+    file_line: number;
+  }
+}
+
+export type CacheLocaleType = Map<string, CacheLocaledataType>;
+
+export function parseYaml(filePath: string): any {
   try {
+    const content = fs.readFileSync(filePath, 'utf8');
     const lines = content.split('\n');
     const result: any = {};
     const stack: any[] = [result];
+
     let currentIndent = 0;
+    let currentLine = -1;
 
     for (const line of lines) {
+      currentLine += 1;
+
       const trimmed = line.trim();
+
       if (!trimmed || trimmed.startsWith('#')) {
         continue;
       }
@@ -36,7 +52,11 @@ export function parseYaml(content: string): any {
         stack.push(current[key]);
         currentIndent = indent;
       } else {
-        current[key] = value.replace(/^['"]|['"]$/g, '');
+        current[key] = {
+          value: value.replace(/^['"]|['"]$/g, ''),
+          file_path: filePath,
+          file_line: currentLine
+        };
       }
     }
 
@@ -47,19 +67,16 @@ export function parseYaml(content: string): any {
   }
 }
 
-export type CacheLocaleType = Map<string, { data: any; file: string }>;
-
 export async function loadLocalesData(cacheMap: CacheLocaleType): Promise<CacheLocaleType> {
   const localeFiles = await workspace.findFiles('config/locales/**/*.{yml,yaml}');
 
   for (const file of localeFiles) {
     try {
-      const content = fs.readFileSync(file.fsPath, 'utf8');
-      const data = parseYaml(content);
+      const data = parseYaml(file.fsPath);
 
       if (data && typeof data === 'object') {
         for (const [locale, localeData] of Object.entries(data)) {
-          cacheMap.set(locale, { data: localeData, file: file.fsPath });
+          cacheMap.set(locale, locateDataToI18nKeys(localeData as CacheLocaledataType));
         }
       }
     } catch (error) {
@@ -68,4 +85,23 @@ export async function loadLocalesData(cacheMap: CacheLocaleType): Promise<CacheL
   }
 
   return cacheMap;
+}
+
+function locateDataToI18nKeys(localeData: CacheLocaledataType): CacheLocaledataType {
+  const result: CacheLocaledataType = {};
+
+  function traverse(data: any, path: string[] = []) {
+    for (const [key, value] of Object.entries(data)) {
+      if (value && typeof value === 'object' && !('value' in value)) {
+        traverse(value, [...path, key]);
+      }
+      else if (value && typeof value === 'object' && 'value' in value) {
+        const fullPath = [...path, key].join('.');
+        result[fullPath] = value as { value: string; file_path: string; file_line: number };
+      }
+    }
+  }
+
+  traverse(localeData);
+  return result;
 }

@@ -2,18 +2,29 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import I18nCompletionProvider from '../../providers/i18n/I18nCompletionProvider';
 import { CacheLocaleType } from '../../ultils/yaml';
+import { I18nLocaleConfig } from '../../providers/i18n';
 
 suite('I18nCompletionProvider Tests', () => {
   let provider: I18nCompletionProvider;
   let localesData: CacheLocaleType;
+  let localeConfig: I18nLocaleConfig;
 
   setup(() => {
-    localesData = new Map([
-      ['en', { data: { 'user.name': 'User Name', 'admin.dashboard': 'Admin Dashboard' }, file: 'en.yml' }],
-      ['fr', { data: { 'user.name': 'Nom d\'utilisateur', 'admin.dashboard': 'Tableau de bord admin' }, file: 'fr.yml' }]
-    ]);
+    localeConfig = { defaultLocale: 'en' };
+    localesData = new Map(
+      Object.entries({
+        'en': {
+          'user.name': { value: 'User Name', file_path: 'en.yaml', file_line: 1 },
+          'admin.dashboard': { value: 'Admin Dashboard', file_path: 'en.yaml', file_line: 2 }
+        },
+        'fr': {
+          'user.name': { value: 'Nom d\'utilisateur', file_path: 'fr.yaml', file_line: 1 },
+          'admin.dashboard': { value: 'Tableau de bord Admin', file_path: 'fr.yaml', file_line: 2 }
+        }
+      })
+    );
 
-    provider = new I18nCompletionProvider(localesData);
+    provider = new I18nCompletionProvider(localesData, localeConfig);
   });
 
   test('should provide completions for I18n.t helper', async () => {
@@ -62,14 +73,12 @@ suite('I18nCompletionProvider Tests', () => {
     } as any;
 
     const position = new vscode.Position(0, 11);
-
     const completions = await provider.provideCompletionItems(document, position);
 
     if (Array.isArray(completions)) {
       const keys = completions.map(item => item.label);
       const uniqueKeys = [...new Set(keys)];
 
-      // Verifica se não há chaves duplicadas
       assert.strictEqual(keys.length, uniqueKeys.length, 'Should not have duplicate keys');
     }
   });

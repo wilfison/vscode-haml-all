@@ -41,7 +41,7 @@ export default class I18nDefinitionProvider implements DefinitionProvider {
       new Position(position.line, keyEnd)
     );
 
-    const definitions = await this.findKeyDefinitions(key);
+    const definitions = await this.findKeyDefinitions(key, line);
 
     return definitions.map(def => ({
       targetUri: def.uri,
@@ -51,70 +51,23 @@ export default class I18nDefinitionProvider implements DefinitionProvider {
     }));
   }
 
-  private async findKeyDefinitions(key: string): Promise<Location[]> {
+  private async findKeyDefinitions(key: string, line: string): Promise<Location[]> {
     const definitions: Location[] = [];
 
-    for (const [locale, { data, file }] of this.localesData) {
-      const location = this.findKeyInData(data, key, file);
-      if (location) {
-        definitions.push(location);
+    for (const [locale, data] of this.localesData) {
+      const dataKey = data[key];
+
+      if (!dataKey) {
+        continue;
       }
+
+      const position = new Position(dataKey.file_line, 0);
+      const range = new Range(position, new Position(dataKey.file_line, line.length - 1));
+      const location = new Location(Uri.file(dataKey.file_path), range);
+
+      definitions.push(location);
     }
 
     return definitions;
-  }
-
-  private findKeyInData(data: any, key: string, filePath: string): Location | null {
-    const parts = key.split('.');
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    const lines = fileContent.split('\n');
-
-    let currentPath: string[] = [];
-    let targetIndent = -1;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const trimmed = line.trim();
-
-      if (!trimmed || trimmed.startsWith('#')) {
-        continue;
-      }
-
-      const indent = line.length - line.trimStart().length;
-      const colonIndex = trimmed.indexOf(':');
-
-      if (colonIndex === -1) {
-        continue;
-      }
-
-      const lineKey = trimmed.substring(0, colonIndex).trim();
-
-      if (targetIndent >= 0 && indent <= targetIndent) {
-        while (currentPath.length > 0 && indent <= this.getIndentForDepth(currentPath.length - 1)) {
-          currentPath.pop();
-        }
-        targetIndent = -1;
-      }
-
-      if (indent > (currentPath.length > 0 ? this.getIndentForDepth(currentPath.length) : -1)) {
-        currentPath.push(lineKey);
-
-        if (currentPath.join('.') === key) {
-          const position = new Position(i, line.indexOf(lineKey));
-          const range = new Range(position, new Position(i, line.indexOf(lineKey) + lineKey.length));
-          return new Location(Uri.file(filePath), range);
-        }
-
-        if (key.startsWith(currentPath.join('.') + '.')) {
-          targetIndent = indent;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  private getIndentForDepth(depth: number): number {
-    return depth * 2;
   }
 }

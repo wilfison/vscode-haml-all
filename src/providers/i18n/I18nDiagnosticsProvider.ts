@@ -45,6 +45,7 @@ export default class I18nDiagnosticsProvider {
           `I18n key '${key}' not found in locale files`,
           DiagnosticSeverity.Error
         );
+
         diagnostic.source = 'i18n-validator';
         diagnostics.push(diagnostic);
       }
@@ -54,28 +55,13 @@ export default class I18nDiagnosticsProvider {
   }
 
   private isValidI18nKey(key: string): boolean {
-    for (const [locale, { data, file }] of this.localesData) {
-      if (this.hasKey(data, key)) {
+    for (const [_locale, data] of this.localesData) {
+      if (data[key]) {
         return true;
       }
     }
 
     return false;
-  }
-
-  private hasKey(data: any, key: string): boolean {
-    const parts = key.split('.');
-    let current = data;
-
-    for (const part of parts) {
-      if (current && typeof current === 'object' && part in current) {
-        current = current[part];
-      } else {
-        return false;
-      }
-    }
-
-    return typeof current === 'string';
   }
 
   public dispose(): void {
