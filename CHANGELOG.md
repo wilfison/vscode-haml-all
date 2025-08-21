@@ -1,5 +1,9 @@
 # Change Log
 
+## [2.0.1] - 2025-08-21
+
+- Fix I18N_CALL_REGEXP to match I18n calls with preceding characters (=, -)
+
 ## [2.0.0] - 2025-08-15
 
 - Add **Data Attributes Auto-completion**: Intelligent auto-completion for HTML data attributes including:
