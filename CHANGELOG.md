@@ -1,5 +1,12 @@
 # Change Log
 
+## [Unreleased]
+
+- Add **Wrap in Conditional**: New Code Action to wrap selected HAML content in conditional statements (if/unless blocks)
+  - Select any HAML content and use the "Wrap in conditional" option from the Code Actions menu
+  - Prompts for condition input (e.g., `user.present?`, `@items.any?`, etc.)
+  - Properly handles indentation for nested HAML content
+
 ## [2.0.0] - 2025-08-15
 
 - Add **Data Attributes Auto-completion**: Intelligent auto-completion for HTML data attributes including:

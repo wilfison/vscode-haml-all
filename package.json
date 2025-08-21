@@ -85,6 +85,11 @@
         "command": "hamlAll.livePreview",
         "title": "HAML: Open Live Preview",
         "enablement": "editorLangId == haml"
+      },
+      {
+        "command": "hamlAll.wrapInConditional",
+        "title": "HAML: Wrap in conditional",
+        "enablement": "editorLangId == haml"
       }
     ],
     "languages": [

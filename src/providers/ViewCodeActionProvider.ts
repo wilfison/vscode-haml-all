@@ -18,7 +18,8 @@ export class ViewCodeActionProvider implements CodeActionProvider {
   public provideCodeActions(document: TextDocument, range: Range): CodeAction[] | null {
     const actions: (CodeAction | null)[] = [
       buildPartialAction(range),
-      buildHtml2HamlAction()
+      buildHtml2HamlAction(),
+      buildWrapInConditionalAction(range)
     ];
 
     const codeActions = actions.filter(action => action !== null) as CodeAction[];
@@ -49,6 +50,20 @@ function buildPartialAction(range: Range): CodeAction | null {
   };
 
   return partialAction;
+}
+
+function buildWrapInConditionalAction(range: Range): CodeAction | null {
+  if (range.isEmpty) {
+    return null;
+  }
+
+  const wrapAction = new CodeAction('Wrap in conditional', CodeActionKind.RefactorRewrite);
+  wrapAction.command = {
+    command: 'hamlAll.wrapInConditional',
+    title: 'Wrap in conditional'
+  };
+
+  return wrapAction;
 }
 
 export async function createPartialFromSelection(): Promise<void> {
@@ -154,4 +169,57 @@ function formatPartialContent(partialName: string, content: string): [string, st
   newContent += '\n';
 
   return [newContent, renderText];
+}
+
+export async function wrapInConditional(): Promise<void> {
+  const editor = window.activeTextEditor;
+
+  if (!editor || editor.selection.isEmpty) {
+    return;
+  }
+
+  const condition = await window.showInputBox({
+    prompt: 'Enter condition (e.g., user.present?, @items.any?, etc.):',
+    placeHolder: 'user.present?'
+  });
+
+  if (!condition) {
+    return;
+  }
+
+  const selection = editor.selection;
+  const selectedText = editor.document.getText(selection);
+  const lines = selectedText.split('\n');
+
+  if (lines.length === 0) {
+    return;
+  }
+
+  // Get the indentation of the first non-empty line
+  const firstLineWithContent = lines.findIndex(line => line.trim().length > 0);
+  if (firstLineWithContent === -1) {
+    return;
+  }
+
+  const baseIndentation = lines[firstLineWithContent].match(/^[\s\t]*/)?.[0] || '';
+
+  // Add extra indentation to all lines (HAML uses 2 spaces by default)
+  const indentedLines = lines.map((line, index) => {
+    if (line.trim().length === 0) {
+      return line; // Keep empty lines as they are
+    }
+    // Only add indentation if this is not the first line or if it already has the base indentation
+    if (index === firstLineWithContent || line.startsWith(baseIndentation)) {
+      return `  ${line}`; // Add 2 spaces of indentation
+    }
+    return `  ${baseIndentation}${line.trimStart()}`; // Normalize and add indentation
+  });
+
+  // Create the wrapped content with proper HAML conditional syntax
+  const wrappedContent = `${baseIndentation}- if ${condition}\n${indentedLines.join('\n')}`;
+
+  const edit = new WorkspaceEdit();
+  edit.replace(editor.document.uri, selection, wrappedContent);
+
+  await workspace.applyEdit(edit);
 }

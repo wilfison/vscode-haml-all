@@ -58,6 +58,28 @@ Easily extract content into a new partial. Select the content, click the `Create
 
 ![Split to Partial](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/partial-from-selection.gif)
 
+### Wrap in Conditional
+
+Quickly wrap selected HAML content in a conditional statement. Select any content, access the Code Actions menu (lightbulb icon), and choose `Wrap in conditional`. You'll be prompted to enter the condition (e.g., `user.present?`, `@items.any?`, etc.).
+
+**Example:**
+Before:
+
+```haml
+%div.user-info
+  %h2= @user.name
+  %p= @user.email
+```
+
+After wrapping in conditional with `@user.present?`:
+
+```haml
+- if @user.present?
+  %div.user-info
+    %h2= @user.name
+    %p= @user.email
+```
+
 ### Partial Completion
 
 Autocomplete for partials based on the `app/views` directory in your project.
