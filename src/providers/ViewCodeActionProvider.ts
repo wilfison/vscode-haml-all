@@ -53,10 +53,6 @@ function buildPartialAction(range: Range): CodeAction | null {
 }
 
 function buildWrapInConditionalAction(range: Range): CodeAction | null {
-  if (range.isEmpty) {
-    return null;
-  }
-
   const wrapAction = new CodeAction('Wrap in conditional', CodeActionKind.RefactorRewrite);
   wrapAction.command = {
     command: 'hamlAll.wrapInConditional',
@@ -174,20 +170,25 @@ function formatPartialContent(partialName: string, content: string): [string, st
 export async function wrapInConditional(): Promise<void> {
   const editor = window.activeTextEditor;
 
-  if (!editor || editor.selection.isEmpty) {
+  if (!editor) {
     return;
   }
 
-  const condition = await window.showInputBox({
-    prompt: 'Enter condition (e.g., user.present?, @items.any?, etc.):',
-    placeHolder: 'user.present?'
-  });
+  let selection;
 
-  if (!condition) {
-    return;
+  if (editor.selection.isEmpty) {
+    selection = new Selection(
+      editor.selection.start.with({ character: 0 }),
+      editor.selection.end.with({ character: Number.MAX_VALUE })
+    );
+  } else {
+    // Expand selection to full lines
+    selection = new Selection(
+      editor.selection.start.with({ character: 0 }),
+      editor.selection.end.with({ character: Number.MAX_VALUE })
+    );
   }
 
-  const selection = editor.selection;
   const selectedText = editor.document.getText(selection);
   const lines = selectedText.split('\n');
 
@@ -216,10 +217,15 @@ export async function wrapInConditional(): Promise<void> {
   });
 
   // Create the wrapped content with proper HAML conditional syntax
-  const wrappedContent = `${baseIndentation}- if ${condition}\n${indentedLines.join('\n')}`;
+  const wrappedContent = `${baseIndentation}- if condition\n${indentedLines.join('\n')}`;
 
   const edit = new WorkspaceEdit();
   edit.replace(editor.document.uri, selection, wrappedContent);
 
   await workspace.applyEdit(edit);
+
+  // Optionally, move the cursor to the 'condition' part for easy editing. And select it.
+  const conditionPosition = new Position(selection.start.line, baseIndentation.length + 5);
+  editor.selection = new Selection(conditionPosition, conditionPosition.translate(0, 9));
+  editor.revealRange(new Range(conditionPosition, conditionPosition));
 }
