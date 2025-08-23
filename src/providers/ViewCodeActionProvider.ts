@@ -167,7 +167,7 @@ function formatPartialContent(partialName: string, content: string): [string, st
   return [newContent, renderText];
 }
 
-export async function wrapInConditional(): Promise<void> {
+export async function wrapInBlock(block: string): Promise<void> {
   const editor = window.activeTextEditor;
 
   if (!editor) {
@@ -217,7 +217,7 @@ export async function wrapInConditional(): Promise<void> {
   });
 
   // Create the wrapped content with proper HAML conditional syntax
-  const wrappedContent = `${baseIndentation}- if condition\n${indentedLines.join('\n')}`;
+  const wrappedContent = `${baseIndentation}${block}\n${indentedLines.join('\n')}`;
 
   const edit = new WorkspaceEdit();
   edit.replace(editor.document.uri, selection, wrappedContent);

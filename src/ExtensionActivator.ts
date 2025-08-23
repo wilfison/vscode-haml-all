@@ -8,7 +8,7 @@ import RoutesDefinitionProvider from './providers/RoutesDefinitionProvider';
 import PartialSignatureHelpProvider from './providers/PartialSignatureHelpProvider';
 import CodeLensProvider from './providers/CodeLensProvider';
 import FormattingEditProvider from './providers/FormattingEditProvider';
-import { ViewCodeActionProvider, createPartialFromSelection, wrapInConditional } from './providers/ViewCodeActionProvider';
+import { ViewCodeActionProvider, createPartialFromSelection, wrapInBlock } from './providers/ViewCodeActionProvider';
 import DataAttributeCompletionProvider from './providers/DataAttributeCompletionProvider';
 import AssetsCompletionProvider from './providers/AssetsCompletionProvider';
 import ImagePreviewCodeLensProvider from './providers/ImagePreviewCodeLensProvider';
@@ -184,7 +184,7 @@ export class ExtensionActivator {
 
       vscode.commands.registerCommand(
         'hamlAll.wrapInConditional',
-        wrapInConditional
+        () => wrapInBlock('- if condition')
       ),
 
       vscode.commands.registerCommand(
