@@ -1,5 +1,11 @@
 # Change Log
 
+## [2.0.3] - 2025-08-23
+
+- Add **Wrap in a Ruby Block**: New Code Action to wrap selected HAML content in Ruby blocks (each, times, etc.)
+  - Select any HAML content and use the "Wrap in a ruby block" option from the Code Actions menu
+- Refactor: Improve wrap functionality implementation and add better support for empty selections
+
 ## [2.0.2] - 2025-08-23
 
 - Add **Wrap in Conditional**: New Code Action to wrap selected HAML content in conditional statements (if/unless blocks)
