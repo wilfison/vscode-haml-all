@@ -8,7 +8,7 @@ import RoutesDefinitionProvider from './providers/RoutesDefinitionProvider';
 import PartialSignatureHelpProvider from './providers/PartialSignatureHelpProvider';
 import CodeLensProvider from './providers/CodeLensProvider';
 import FormattingEditProvider from './providers/FormattingEditProvider';
-import { ViewCodeActionProvider, createPartialFromSelection, wrapInBlock } from './providers/ViewCodeActionProvider';
+import { ViewCodeActionProvider, createPartialFromSelection, wrapContentInBlock } from './providers/ViewCodeActionProvider';
 import DataAttributeCompletionProvider from './providers/DataAttributeCompletionProvider';
 import AssetsCompletionProvider from './providers/AssetsCompletionProvider';
 import ImagePreviewCodeLensProvider from './providers/ImagePreviewCodeLensProvider';
@@ -182,10 +182,13 @@ export class ExtensionActivator {
         createPartialFromSelection
       ),
 
-      vscode.commands.registerCommand(
-        'hamlAll.wrapInConditional',
-        () => wrapInBlock('- if condition')
-      ),
+      vscode.commands.registerCommand('hamlAll.wrapInConditional', () => {
+        wrapContentInBlock('- if condition');
+      }),
+
+      vscode.commands.registerCommand('hamlAll.wrapInBlock', () => {
+        wrapContentInBlock('- (1..5).each do |item|');
+      }),
 
       vscode.commands.registerCommand(
         'hamlAll.html2Haml',

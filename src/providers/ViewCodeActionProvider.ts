@@ -19,7 +19,8 @@ export class ViewCodeActionProvider implements CodeActionProvider {
     const actions: (CodeAction | null)[] = [
       buildPartialAction(range),
       buildHtml2HamlAction(),
-      buildWrapInConditionalAction(range)
+      buildWrapInConditionalAction(range),
+      buildWrapInBlockAction(range)
     ];
 
     const codeActions = actions.filter(action => action !== null) as CodeAction[];
@@ -57,6 +58,16 @@ function buildWrapInConditionalAction(range: Range): CodeAction | null {
   wrapAction.command = {
     command: 'hamlAll.wrapInConditional',
     title: 'Wrap in conditional'
+  };
+
+  return wrapAction;
+}
+
+function buildWrapInBlockAction(range: Range): CodeAction | null {
+  const wrapAction = new CodeAction('Wrap in a ruby block', CodeActionKind.RefactorRewrite);
+  wrapAction.command = {
+    command: 'hamlAll.wrapInBlock',
+    title: 'Wrap in a ruby block'
   };
 
   return wrapAction;
@@ -167,7 +178,7 @@ function formatPartialContent(partialName: string, content: string): [string, st
   return [newContent, renderText];
 }
 
-export async function wrapInBlock(block: string): Promise<void> {
+export async function wrapContentInBlock(block: string): Promise<void> {
   const editor = window.activeTextEditor;
 
   if (!editor) {
@@ -225,7 +236,7 @@ export async function wrapInBlock(block: string): Promise<void> {
   await workspace.applyEdit(edit);
 
   // Optionally, move the cursor to the 'condition' part for easy editing. And select it.
-  const conditionPosition = new Position(selection.start.line, baseIndentation.length + 5);
-  editor.selection = new Selection(conditionPosition, conditionPosition.translate(0, 9));
+  const conditionPosition = new Position(selection.start.line, baseIndentation.length);
+  editor.selection = new Selection(conditionPosition, conditionPosition.translate(0, block.length));
   editor.revealRange(new Range(conditionPosition, conditionPosition));
 }

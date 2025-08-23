@@ -9,9 +9,9 @@ suite('ViewCodeActionProvider Tests', () => {
     provider = new ViewCodeActionProvider();
   });
 
-  test('should provide wrap in conditional action for non-empty range', () => {
+  test('should provide wrap in conditional action', () => {
     const document = {} as vscode.TextDocument;
-    const range = new vscode.Range(0, 0, 1, 10); // Non-empty range
+    const range = new vscode.Range(0, 0, 1, 10);
 
     const actions = provider.provideCodeActions(document, range);
 
@@ -23,16 +23,18 @@ suite('ViewCodeActionProvider Tests', () => {
     assert.strictEqual(wrapAction.command?.command, 'hamlAll.wrapInConditional');
   });
 
-  test('should provide wrap in conditional action for empty range', () => {
+  test('should provide wrap in a ruby block action', () => {
     const document = {} as vscode.TextDocument;
-    const range = new vscode.Range(0, 0, 0, 0); // Empty range
+    const range = new vscode.Range(0, 0, 1, 10);
 
     const actions = provider.provideCodeActions(document, range);
 
-    if (actions) {
-      const wrapAction = actions.find(action => action.title === 'Wrap in conditional');
-      assert.ok(wrapAction);
-    }
+    assert.ok(actions);
+    assert.ok(actions.length > 0);
+
+    const wrapAction = actions.find(action => action.title === 'Wrap in a ruby block');
+    assert.ok(wrapAction);
+    assert.strictEqual(wrapAction.command?.command, 'hamlAll.wrapInBlock');
   });
 
   test('should provide partial action for multi-line range', () => {

@@ -90,6 +90,11 @@
         "command": "hamlAll.wrapInConditional",
         "title": "HAML: Wrap in conditional",
         "enablement": "editorLangId == haml"
+      },
+      {
+        "command": "hamlAll.wrapInBlock",
+        "title": "HAML: Wrap in a ruby block",
+        "enablement": "editorLangId == haml"
       }
     ],
     "languages": [
