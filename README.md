@@ -13,8 +13,8 @@ The following features are supported to make your HAML development effortless:
 | Status | Feature                    | Requirement/Infos                                    |
 | ------ | -------------------------- | ---------------------------------------------------- |
 | ✅     | Syntax Highlighting        |                                                      |
-| ✅     | Linter                     | Rquire `haml_lint` gem                               |
-| ✅     | HAML Formatter             | Rquires `haml_lint` e `rubocop` gems                 |
+| ✅     | Linter                     | Require `haml_lint` gem                              |
+| ✅     | HAML Formatter             | Requires `haml_lint` and `rubocop` gems              |
 | ✅     | Partial: Go to Definition  |                                                      |
 | ✅     | Partial: Autocompletion    |                                                      |
 | ✅     | Data Attributes Completion | HTML, Rails UJS, Turbo Rails & Stimulus              |
@@ -25,6 +25,8 @@ The following features are supported to make your HAML development effortless:
 | ✅     | Snippets - HAML            |                                                      |
 | ✅     | Snippets - Rails           |                                                      |
 | ✅     | Live Preview               | Use `HAML: Open Live Preview` command                |
+| ✅     | Wrap in Conditional        |                                                      |
+| ✅     | I18n Support               | Rails Project                                        |
 
 ---
 

@@ -1,11 +1,9 @@
 # Change Log
 
-## [Unreleased]
+## [2.0.2] - 2025-08-23
 
 - Add **Wrap in Conditional**: New Code Action to wrap selected HAML content in conditional statements (if/unless blocks)
   - Select any HAML content and use the "Wrap in conditional" option from the Code Actions menu
-  - Prompts for condition input (e.g., `user.present?`, `@items.any?`, etc.)
-  - Properly handles indentation for nested HAML content
 
 ## [2.0.1] - 2025-08-21
 

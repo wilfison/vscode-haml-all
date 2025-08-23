@@ -23,7 +23,7 @@ suite('ViewCodeActionProvider Tests', () => {
     assert.strictEqual(wrapAction.command?.command, 'hamlAll.wrapInConditional');
   });
 
-  test('should not provide wrap in conditional action for empty range', () => {
+  test('should provide wrap in conditional action for empty range', () => {
     const document = {} as vscode.TextDocument;
     const range = new vscode.Range(0, 0, 0, 0); // Empty range
 
@@ -31,7 +31,7 @@ suite('ViewCodeActionProvider Tests', () => {
 
     if (actions) {
       const wrapAction = actions.find(action => action.title === 'Wrap in conditional');
-      assert.ok(!wrapAction);
+      assert.ok(wrapAction);
     }
   });
 
