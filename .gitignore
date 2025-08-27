@@ -8,3 +8,4 @@ coverage
 tmp
 Gemfile.lock
 /*.haml
+package-lock.json
