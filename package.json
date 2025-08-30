@@ -17,7 +17,7 @@
     "url": "https://github.com/wilfison/vscode-haml-all"
   },
   "engines": {
-    "vscode": "^1.95.0"
+    "vscode": "^1.103.0"
   },
   "categories": [
     "Programming Languages",
