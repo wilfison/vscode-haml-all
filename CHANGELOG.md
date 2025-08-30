@@ -1,5 +1,9 @@
 # Change Log
 
+## [2.0.4] - 2025-08-30
+
+- Update regex for I18n calls to suporte interpolated strings.
+
 ## [2.0.3] - 2025-08-23
 
 - Add **Wrap in a Ruby Block**: New Code Action to wrap selected HAML content in Ruby blocks (each, times, etc.)
