@@ -2,7 +2,7 @@
   "name": "haml-all",
   "displayName": "HAML - All in One",
   "description": "Including syntax highlighting, linting, formatting, and additional features.",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "icon": "images/icon.png",
   "galleryBanner": {
     "color": "#EAEAE1",

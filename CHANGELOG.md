@@ -1,5 +1,9 @@
 # Change Log
 
+## [2.0.5] - 2025-09-01
+
+- Fix false positive in `I18nDiagnosticsProvider`.
+
 ## [2.0.4] - 2025-08-30
 
 - Update regex for I18n calls to suporte interpolated strings.
