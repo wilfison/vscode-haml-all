@@ -136,7 +136,8 @@ suite('I18nDiagnosticsProvider Tests', () => {
       '= I18n.t(\'user.name\')\n' +
       '= I18n.t(\'invalid.key\')\n' +
       '= t(\'admin.dashboard\')\n' +
-      '= t(\'another.invalid\')'
+      '= t(\'another.invalid\')' +
+      'alert(\'Selecione algum boleto geristrado para enviar\');'
     );
 
     await provider.validateDocument(document);

@@ -9,7 +9,7 @@ import {
 
 import { CacheLocaleType } from '../../ultils/yaml';
 
-const I18N_CALL_REGEXP = /[\s\(]*(?:I18n\.t|t)\(['"]([^'"#]+)['"]/g;
+const I18N_CALL_REGEXP = /[\s\(]+(?:I18n\.t|t)\(['"]([^'"#]+)['"]/g;
 
 export default class I18nDiagnosticsProvider {
   public diagnosticCollection: DiagnosticCollection;
