@@ -111,17 +111,42 @@ export class ExtensionActivator {
         )
       );
 
-      vscode.workspace.onDidChangeTextDocument((event) => {
-        if (event.document.languageId === 'haml') {
-          this.i18nProvider.i18nDiagnosticsProvider.validateDocument(event.document);
-        }
-      });
+      // Only register validation listeners if I18n validation is enabled
+      if (this.i18nProvider.isI18nValidationEnabled()) {
+        vscode.workspace.onDidChangeTextDocument((event) => {
+          if (event.document.languageId === 'haml') {
+            this.i18nProvider.i18nDiagnosticsProvider.validateDocument(event.document);
+          }
+        });
 
-      vscode.workspace.onDidOpenTextDocument((document) => {
-        if (document.languageId === 'haml') {
-          this.i18nProvider.i18nDiagnosticsProvider.validateDocument(document);
-        }
-      });
+        vscode.workspace.onDidOpenTextDocument((document) => {
+          if (document.languageId === 'haml') {
+            this.i18nProvider.i18nDiagnosticsProvider.validateDocument(document);
+          }
+        });
+
+        // Listen for configuration changes to enable/disable validation dynamically
+        vscode.workspace.onDidChangeConfiguration((event) => {
+          if (event.affectsConfiguration('hamlAll.i18nValidation.enabled')) {
+            // If validation was disabled, clear all diagnostics
+            if (!this.i18nProvider.isI18nValidationEnabled()) {
+              this.i18nProvider.i18nDiagnosticsProvider.diagnosticCollection.clear();
+            } else {
+              // If validation was enabled, validate all open HAML documents
+              vscode.workspace.textDocuments.forEach((document) => {
+                if (document.languageId === 'haml') {
+                  this.i18nProvider.i18nDiagnosticsProvider.validateDocument(document);
+                }
+              });
+            }
+          }
+
+          // If default locale configuration changed, reload locales data
+          if (event.affectsConfiguration('hamlAll.i18nValidation.defaultLocale')) {
+            this.i18nProvider.setupData();
+          }
+        });
+      }
     }
 
     eventSubscriber.subscribeRails();

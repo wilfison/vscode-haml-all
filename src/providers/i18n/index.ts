@@ -61,7 +61,24 @@ class I18nProvider {
     return watcher;
   }
 
+  isI18nValidationEnabled(): boolean {
+    const config = workspace.getConfiguration('hamlAll');
+    return config.get<boolean>('i18nValidation.enabled', true);
+  }
+
   private async setDefaultLocale(): Promise<void> {
+    // Check for user-configured default locale first
+    const config = workspace.getConfiguration('hamlAll');
+    const userDefaultLocale = config.get<string>('i18nValidation.defaultLocale', '').trim();
+
+    if (userDefaultLocale && this.localesData.has(userDefaultLocale)) {
+      this.localeConfig.defaultLocale = userDefaultLocale;
+      this.outputChannel.appendLine(`Default locale (${this.localeConfig.defaultLocale}) set from user configuration`);
+      return;
+    } else if (userDefaultLocale) {
+      this.outputChannel.appendLine(`Warning: User-configured default locale '${userDefaultLocale}' not found in available locales. Falling back to auto-detection.`);
+    }
+
     // Try to find Rails configuration
     try {
       const configFiles = await workspace.findFiles('config/**/*.rb');

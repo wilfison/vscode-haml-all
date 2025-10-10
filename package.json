@@ -67,6 +67,16 @@
           "type": "boolean",
           "default": false,
           "description": "Use `bundle exec` to run haml-lint. (If this is true, the 'linterExecutablePath' setting is ignored.)"
+        },
+        "hamlAll.i18nValidation.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable I18n validation diagnostics"
+        },
+        "hamlAll.i18nValidation.defaultLocale": {
+          "type": "string",
+          "default": "",
+          "description": "Default locale for I18n validation (e.g., 'en', 'pt-BR'). If empty, will be auto-detected from Rails config or available locales."
         }
       }
     },
