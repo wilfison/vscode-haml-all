@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.0.6] - 2025-10-10
+
+- Add **I18n Validation Configuration**: New settings to control I18n validation behavior
+  - `hamlAll.i18nValidation.enabled`: Enable/disable I18n validation diagnostics (default: true)
+  - `hamlAll.i18nValidation.defaultLocale`: Set default locale for I18n validation (auto-detected if empty)
+- Better handling of missing locale scenarios
+- Enhanced configuration flexibility for different project setups
+
 ## [2.0.5] - 2025-09-01
 
 - Fix false positive in `I18nDiagnosticsProvider`.
