@@ -139,9 +139,21 @@ You can customize this extension by creating a `.vscode/settings.json` file in y
   "hamlAll.useBundler": false,
 
   // Specify the path to the haml-lint executable.
-  "hamlAll.linterExecutablePath": "haml-lint"
+  "hamlAll.linterExecutablePath": "haml-lint",
+
+  // I18n validation settings
+  "hamlAll.i18nValidation.enabled": true,
+  "hamlAll.i18nValidation.defaultLocale": "en"
 }
 ```
+
+### I18n Configuration
+
+The extension provides I18n validation and completion features for Rails projects. You can configure these settings:
+
+- **`hamlAll.i18nValidation.enabled`** (boolean, default: `true`): Enable/disable I18n validation diagnostics. Set to `false` if you have dynamic I18n keys or prefer other validation tools.
+
+- **`hamlAll.i18nValidation.defaultLocale`** (string, default: auto-detect): Set the default locale for I18n operations. If empty, the extension will auto-detect from Rails configuration or use common fallbacks (`en`, `pt`, `pt-BR`, `es`, `fr`).
 
 ---
 

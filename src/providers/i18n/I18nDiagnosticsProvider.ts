@@ -4,7 +4,8 @@ import {
   Diagnostic,
   DiagnosticSeverity,
   Range,
-  languages
+  languages,
+  workspace
 } from 'vscode';
 
 import { CacheLocaleType } from '../../ultils/yaml';
@@ -20,6 +21,16 @@ export default class I18nDiagnosticsProvider {
 
   public async validateDocument(document: TextDocument): Promise<void> {
     if (document.languageId !== 'haml') {
+      return;
+    }
+
+    // Check if I18n validation is enabled
+    const config = workspace.getConfiguration('hamlAll');
+    const isEnabled = config.get<boolean>('i18nValidation.enabled', true);
+
+    if (!isEnabled) {
+      // Clear any existing diagnostics if validation is disabled
+      this.diagnosticCollection.delete(document.uri);
       return;
     }
 
