@@ -1,5 +1,5 @@
 import Linter from '../linter';
-import { HAML_FILTERS } from '../ultils/haml';
+import { HAML_FILTERS } from '../utils/haml';
 
 import hamlFixes, { HamlLintFixer, linter_cops } from './haml_lint_cops';
 

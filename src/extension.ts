@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import { hamlLintPresent } from './Helpers';
-import { getWorkspaceRoot } from './ultils/file';
+import { getWorkspaceRoot } from './utils/file';
 import { ExtensionActivator } from './ExtensionActivator';
 import LintServer from './server';
 

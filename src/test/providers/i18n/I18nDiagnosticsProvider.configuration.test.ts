@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import I18nDiagnosticsProvider from '../../../providers/i18n/I18nDiagnosticsProvider';
-import { CacheLocaleType } from '../../../ultils/yaml';
+import { CacheLocaleType } from '../../../utils/yaml';
 
 suite('I18nDiagnosticsProvider Configuration Tests', () => {
   let provider: I18nDiagnosticsProvider;

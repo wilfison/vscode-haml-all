@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 
 import { TextDocument, Position, DefinitionProvider, DefinitionLink, Location, Range, Uri } from 'vscode';
 
-import { CacheLocaleType } from '../../ultils/yaml';
+import { CacheLocaleType } from '../../utils/yaml';
 
 const I18N_KEY_REGEXP = /(?:I18n\.t|t)\(['"]([^'"]*)$/;
 

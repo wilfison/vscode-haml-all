@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import I18nCompletionProvider from '../../providers/i18n/I18nCompletionProvider';
-import { CacheLocaleType } from '../../ultils/yaml';
+import { CacheLocaleType } from '../../utils/yaml';
 import { I18nLocaleConfig } from '../../providers/i18n';
 
 suite('I18nCompletionProvider Tests', () => {

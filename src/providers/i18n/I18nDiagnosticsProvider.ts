@@ -1,6 +1,6 @@
 import { DiagnosticCollection, TextDocument, Diagnostic, DiagnosticSeverity, Range, languages, workspace } from 'vscode';
 
-import { CacheLocaleType } from '../../ultils/yaml';
+import { CacheLocaleType } from '../../utils/yaml';
 
 const I18N_CALL_REGEXP = /[\s\(]+(?:I18n\.t|t)\(['"]([^'"#]+)['"]/g;
 

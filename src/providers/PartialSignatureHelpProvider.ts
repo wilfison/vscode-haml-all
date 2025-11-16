@@ -1,5 +1,5 @@
 import { CancellationToken, Position, SignatureHelp, SignatureHelpProvider, SignatureInformation, TextDocument } from 'vscode';
-import { fileExists, fileStringLocals, getPartialName, resolvePartialFilePath } from '../ultils/file';
+import { fileExists, fileStringLocals, getPartialName, resolvePartialFilePath } from '../utils/file';
 
 const RENDER_BASE_REGEX = /^\s*=\s*render[\s\(]/;
 const RENDER_PARTIAL_REGEX = /render[\s\(]p/;

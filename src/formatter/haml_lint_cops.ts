@@ -1,6 +1,6 @@
 import { LinterConfig } from '../types';
-import { parseHtmlAttributes } from '../ultils/haml';
-import { ecmaScriptRegexFromRubyRegex } from '../ultils/regex';
+import { parseHtmlAttributes } from '../utils/haml';
+import { ecmaScriptRegexFromRubyRegex } from '../utils/regex';
 
 function fixTrailingWhitespace(text: string, config: LinterConfig): string {
   if (!config.TrailingWhitespace.enabled) {

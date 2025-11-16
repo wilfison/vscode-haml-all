@@ -18,7 +18,7 @@ import LivePreviewPanel from './LivePreviewPanel';
 import LintServer from './server';
 
 import { html2Haml } from './html2Haml';
-import { openFile } from './ultils/file';
+import { openFile } from './utils/file';
 import * as helpers from './Helpers';
 
 export class ExtensionActivator {

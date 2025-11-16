@@ -1,6 +1,6 @@
 import { TextDocument, Position, DefinitionProvider, DefinitionLink, Location, Range, Uri } from 'vscode';
 
-import { getPartialName, resolvePartialFilePath } from '../ultils/file';
+import { getPartialName, resolvePartialFilePath } from '../utils/file';
 
 export default class ViewFileDefinitionProvider implements DefinitionProvider {
   public async provideDefinition(document: TextDocument, position: Position, token: any): Promise<DefinitionLink[]> {

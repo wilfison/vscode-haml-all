@@ -11,7 +11,7 @@ import {
   MarkdownString,
 } from 'vscode';
 
-import { CacheLocaleType } from '../../ultils/yaml';
+import { CacheLocaleType } from '../../utils/yaml';
 import { I18nLocaleConfig } from '.';
 
 const I18N_REGEXP = /(?:I18n\.t|t)\s*\(?['"]([^'"]*)/;

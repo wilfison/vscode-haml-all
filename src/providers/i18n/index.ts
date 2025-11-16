@@ -5,7 +5,7 @@ import I18nDiagnosticsProvider from './I18nDiagnosticsProvider';
 import I18nCompletionProvider from './I18nCompletionProvider';
 import I18nDefinitionProvider from './I18nDefinitionProvider';
 
-import { CacheLocaleType, loadLocalesData } from '../../ultils/yaml';
+import { CacheLocaleType, loadLocalesData } from '../../utils/yaml';
 
 export type I18nLocaleConfig = {
   defaultLocale: string;

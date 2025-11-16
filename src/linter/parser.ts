@@ -1,6 +1,6 @@
 import { Diagnostic, DiagnosticSeverity, OutputChannel, Position, Range, TextDocument, Uri } from 'vscode';
 import { LinterConfigWithErrors, LinterOffense } from '../types';
-import { hamlCopUrl } from '../ultils/uris';
+import { hamlCopUrl } from '../utils/uris';
 
 const RUBOCOP_COP_NAME_REGEX = /([\w\/]*):/;
 

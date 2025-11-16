@@ -2,7 +2,7 @@ import fs from 'node:fs';
 
 import { CancellationToken, CodeLens, TextDocument, CodeLensProvider as VSCodeLensProvider } from 'vscode';
 
-import * as fileHelper from '../ultils/file';
+import * as fileHelper from '../utils/file';
 
 class CodeLensProvider implements VSCodeLensProvider {
   public provideCodeLenses(document: TextDocument, token: CancellationToken): CodeLens[] {
