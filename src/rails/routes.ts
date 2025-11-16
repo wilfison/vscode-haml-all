@@ -2,7 +2,6 @@ import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 
 import { Route, parseRoutes } from './router_parser';
 import { OutputChannel } from 'vscode';
-import { isARailsProject } from '../Helpers';
 
 export default class Routes {
   private routes: Map<string, Route> = new Map();
@@ -23,7 +22,7 @@ export default class Routes {
   }
 
   public async load() {
-    if (this.isARailsProject) {
+    if (!this.isARailsProject) {
       return;
     }
 
