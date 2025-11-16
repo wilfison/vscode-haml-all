@@ -1,0 +1,32 @@
+# Dependências
+node_modules
+out
+
+# Arquivos gerados
+*.vsix
+
+# Build artifacts
+dist
+build
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temp
+tmp
+*.tmp
+
+# VS Code
+.vscode-test
+
+# Ruby
+Gemfile.lock
+
+# Templates e arquivos estáticos
+templates/
+syntaxes/
+snippets/
+
+# Arquivos de teste
+test/

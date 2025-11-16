@@ -145,18 +145,24 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
     "test": "vscode-test",
-    "package": "vsce package"
+    "package": "vsce package",
+    "format": "prettier --write \"src/**/*.ts\" \"*.mjs\" \"*.json\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"*.mjs\" \"*.json\""
   },
   "devDependencies": {
-    "@types/vscode": "^1.103.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
+    "@types/vscode": "^1.103.0",
     "@typescript-eslint/eslint-plugin": "^8.10.0",
     "@typescript-eslint/parser": "^8.7.0",
-    "eslint": "^9.34.0",
-    "typescript": "^5.9.2",
     "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.34.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2"
   }
 }
