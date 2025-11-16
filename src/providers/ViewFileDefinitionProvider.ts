@@ -1,12 +1,4 @@
-import {
-  TextDocument,
-  Position,
-  DefinitionProvider,
-  DefinitionLink,
-  Location,
-  Range,
-  Uri
-} from 'vscode';
+import { TextDocument, Position, DefinitionProvider, DefinitionLink, Location, Range, Uri } from 'vscode';
 
 import { getPartialName, resolvePartialFilePath } from '../ultils/file';
 
@@ -34,7 +26,7 @@ export default class ViewFileDefinitionProvider implements DefinitionProvider {
         targetUri: uri,
         targetRange: location.range,
         targetSelectionRange: location.range,
-        originSelectionRange: originSelectionRange
+        originSelectionRange: originSelectionRange,
       };
 
       definitionLinks.push(definitionLink);

@@ -7,7 +7,7 @@ import {
   workspace,
   CompletionItem,
   CompletionItemKind,
-  Uri
+  Uri,
 } from 'vscode';
 
 import { CompletionItemWithScore } from '../types';
@@ -46,14 +46,17 @@ export default class ViewCompletionProvider implements CompletionItemProvider {
     const viewPaths = partialPaths.map(viewPathForRelativePath);
     const currentViewPath = viewPathForRelativePath(document.uri);
 
-    const itemsWithScore = viewPaths.map(viewPath => ({
+    const itemsWithScore = viewPaths.map((viewPath) => ({
       item: this.buildCompletionItem(viewPath, currentViewPath),
-      score: matchScore(currentViewPath, viewPath)
+      score: matchScore(currentViewPath, viewPath),
     }));
 
-    const maxItemWithScore = itemsWithScore.reduce<CompletionItemWithScore>((maxItem, currentItem) => {
-      return currentItem.score > maxItem.score ? currentItem : maxItem;
-    }, { item: null, score: -1 });
+    const maxItemWithScore = itemsWithScore.reduce<CompletionItemWithScore>(
+      (maxItem, currentItem) => {
+        return currentItem.score > maxItem.score ? currentItem : maxItem;
+      },
+      { item: null, score: -1 }
+    );
 
     if (!maxItemWithScore.item) {
       return null;

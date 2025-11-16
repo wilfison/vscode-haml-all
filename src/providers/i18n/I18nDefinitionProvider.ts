@@ -1,22 +1,13 @@
 import * as fs from 'node:fs';
 
-import {
-  TextDocument,
-  Position,
-  DefinitionProvider,
-  DefinitionLink,
-  Location,
-  Range,
-  Uri
-} from 'vscode';
+import { TextDocument, Position, DefinitionProvider, DefinitionLink, Location, Range, Uri } from 'vscode';
 
 import { CacheLocaleType } from '../../ultils/yaml';
 
 const I18N_KEY_REGEXP = /(?:I18n\.t|t)\(['"]([^'"]*)$/;
 
 export default class I18nDefinitionProvider implements DefinitionProvider {
-  constructor(private localesData: CacheLocaleType) {
-  }
+  constructor(private localesData: CacheLocaleType) {}
 
   public async provideDefinition(document: TextDocument, position: Position): Promise<DefinitionLink[]> {
     const line = document.lineAt(position.line).text;
@@ -36,18 +27,15 @@ export default class I18nDefinitionProvider implements DefinitionProvider {
     const keyStart = beforeMatch.index! + beforeMatch[0].indexOf(beforeMatch[1]);
     const keyEnd = keyStart + key.length;
 
-    const keyRange = new Range(
-      new Position(position.line, keyStart),
-      new Position(position.line, keyEnd)
-    );
+    const keyRange = new Range(new Position(position.line, keyStart), new Position(position.line, keyEnd));
 
     const definitions = await this.findKeyDefinitions(key, line);
 
-    return definitions.map(def => ({
+    return definitions.map((def) => ({
       targetUri: def.uri,
       targetRange: def.range,
       targetSelectionRange: def.range,
-      originSelectionRange: keyRange
+      originSelectionRange: keyRange,
     }));
   }
 

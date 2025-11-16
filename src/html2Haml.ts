@@ -8,7 +8,9 @@ function html2HamlAvailable(useBundler: boolean): boolean {
     exec(command);
     return true;
   } catch (error) {
-    window.showErrorMessage(`html2haml not found. Please install html2haml gem to use this extension.\nFail on execute command: ${command}`);
+    window.showErrorMessage(
+      `html2haml not found. Please install html2haml gem to use this extension.\nFail on execute command: ${command}`
+    );
     return false;
   }
 }
@@ -63,12 +65,11 @@ export async function html2Haml(): Promise<void> {
 
   if (hasSelection) {
     edit.replace(uri, editor.selection, haml);
-  }
-  else {
+  } else {
     edit.createFile(uri);
     edit.insert(uri, new Position(0, 0), haml);
   }
 
   await workspace.applyEdit(edit);
   await window.showTextDocument(uri);
-};
+}

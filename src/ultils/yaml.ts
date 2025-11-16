@@ -6,8 +6,8 @@ export type CacheLocaledataType = {
     value: string;
     file_path: string;
     file_line: number;
-  }
-}
+  };
+};
 
 export type CacheLocaleType = Map<string, CacheLocaledataType>;
 
@@ -55,7 +55,7 @@ export function parseYaml(filePath: string): any {
         current[key] = {
           value: value.replace(/^['"]|['"]$/g, ''),
           file_path: filePath,
-          file_line: currentLine
+          file_line: currentLine,
         };
       }
     }
@@ -94,8 +94,7 @@ function locateDataToI18nKeys(localeData: CacheLocaledataType): CacheLocaledataT
     for (const [key, value] of Object.entries(data)) {
       if (value && typeof value === 'object' && !('value' in value)) {
         traverse(value, [...path, key]);
-      }
-      else if (value && typeof value === 'object' && 'value' in value) {
+      } else if (value && typeof value === 'object' && 'value' in value) {
         const fullPath = [...path, key].join('.');
         result[fullPath] = value as { value: string; file_path: string; file_line: number };
       }

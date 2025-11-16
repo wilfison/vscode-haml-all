@@ -6,7 +6,7 @@ import Routes from './routes';
 export const loadWithProgress = async (title: string, callback: () => Promise<void>): Promise<void> => {
   const progressOptions = {
     location: ProgressLocation.Window,
-    title: title
+    title: title,
   };
 
   await window.withProgress(progressOptions, () => callback());
@@ -14,9 +14,7 @@ export const loadWithProgress = async (title: string, callback: () => Promise<vo
 
 export function buildRouteHelperSnippet(helperPrefix: string, params: string[]): SnippetString {
   const paramSnippets = params.map((param, index) => `\${${index + 2}:${param}}`).join(', ');
-  const snippet = params.length > 0
-    ? `${helperPrefix}_\${1|path,url|}(${paramSnippets})\$0`
-    : `${helperPrefix}_\${1|path,url|}`;
+  const snippet = params.length > 0 ? `${helperPrefix}_\${1|path,url|}(${paramSnippets})\$0` : `${helperPrefix}_\${1|path,url|}`;
 
   return new SnippetString(snippet);
 }
@@ -30,7 +28,7 @@ export function buildRouteHelperDetails(route: Route, currentUri: string): strin
     `${route.uri}(.:format)\n`,
     `Controller: ${route.controller}`,
     `Actions: ${actions}`,
-    route.source_location ? `Source: ${route.source_location.replace(currentUri, '')}` : ''
+    route.source_location ? `Source: ${route.source_location.replace(currentUri, '')}` : '',
   ].join('\n');
 }
 

@@ -37,9 +37,7 @@ class PartialSignatureHelpProvider implements SignatureHelpProvider {
     signatureHelp.activeSignature = 0;
     signatureHelp.activeParameter = 0;
 
-    signatureHelp.signatures = [
-      this.buildSignature(document, position, renderType),
-    ];
+    signatureHelp.signatures = [this.buildSignature(document, position, renderType)];
 
     if (beforeCursor.includes(',')) {
       if (signatureHelp.signatures.length > 2) {
@@ -58,17 +56,14 @@ class PartialSignatureHelpProvider implements SignatureHelpProvider {
 
     const renderOptions = this.buildRender(renderType, options);
 
-    const signature = new SignatureInformation(
-      renderOptions.label,
-      'Renders a partial with the given options.',
-    );
+    const signature = new SignatureInformation(renderOptions.label, 'Renders a partial with the given options.');
 
     signature.parameters = renderOptions.parameters.map((param) => ({ label: param }));
 
     return signature;
   }
 
-  private buildRender(renderType: string, options: string[]): { label: string, parameters: string[] } {
+  private buildRender(renderType: string, options: string[]): { label: string; parameters: string[] } {
     const partial = renderType === 'explicit' ? 'partial: location' : 'location';
     const localsExplicit = renderType === 'explicit' ? 'locals: ' : '';
     const parameters = options.length > 0 ? options.map((option) => `${option} value`) : ['option: value'];
@@ -77,7 +72,7 @@ class PartialSignatureHelpProvider implements SignatureHelpProvider {
       label: `render(${partial}, ${localsExplicit}{ ${parameters.join(', ')} })`,
       parameters: [partial, ...parameters],
     };
-  };
+  }
 }
 
 export default PartialSignatureHelpProvider;

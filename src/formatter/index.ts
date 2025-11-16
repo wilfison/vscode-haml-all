@@ -29,37 +29,39 @@ export default function autoCorrectAll(fileName: string, text: string, linter: L
   let insideFilter = false;
   let filterIdent = 0;
 
-  let fixedText = text.split('\n').map(line => {
-    if (line.trim() === '') {
-      return line.trim();
-    }
+  let fixedText = text
+    .split('\n')
+    .map((line) => {
+      if (line.trim() === '') {
+        return line.trim();
+      }
 
-    if (insideFilter) {
-      insideFilter = lineIdent(line) > filterIdent;
-      filterIdent = insideFilter ? filterIdent : 0;
-    }
+      if (insideFilter) {
+        insideFilter = lineIdent(line) > filterIdent;
+        filterIdent = insideFilter ? filterIdent : 0;
+      }
 
-    if (insideFilter) {
-      return line.trimEnd();
-    }
+      if (insideFilter) {
+        return line.trimEnd();
+      }
 
-    if (isFilter(line)) {
-      insideFilter = true;
-      filterIdent = lineIdent(line);
-      return line.trimEnd();
-    }
+      if (isFilter(line)) {
+        insideFilter = true;
+        filterIdent = lineIdent(line);
+        return line.trimEnd();
+      }
 
-    let fixedLine = line.trimEnd();
+      let fixedLine = line.trimEnd();
 
-    if (hamlLintConfig) {
-      hamlFixers.forEach((fixer) => {
-        fixedLine = fixer(fixedLine, hamlLintConfig);
-      });
-    }
+      if (hamlLintConfig) {
+        hamlFixers.forEach((fixer) => {
+          fixedLine = fixer(fixedLine, hamlLintConfig);
+        });
+      }
 
-    return fixedLine;
-  }
-  ).join('\n');
+      return fixedLine;
+    })
+    .join('\n');
 
   fixedText = hamlFixes.fixStrictLocals(fileName, fixedText, hamlLintConfig);
   fixedText = hamlFixes.fixFinalNewline(fixedText, hamlLintConfig);

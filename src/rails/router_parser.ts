@@ -20,18 +20,18 @@ export type Route = {
   params: string[];
   source_location: string;
   controller: string;
-}
+};
 
 function parseRawBlock(block: string, lastRoute: BaseRoute): BaseRoute {
   const [prefix, verb, uriLine, controllerLine, source] = block
     .split('\n')
-    .map(line => line.trim())
+    .map((line) => line.trim())
     .filter(Boolean);
 
   const [controller, action] = controllerLine.replace(RAW_LINE_REMOVE, '').split('#');
 
   const uri = uriLine.match(ROW_LINE_URI)?.[1] || '';
-  const uri_params = uri.split('/').filter(part => part.match(PARAM_REGEXP));
+  const uri_params = uri.split('/').filter((part) => part.match(PARAM_REGEXP));
 
   return {
     prefix: prefix.replace(RAW_LINE_REMOVE, '') || lastRoute.prefix,
@@ -40,7 +40,7 @@ function parseRawBlock(block: string, lastRoute: BaseRoute): BaseRoute {
     uri_params,
     controller,
     action,
-    source_location: source?.replace(RAW_LINE_REMOVE, '') || ''
+    source_location: source?.replace(RAW_LINE_REMOVE, '') || '',
   };
 }
 
@@ -65,7 +65,7 @@ function buildNewRoute(): Route {
     uri: '',
     params: [],
     controller: '',
-    source_location: ''
+    source_location: '',
   };
 }
 
@@ -90,4 +90,4 @@ export function parseRoutes(output: string): Map<string, Route> {
   }, new Map<string, Route>());
 
   return routes;
-};
+}

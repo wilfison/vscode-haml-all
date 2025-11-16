@@ -1,11 +1,5 @@
 import path from 'node:path';
-import {
-  DiagnosticCollection,
-  languages,
-  TextDocument,
-  workspace,
-  OutputChannel
-} from 'vscode';
+import { DiagnosticCollection, languages, TextDocument, workspace, OutputChannel } from 'vscode';
 
 import { LinterConfig, LinterOffense } from '../types';
 import { DiagnosticFull, parseLintOffence } from './parser';
@@ -31,7 +25,9 @@ export default class Linter {
   }
 
   public run(document: TextDocument) {
-    if (document.uri.scheme !== 'file' || document.languageId !== 'haml') { return; }
+    if (document.uri.scheme !== 'file' || document.languageId !== 'haml') {
+      return;
+    }
 
     this.lint(document);
   }
@@ -64,8 +60,7 @@ export default class Linter {
       this.outputChanel.appendLine('Haml Lint server started');
 
       return Promise.resolve();
-    }
-    catch (error) {
+    } catch (error) {
       this.outputChanel.appendLine(`Error starting Haml Lint server: ${error}`);
       return Promise.reject(error);
     }
@@ -111,14 +106,14 @@ export default class Linter {
     // set unique key for each diagnostic and line
     const offenses = new Map<string, any>();
 
-    lintOffenses.forEach(offense => {
+    lintOffenses.forEach((offense) => {
       const key = `${offense.location.line}:${offense.message}`;
       offenses.set(key, offense);
     });
 
     const diagnostics: DiagnosticFull[] = [];
 
-    offenses.forEach(offense => {
+    offenses.forEach((offense) => {
       diagnostics.push(parseLintOffence(document, offense));
     });
 

@@ -1,11 +1,6 @@
 import fs from 'node:fs';
 
-import {
-  CancellationToken,
-  CodeLens,
-  TextDocument,
-  CodeLensProvider as VSCodeLensProvider,
-} from 'vscode';
+import { CancellationToken, CodeLens, TextDocument, CodeLensProvider as VSCodeLensProvider } from 'vscode';
 
 import * as fileHelper from '../ultils/file';
 
@@ -56,7 +51,7 @@ class CodeLensProvider implements VSCodeLensProvider {
     }
 
     const controllerContent = fs.readFileSync(controllerPath, 'utf-8');
-    const actionLine = controllerContent.split('\n').findIndex(line => {
+    const actionLine = controllerContent.split('\n').findIndex((line) => {
       return line.includes(` def ${action}`);
     });
 

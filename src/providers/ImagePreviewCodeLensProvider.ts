@@ -19,14 +19,11 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
         const imagePath = this.findImagePath(imageRef.imageName);
 
         if (imagePath) {
-          const codeLens = new vscode.CodeLens(
-            imageRef.range,
-            {
-              title: '$(eye) Preview Image',
-              command: 'hamlAll.previewImage',
-              arguments: [imagePath, imageRef.imageName]
-            }
-          );
+          const codeLens = new vscode.CodeLens(imageRef.range, {
+            title: '$(eye) Preview Image',
+            command: 'hamlAll.previewImage',
+            arguments: [imagePath, imageRef.imageName],
+          });
           codeLenses.push(codeLens);
         }
       }
@@ -35,8 +32,8 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     return codeLenses;
   }
 
-  private findImageReferences(lineText: string, lineIndex: number): Array<{ imageName: string, range: vscode.Range }> {
-    const references: Array<{ imageName: string, range: vscode.Range }> = [];
+  private findImageReferences(lineText: string, lineIndex: number): Array<{ imageName: string; range: vscode.Range }> {
+    const references: Array<{ imageName: string; range: vscode.Range }> = [];
 
     if (!this.isImageHelper(lineText)) {
       return references;
@@ -51,10 +48,7 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
       const startPos = match.index + 1; // Skip opening quote
       const endPos = startPos + imageName.length;
 
-      const range = new vscode.Range(
-        new vscode.Position(lineIndex, startPos),
-        new vscode.Position(lineIndex, endPos)
-      );
+      const range = new vscode.Range(new vscode.Position(lineIndex, startPos), new vscode.Position(lineIndex, endPos));
 
       references.push({ imageName, range });
     }
@@ -68,8 +62,12 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
         const imageName = match[1];
 
         // Skip if it looks like a path or contains common non-image keywords
-        if (imageName.includes('path') || imageName.includes('url') ||
-          imageName.includes('controller') || imageName.includes('action')) {
+        if (
+          imageName.includes('path') ||
+          imageName.includes('url') ||
+          imageName.includes('controller') ||
+          imageName.includes('action')
+        ) {
           continue;
         }
 
@@ -79,10 +77,7 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
           const startPos = match.index + 1; // Skip opening quote
           const endPos = startPos + imageName.length;
 
-          const range = new vscode.Range(
-            new vscode.Position(lineIndex, startPos),
-            new vscode.Position(lineIndex, endPos)
-          );
+          const range = new vscode.Range(new vscode.Position(lineIndex, startPos), new vscode.Position(lineIndex, endPos));
 
           references.push({ imageName, range });
         }
@@ -93,7 +88,7 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
   }
 
   private isImageHelper(line: string): boolean {
-    return IMAGE_HELPERS.some(helper => {
+    return IMAGE_HELPERS.some((helper) => {
       return line.includes(helper);
     });
   }
@@ -129,7 +124,7 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
       path.join(workspacePath, 'app', 'javascript', 'images'),
       path.join(workspacePath, 'public', 'images'),
       path.join(workspacePath, 'public', 'assets'),
-      path.join(workspacePath, 'vendor', 'assets', 'images')
+      path.join(workspacePath, 'vendor', 'assets', 'images'),
     ];
   }
 
@@ -156,8 +151,7 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
             }
 
             // Match without extension (Rails convention)
-            if (nameWithoutExt === imageName ||
-              nameWithoutExt === path.basename(imageName, path.extname(imageName))) {
+            if (nameWithoutExt === imageName || nameWithoutExt === path.basename(imageName, path.extname(imageName))) {
               return fullPath;
             }
 
@@ -166,10 +160,11 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
             const normalizedRelativePath = relativePath.replace(/\\/g, '/');
             const normalizedImageName = imageName.replace(/\\/g, '/');
 
-            if (normalizedRelativePath === normalizedImageName ||
+            if (
+              normalizedRelativePath === normalizedImageName ||
               normalizedRelativePath === normalizedImageName + ext ||
-              path.basename(normalizedRelativePath, ext) ===
-              path.basename(normalizedImageName, path.extname(normalizedImageName))) {
+              path.basename(normalizedRelativePath, ext) === path.basename(normalizedImageName, path.extname(normalizedImageName))
+            ) {
               return fullPath;
             }
 
@@ -195,15 +190,10 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     const isRemoteImage = imagePath.startsWith('http');
     const imageFileUri = isRemoteImage ? vscode.Uri.parse(imagePath) : vscode.Uri.file(imagePath);
 
-    const panel = vscode.window.createWebviewPanel(
-      'imagePreview',
-      `🖼️ ${imageName}`,
-      vscode.ViewColumn.Beside,
-      {
-        enableScripts: true,
-        localResourceRoots: isRemoteImage ? undefined : [vscode.Uri.file(path.dirname(imagePath))]
-      }
-    );
+    const panel = vscode.window.createWebviewPanel('imagePreview', `🖼️ ${imageName}`, vscode.ViewColumn.Beside, {
+      enableScripts: true,
+      localResourceRoots: isRemoteImage ? undefined : [vscode.Uri.file(path.dirname(imagePath))],
+    });
 
     const imageUri = panel.webview.asWebviewUri(imageFileUri);
     const imageStats = isRemoteImage ? { size: 0 } : fs.statSync(imagePath);
@@ -226,10 +216,7 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     imageSize: number,
     imageExt: string
   ): string {
-    const template = fs.readFileSync(
-      path.join(__dirname, '..', '..', 'templates', 'webview_image_preview.html'),
-      'utf8'
-    );
+    const template = fs.readFileSync(path.join(__dirname, '..', '..', 'templates', 'webview_image_preview.html'), 'utf8');
 
     return template
       .replace(/{{imageUri}}/g, imageUri.toString())

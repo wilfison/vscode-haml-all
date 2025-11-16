@@ -40,9 +40,7 @@ export default class FixActionsProvider implements CodeActionProvider {
 
   private filterWarnings(diagnostics: CodeActionContext): DiagnosticFull[] {
     const filtred = diagnostics.diagnostics.filter(
-      (diagnostic) =>
-        diagnostic.source === SOURCE &&
-        diagnostic.severity === DiagnosticSeverity.Warning
+      (diagnostic) => diagnostic.source === SOURCE && diagnostic.severity === DiagnosticSeverity.Warning
     ) as DiagnosticFull[];
 
     return filtred;
@@ -99,11 +97,11 @@ export default class FixActionsProvider implements CodeActionProvider {
     const text = document.getText(range);
     const quote = text[0] === text.slice(-1) ? text[0] : '';
 
-    if (['"', '\''].includes(quote) === false) {
+    if (['"', "'"].includes(quote) === false) {
       return;
     }
 
-    const inverseQuote = quote === '"' ? '\'' : '"';
+    const inverseQuote = quote === '"' ? "'" : '"';
     const quoteName = inverseQuote === '"' ? 'double' : 'single';
 
     const action = new CodeAction(`Change to ${quoteName} quotes`, CodeActionKind.QuickFix);

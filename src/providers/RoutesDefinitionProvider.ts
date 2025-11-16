@@ -1,12 +1,4 @@
-import {
-  DefinitionProvider,
-  TextDocument,
-  Location,
-  Position,
-  workspace,
-  Uri,
-  Range,
-} from 'vscode';
+import { DefinitionProvider, TextDocument, Location, Position, workspace, Uri, Range } from 'vscode';
 
 import Routes from '../rails/routes';
 import { getActionPosition } from '../rails/utils';
@@ -14,18 +6,24 @@ import { getActionPosition } from '../rails/utils';
 const HELPER_METHOD_REGEXP = /\w+_(?:path|url)/;
 
 export default class RoutesDefinitionProvider implements DefinitionProvider {
-  constructor(private routes: Routes) { }
+  constructor(private routes: Routes) {}
 
   public async provideDefinition(document: TextDocument, position: Position) {
     const range = document.getWordRangeAtPosition(position, HELPER_METHOD_REGEXP);
-    if (!range) { return; }
+    if (!range) {
+      return;
+    }
 
     const prefix = this.extractPrefix(document, range);
     const route = this.routes.get(prefix);
-    if (!route) { return; }
+    if (!route) {
+      return;
+    }
 
     const controllerPaths = await this.findControllerPaths(route.controller);
-    if (controllerPaths.length < 1) { return; }
+    if (controllerPaths.length < 1) {
+      return;
+    }
 
     return this.getLocations(controllerPaths[0], route.actions);
   }
@@ -39,10 +37,12 @@ export default class RoutesDefinitionProvider implements DefinitionProvider {
   }
 
   private async getLocations(uri: Uri, actions: Set<string>): Promise<Location[]> {
-    const promises = Array.from(actions).map(async action => {
+    const promises = Array.from(actions).map(async (action) => {
       const position = await getActionPosition(uri, action);
 
-      if (!position) { return; }
+      if (!position) {
+        return;
+      }
 
       return new Location(uri, position);
     });

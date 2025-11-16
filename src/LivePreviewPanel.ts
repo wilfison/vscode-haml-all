@@ -43,14 +43,9 @@ export default class LivePreviewPanel {
       return;
     }
 
-    const panel = vscode.window.createWebviewPanel(
-      'hamlLivePreview',
-      'Live Preview',
-      column,
-      {
-        enableScripts: true,
-      }
-    );
+    const panel = vscode.window.createWebviewPanel('hamlLivePreview', 'Live Preview', column, {
+      enableScripts: true,
+    });
 
     LivePreviewPanel.currentPanel = new LivePreviewPanel(panel, extensionUri, lintServer);
   }
@@ -58,7 +53,7 @@ export default class LivePreviewPanel {
   private _watchFile() {
     let timeoutUpdate: NodeJS.Timeout | undefined = undefined;
 
-    vscode.workspace.onDidChangeTextDocument(event => {
+    vscode.workspace.onDidChangeTextDocument((event) => {
       if (event.document.languageId === 'haml' && LivePreviewPanel.currentPanel) {
         if (timeoutUpdate) {
           clearTimeout(timeoutUpdate);

@@ -8,7 +8,7 @@ import {
   Range,
   Position,
   Uri,
-  workspace
+  workspace,
 } from 'vscode';
 
 import Routes from '../rails/routes';
@@ -32,18 +32,11 @@ const matchScore = (path1: string, path2: string): number => {
   return score;
 };
 
-export default class RoutesCompletionProvider
-  implements CompletionItemProvider {
-
-  constructor(private routes: Routes) { }
+export default class RoutesCompletionProvider implements CompletionItemProvider {
+  constructor(private routes: Routes) {}
 
   public provideCompletionItems(document: TextDocument, position: Position) {
-    const line = document.getText(
-      new Range(
-        new Position(position.line, 0),
-        new Position(position.line, position.character)
-      )
-    );
+    const line = document.getText(new Range(new Position(position.line, 0), new Position(position.line, position.character)));
 
     const matches = line.match(LINE_REGEXP);
 
@@ -55,9 +48,7 @@ export default class RoutesCompletionProvider
   }
 
   private buildCompletionItems(currentUri: Uri) {
-    const currentController = workspace
-      .asRelativePath(currentUri)
-      .replace(/app\/(?:controllers|views)\//, '');
+    const currentController = workspace.asRelativePath(currentUri).replace(/app\/(?:controllers|views)\//, '');
 
     const rootPath = workspace.getWorkspaceFolder(currentUri)?.uri.fsPath || '';
     const itemsWithScore: { item: CompletionItem; score: number }[] = [];
@@ -73,9 +64,7 @@ export default class RoutesCompletionProvider
 
     const scores = itemsWithScore.map(({ score }) => score);
     const maxScore = Math.max(...scores);
-    const maxScoreItemWithScore = itemsWithScore.find(
-      ({ score }) => score === maxScore
-    );
+    const maxScoreItemWithScore = itemsWithScore.find(({ score }) => score === maxScore);
     if (!maxScoreItemWithScore) {
       return null;
     }

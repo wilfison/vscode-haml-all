@@ -8,7 +8,7 @@ import {
   workspace,
   CompletionItem,
   CompletionItemKind,
-  MarkdownString
+  MarkdownString,
 } from 'vscode';
 
 import { CacheLocaleType } from '../../ultils/yaml';
@@ -20,8 +20,7 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
   constructor(
     private localesData: CacheLocaleType,
     private localeConfig: I18nLocaleConfig
-  ) {
-  }
+  ) {}
 
   public async provideCompletionItems(document: TextDocument, position: Position): Promise<CompletionItem[] | null> {
     const line = document.getText(new Range(new Position(position.line, 0), position));
@@ -58,8 +57,7 @@ export default class I18nCompletionProvider implements CompletionItemProvider {
         if (locale === preferredLocale && addedKeys.has(key)) {
           const existingIndex = addedKeys.get(key) || 0;
           completions[existingIndex] = item;
-        }
-        else if (!addedKeys.has(key)) {
+        } else if (!addedKeys.has(key)) {
           completions.push(item);
           addedKeys.set(key, completions.length - 1);
         }

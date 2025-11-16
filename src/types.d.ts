@@ -19,7 +19,7 @@ type LinterOffense = {
 type LinterOutputFile = {
   path: string;
   offenses: LinterOffense[];
-}
+};
 
 export type LinterOutput = {
   files: LinterOutputFile[];
@@ -64,4 +64,4 @@ export type LinterConfig = {
   TrailingEmptyLines: LinterConfigEnabler;
   TrailingWhitespace: LinterConfigEnabler;
   UnnecessaryStringOutput: LinterConfigEnabler;
-}
+};

@@ -9,7 +9,7 @@ import {
   Uri,
   WorkspaceEdit,
   Position,
-  Selection
+  Selection,
 } from 'vscode';
 
 import * as path from 'path';
@@ -20,10 +20,10 @@ export class ViewCodeActionProvider implements CodeActionProvider {
       buildPartialAction(range),
       buildHtml2HamlAction(),
       buildWrapInConditionalAction(range),
-      buildWrapInBlockAction(range)
+      buildWrapInBlockAction(range),
     ];
 
-    const codeActions = actions.filter(action => action !== null) as CodeAction[];
+    const codeActions = actions.filter((action) => action !== null) as CodeAction[];
 
     return codeActions.length > 0 ? codeActions : null;
   }
@@ -33,7 +33,7 @@ function buildHtml2HamlAction(): CodeAction | null {
   const html2HamlAction = new CodeAction('Convert to HAML', CodeActionKind.RefactorExtract);
   html2HamlAction.command = {
     command: 'hamlAll.html2Haml',
-    title: 'HAML: Convert HTML to HAML'
+    title: 'HAML: Convert HTML to HAML',
   };
 
   return html2HamlAction;
@@ -47,7 +47,7 @@ function buildPartialAction(range: Range): CodeAction | null {
   const partialAction = new CodeAction('Create a partial from selection', CodeActionKind.RefactorExtract);
   partialAction.command = {
     command: 'hamlAll.createPartialFromSelection',
-    title: 'Create a partial from selection'
+    title: 'Create a partial from selection',
   };
 
   return partialAction;
@@ -57,7 +57,7 @@ function buildWrapInConditionalAction(range: Range): CodeAction | null {
   const wrapAction = new CodeAction('Wrap in conditional', CodeActionKind.RefactorRewrite);
   wrapAction.command = {
     command: 'hamlAll.wrapInConditional',
-    title: 'Wrap in conditional'
+    title: 'Wrap in conditional',
   };
 
   return wrapAction;
@@ -67,7 +67,7 @@ function buildWrapInBlockAction(range: Range): CodeAction | null {
   const wrapAction = new CodeAction('Wrap in a ruby block', CodeActionKind.RefactorRewrite);
   wrapAction.command = {
     command: 'hamlAll.wrapInBlock',
-    title: 'Wrap in a ruby block'
+    title: 'Wrap in a ruby block',
   };
 
   return wrapAction;
@@ -87,7 +87,10 @@ export async function createPartialFromSelection(): Promise<void> {
   }
 
   // sanitize name
-  name = name.trim().replace(/^_*/, '').replaceAll(/[^a-zA-Z0-9_]/g, '_');
+  name = name
+    .trim()
+    .replace(/^_*/, '')
+    .replaceAll(/[^a-zA-Z0-9_]/g, '_');
 
   // change vscode selection to whole line
   editor.selection = new Selection(
@@ -133,7 +136,7 @@ function formatPartialVariables(globalVariables: string[], content: string): str
     return content;
   }
 
-  const globalVariablesKeys = globalVariables.map(variable => `${variable.replace('@', '')}:`).join(', ');
+  const globalVariablesKeys = globalVariables.map((variable) => `${variable.replace('@', '')}:`).join(', ');
   const newContent = globalVariables.reduce((acc, variable) => {
     return acc.replace(new RegExp(variable, 'g'), variable.replace('@', ''));
   }, content);
@@ -146,9 +149,11 @@ function buildRenderText(partialName: string, globalVariables: string[]): string
     return `= render('${partialName}')\n`;
   }
 
-  const globalVariablesKeys = globalVariables.map((variable) => {
-    return `${variable.replace('@', '')}: ${variable}`;
-  }).join(', ');
+  const globalVariablesKeys = globalVariables
+    .map((variable) => {
+      return `${variable.replace('@', '')}: ${variable}`;
+    })
+    .join(', ');
 
   return `= render('${partialName}', ${globalVariablesKeys})\n`;
 }
@@ -160,10 +165,10 @@ function formatPartialContent(partialName: string, content: string): [string, st
     return [content, ''];
   }
 
-  const firstLineWithContent = lines.findIndex(line => line.trim().length > 0);
+  const firstLineWithContent = lines.findIndex((line) => line.trim().length > 0);
   const firstLineIndentation = lines[firstLineWithContent].match(/^[\s\t]*/)?.[0] || '';
 
-  const formattedLines = lines.map(line => {
+  const formattedLines = lines.map((line) => {
     return line.startsWith(firstLineIndentation) ? line.slice(firstLineIndentation.length) : line;
   });
 
@@ -208,7 +213,7 @@ export async function wrapContentInBlock(block: string): Promise<void> {
   }
 
   // Get the indentation of the first non-empty line
-  const firstLineWithContent = lines.findIndex(line => line.trim().length > 0);
+  const firstLineWithContent = lines.findIndex((line) => line.trim().length > 0);
   if (firstLineWithContent === -1) {
     return;
   }

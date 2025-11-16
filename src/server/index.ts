@@ -9,7 +9,7 @@ type CallbakFunc<T> = (data: T) => void;
 type ServerResponse<T> = {
   status: string;
   result: T;
-}
+};
 
 class LintServer {
   public rubyServerProcess: ChildProcessWithoutNullStreams | null = null;

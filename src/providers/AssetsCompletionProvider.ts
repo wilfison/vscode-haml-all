@@ -16,7 +16,7 @@ export default class AssetsCompletionProvider implements vscode.CompletionItemPr
     'video_tag',
     'vite_javascript_tag',
     'vite_stylesheet_tag',
-    'vite_asset_path'
+    'vite_asset_path',
   ];
 
   public provideCompletionItems(
@@ -43,7 +43,7 @@ export default class AssetsCompletionProvider implements vscode.CompletionItemPr
         new RegExp(`=\\s*${helper}\\s*\\(?\\s*([^'"][^,\\)\\s]*?)$`),
         new RegExp(`=\\s*${helper}\\s*\\(\\s*['"](.*?)$`),
         new RegExp(`\\b${helper}\\s*\\(?\\s*['"](.*?)$`),
-        new RegExp('\\{\\s*[\'\"](.*?)$')
+        new RegExp('\\{\\s*[\'\"](.*?)$'),
       ];
 
       for (const pattern of patterns) {
@@ -51,7 +51,7 @@ export default class AssetsCompletionProvider implements vscode.CompletionItemPr
         if (match && linePrefix.includes(helper)) {
           return {
             helper,
-            prefix: match[1] || ''
+            prefix: match[1] || '',
           };
         }
       }
@@ -201,7 +201,7 @@ export default class AssetsCompletionProvider implements vscode.CompletionItemPr
 
         if (item.isDirectory()) {
           const subdirAssets = this.scanDirectory(fullPath, extensions);
-          assets.push(...subdirAssets.map(asset => path.join(item.name, asset)));
+          assets.push(...subdirAssets.map((asset) => path.join(item.name, asset)));
         } else if (item.isFile()) {
           const ext = path.extname(item.name).toLowerCase();
           if (extensions.length === 0 || extensions.includes(ext)) {

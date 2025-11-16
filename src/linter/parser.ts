@@ -30,8 +30,8 @@ function parseHamllintAttributes(offense: LinterOffense) {
     source: rubocopLint ? 'RuboCop' : 'haml-lint',
     code: {
       value: copName,
-      target: targetUri
-    }
+      target: targetUri,
+    },
   };
 }
 
@@ -56,10 +56,7 @@ export function parseLintOffence(document: TextDocument, offense: LinterOffense)
   const lineText = document.lineAt(line);
   const lineTextRange = lineText.range;
 
-  const range = new Range(
-    new Position(lineTextRange.start.line, lineText.firstNonWhitespaceCharacterIndex),
-    lineTextRange.end
-  );
+  const range = new Range(new Position(lineTextRange.start.line, lineText.firstNonWhitespaceCharacterIndex), lineTextRange.end);
 
   const severity = offense.severity === 'warning' ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error;
   const { message, source, code } = parseHamllintAttributes(offense);

@@ -30,7 +30,7 @@ export function parseHtmlAttributes(inputString: string) {
   }
 
   return Object.keys(result)
-    .map(key => {
+    .map((key) => {
       let attrKey = key.includes('-') ? `"${key}"` : key;
 
       // do not add quotes to values that are a number

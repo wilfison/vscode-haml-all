@@ -76,7 +76,9 @@ class I18nProvider {
       this.outputChannel.appendLine(`Default locale (${this.localeConfig.defaultLocale}) set from user configuration`);
       return;
     } else if (userDefaultLocale) {
-      this.outputChannel.appendLine(`Warning: User-configured default locale '${userDefaultLocale}' not found in available locales. Falling back to auto-detection.`);
+      this.outputChannel.appendLine(
+        `Warning: User-configured default locale '${userDefaultLocale}' not found in available locales. Falling back to auto-detection.`
+      );
     }
 
     // Try to find Rails configuration
@@ -89,7 +91,9 @@ class I18nProvider {
 
         if (match) {
           this.localeConfig.defaultLocale = match[1];
-          this.outputChannel.appendLine(`Default locale (${this.localeConfig.defaultLocale}) found in Rails config (${file.fsPath})`);
+          this.outputChannel.appendLine(
+            `Default locale (${this.localeConfig.defaultLocale}) found in Rails config (${file.fsPath})`
+          );
           return;
         }
       }

@@ -13,7 +13,7 @@ export function rubocopFix(rule: string, document: TextDocument, diagnostic: Dia
     default:
       return null;
   }
-};
+}
 
 export function hamlLintFixes(rule: string, document: TextDocument, diagnostic: Diagnostic): CodeAction | null {
   switch (rule) {
@@ -22,4 +22,4 @@ export function hamlLintFixes(rule: string, document: TextDocument, diagnostic: 
     default:
       return null;
   }
-};
+}

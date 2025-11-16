@@ -9,7 +9,7 @@ export function openFile(path: string, lineNumber: number): void {
 
   workspace.openTextDocument(uri).then((document) => {
     window.showTextDocument(document, {
-      selection: new Range(lineNumber, 0, lineNumber, 0)
+      selection: new Range(lineNumber, 0, lineNumber, 0),
     });
   });
 }
@@ -39,8 +39,7 @@ export function extractPartialNameFromLine(lineText: string): string {
 
   const cleanedLineText = lineText.split(' ').filter(Boolean).join(' ');
   const afterRender = cleanedLineText.split(/render\(|render\ |render\: /)[1];
-  const partialMatch = afterRender.match(PARTIAL_EXPLICIT_REGEX) ||
-    afterRender.match(PARTIAL_IMPLICIT_REGEX);
+  const partialMatch = afterRender.match(PARTIAL_EXPLICIT_REGEX) || afterRender.match(PARTIAL_IMPLICIT_REGEX);
 
   if (!partialMatch) {
     return '';
@@ -51,9 +50,12 @@ export function extractPartialNameFromLine(lineText: string): string {
 }
 
 export function formatPartialName(partialName: string): string {
-  return partialName.split('/').map((item, index, array) => {
-    return index === array.length - 1 ? `_${item}` : item;
-  }).join('/');
+  return partialName
+    .split('/')
+    .map((item, index, array) => {
+      return index === array.length - 1 ? `_${item}` : item;
+    })
+    .join('/');
 }
 
 function findFileExistsInWorkspace(workspacePath: string, partial: string, fileExtensions: string[]): string[] {
@@ -79,13 +81,11 @@ function findFileInProjects(partialName: string, workspacePath: string, fileExte
 
   const possibleFileLocations: string[] = [];
 
-  findFileExistsInWorkspace(workspacePath, partialName, fileExtensions)
-    .forEach((filePath) => {
-      if (!possibleFileLocations.includes(filePath)) {
-        possibleFileLocations.push(filePath);
-      }
+  findFileExistsInWorkspace(workspacePath, partialName, fileExtensions).forEach((filePath) => {
+    if (!possibleFileLocations.includes(filePath)) {
+      possibleFileLocations.push(filePath);
     }
-    );
+  });
 
   return possibleFileLocations;
 }
@@ -101,13 +101,11 @@ export function resolvePartialFilePath(partialName: string, fileBaseName: string
   const possibleFileLocations: string[] = [];
   const viewBasePath = fileBaseName.split('/').slice(0, -1).join('/');
 
-  findFileExistsInWorkspace(viewBasePath, partialName, fileExtensions)
-    .forEach((filePath) => {
-      if (!possibleFileLocations.includes(filePath)) {
-        possibleFileLocations.push(filePath);
-      }
+  findFileExistsInWorkspace(viewBasePath, partialName, fileExtensions).forEach((filePath) => {
+    if (!possibleFileLocations.includes(filePath)) {
+      possibleFileLocations.push(filePath);
     }
-    );
+  });
 
   return possibleFileLocations;
 }

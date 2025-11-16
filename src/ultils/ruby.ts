@@ -18,5 +18,5 @@ export const RESERVED_RUBY_WORDS = [
   'alias',
   'undef',
   'self',
-  'nil'
+  'nil',
 ];

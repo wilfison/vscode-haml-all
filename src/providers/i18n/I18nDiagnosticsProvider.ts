@@ -1,12 +1,4 @@
-import {
-  DiagnosticCollection,
-  TextDocument,
-  Diagnostic,
-  DiagnosticSeverity,
-  Range,
-  languages,
-  workspace
-} from 'vscode';
+import { DiagnosticCollection, TextDocument, Diagnostic, DiagnosticSeverity, Range, languages, workspace } from 'vscode';
 
 import { CacheLocaleType } from '../../ultils/yaml';
 
@@ -51,11 +43,7 @@ export default class I18nDiagnosticsProvider {
       const range = new Range(startPos, endPos);
 
       if (!this.isValidI18nKey(key)) {
-        const diagnostic = new Diagnostic(
-          range,
-          `I18n key '${key}' not found in locale files`,
-          DiagnosticSeverity.Error
-        );
+        const diagnostic = new Diagnostic(range, `I18n key '${key}' not found in locale files`, DiagnosticSeverity.Error);
 
         diagnostic.source = 'i18n-validator';
         diagnostics.push(diagnostic);

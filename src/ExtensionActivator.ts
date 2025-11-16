@@ -39,9 +39,7 @@ export class ExtensionActivator {
   public async activate(): Promise<void> {
     const eventSubscriber = new EventSubscriber(this.context, this.outputChannel, this.lintServer, this.isARailsProject);
 
-    eventSubscriber.subscribe([
-      this.i18nProvider.subscribeFileWatcher()
-    ]);
+    eventSubscriber.subscribe([this.i18nProvider.subscribeFileWatcher()]);
 
     this.registerCommands();
     this.registerHamlProviders(eventSubscriber);
@@ -56,41 +54,25 @@ export class ExtensionActivator {
     this.context.subscriptions.push(
       vscode.languages.registerCompletionItemProvider(
         [this.RUBY_SELECTOR, this.HAML_SELECTOR],
-        new RoutesCompletionProvider(eventSubscriber.routes),
+        new RoutesCompletionProvider(eventSubscriber.routes)
       )
     );
 
     this.context.subscriptions.push(
-      vscode.languages.registerDefinitionProvider(
-        this.HAML_SELECTOR,
-        new RoutesDefinitionProvider(eventSubscriber.routes)
-      )
+      vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, new RoutesDefinitionProvider(eventSubscriber.routes))
     );
 
     this.context.subscriptions.push(
-      vscode.languages.registerCompletionItemProvider(
-        this.HAML_SELECTOR,
-        new AssetsCompletionProvider(),
-        '"',
-        '\''
-      )
+      vscode.languages.registerCompletionItemProvider(this.HAML_SELECTOR, new AssetsCompletionProvider(), '"', "'")
     );
 
     if (this.isARailsProject) {
       this.context.subscriptions.push(
-        vscode.languages.registerCompletionItemProvider(
-          this.HAML_SELECTOR,
-          new DataAttributeCompletionProvider(),
-          '-',
-          '_',
-        )
+        vscode.languages.registerCompletionItemProvider(this.HAML_SELECTOR, new DataAttributeCompletionProvider(), '-', '_')
       );
 
       this.context.subscriptions.push(
-        vscode.languages.registerCodeLensProvider(
-          this.HAML_SELECTOR,
-          new ImagePreviewCodeLensProvider()
-        )
+        vscode.languages.registerCodeLensProvider(this.HAML_SELECTOR, new ImagePreviewCodeLensProvider())
       );
 
       this.context.subscriptions.push(
@@ -99,16 +81,13 @@ export class ExtensionActivator {
           this.i18nProvider.i18nCompletionProvider,
           '.',
           '_',
-          '\'',
+          "'",
           '"'
         )
       );
 
       this.context.subscriptions.push(
-        vscode.languages.registerDefinitionProvider(
-          this.HAML_SELECTOR,
-          this.i18nProvider.i18nDefinitionProvider
-        )
+        vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, this.i18nProvider.i18nDefinitionProvider)
       );
 
       // Only register validation listeners if I18n validation is enabled
@@ -165,47 +144,25 @@ export class ExtensionActivator {
     );
 
     this.context.subscriptions.push(
-      vscode.languages.registerCompletionItemProvider(
-        this.HAML_SELECTOR,
-        new ViewCompletionProvider(),
-        '"',
-        '\''
-      )
+      vscode.languages.registerCompletionItemProvider(this.HAML_SELECTOR, new ViewCompletionProvider(), '"', "'")
     );
 
     this.context.subscriptions.push(
-      vscode.languages.registerSignatureHelpProvider(
-        this.HAML_SELECTOR,
-        new PartialSignatureHelpProvider(),
-        '(',
-        ','
-      )
+      vscode.languages.registerSignatureHelpProvider(this.HAML_SELECTOR, new PartialSignatureHelpProvider(), '(', ',')
     );
 
     this.context.subscriptions.push(
-      vscode.languages.registerCodeActionsProvider(
-        this.HAML_SELECTOR,
-        new ViewCodeActionProvider(),
-        {
-          providedCodeActionKinds: [vscode.CodeActionKind.RefactorExtract]
-        }
-      )
+      vscode.languages.registerCodeActionsProvider(this.HAML_SELECTOR, new ViewCodeActionProvider(), {
+        providedCodeActionKinds: [vscode.CodeActionKind.RefactorExtract],
+      })
     );
 
-    this.context.subscriptions.push(
-      vscode.languages.registerCodeLensProvider(
-        this.HAML_SELECTOR,
-        new CodeLensProvider()
-      )
-    );
+    this.context.subscriptions.push(vscode.languages.registerCodeLensProvider(this.HAML_SELECTOR, new CodeLensProvider()));
   }
 
   private registerCommands(): void {
     this.context.subscriptions.push(
-      vscode.commands.registerCommand(
-        'hamlAll.createPartialFromSelection',
-        createPartialFromSelection
-      ),
+      vscode.commands.registerCommand('hamlAll.createPartialFromSelection', createPartialFromSelection),
 
       vscode.commands.registerCommand('hamlAll.wrapInConditional', () => {
         wrapContentInBlock('- if condition');
@@ -215,10 +172,7 @@ export class ExtensionActivator {
         wrapContentInBlock('- (1..5).each do |item|');
       }),
 
-      vscode.commands.registerCommand(
-        'hamlAll.html2Haml',
-        html2Haml
-      ),
+      vscode.commands.registerCommand('hamlAll.html2Haml', html2Haml),
 
       vscode.commands.registerCommand('hamlAll.livePreview', () => {
         LivePreviewPanel.createOrShow(this.context.extensionUri, this.lintServer);

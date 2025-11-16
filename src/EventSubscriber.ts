@@ -41,7 +41,7 @@ class EventSubscriber {
     this.subscribeHaml();
     this.subscribeRails();
 
-    otherEvents.forEach(event => this.context.subscriptions.push(event));
+    otherEvents.forEach((event) => this.context.subscriptions.push(event));
   }
 
   public subscribeHaml() {
@@ -57,13 +57,13 @@ class EventSubscriber {
   }
 
   public unsubscribe() {
-    this.context.subscriptions.forEach(subscription => subscription.dispose());
+    this.context.subscriptions.forEach((subscription) => subscription.dispose());
   }
 
   public updateAllDiagnostics(_event: any = null) {
     this.linter.clearAll();
 
-    workspace.textDocuments.forEach(document => this.linter.run(document));
+    workspace.textDocuments.forEach((document) => this.linter.run(document));
   }
 
   private async subscribeToEvents() {
@@ -85,22 +85,14 @@ class EventSubscriber {
       })
     );
 
-    this.context.subscriptions.push(
-      workspace.onDidOpenTextDocument(updateDiagnostics)
-    );
+    this.context.subscriptions.push(workspace.onDidOpenTextDocument(updateDiagnostics));
+
+    this.context.subscriptions.push(workspace.onDidCloseTextDocument((document) => this.linter.clear(document)));
 
     this.context.subscriptions.push(
-      workspace.onDidCloseTextDocument(document => this.linter.clear(document))
-    );
-
-    this.context.subscriptions.push(
-      languages.registerCodeActionsProvider(
-        'haml',
-        new FixActionsProvider(),
-        {
-          providedCodeActionKinds: [CodeActionKind.QuickFix]
-        }
-      )
+      languages.registerCodeActionsProvider('haml', new FixActionsProvider(), {
+        providedCodeActionKinds: [CodeActionKind.QuickFix],
+      })
     );
 
     window.withProgress(
@@ -111,7 +103,7 @@ class EventSubscriber {
       async () => {
         await this.linter.startServer();
         await this.onUpdateLintConfig();
-      },
+      }
     );
   }
 
@@ -121,24 +113,23 @@ class EventSubscriber {
   }
 
   private subscribeHamlWatchers() {
-    const watchFiles = [
-      '**/.haml-lint.yml',
-    ];
+    const watchFiles = ['**/.haml-lint.yml'];
 
-    watchFiles.forEach(pattern => this.subscribeFileWatcher(pattern, () => {
-      loadWithProgress('Loading lint configs', this.onUpdateLintConfig.bind(this));
-    }));
+    watchFiles.forEach((pattern) =>
+      this.subscribeFileWatcher(pattern, () => {
+        loadWithProgress('Loading lint configs', this.onUpdateLintConfig.bind(this));
+      })
+    );
   }
 
   private subscribeRailsWatchers() {
-    const watchRouteFiles = [
-      '**/config/routes.rb',
-      '**/config/routes/**/*.rb',
-    ];
+    const watchRouteFiles = ['**/config/routes.rb', '**/config/routes/**/*.rb'];
 
-    watchRouteFiles.forEach(pattern => this.subscribeFileWatcher(pattern, () => {
-      loadWithProgress('Loading rails routes', this.routes.load);
-    }));
+    watchRouteFiles.forEach((pattern) =>
+      this.subscribeFileWatcher(pattern, () => {
+        loadWithProgress('Loading rails routes', this.routes.load);
+      })
+    );
   }
 
   private subscribeFileWatcher(pattern: string, callback: (e: Uri) => void): void {

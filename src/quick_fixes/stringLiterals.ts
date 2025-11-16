@@ -18,7 +18,12 @@ export function fixAllStringLiterals(document: TextDocument, diagnostics: Diagno
 
   const content = document.getText();
   const allFileRange = document.validateRange(new Range(0, 0, Number.MAX_VALUE, Number.MAX_VALUE));
-  const codeAction = buildCodeAction(content, document.uri, { ...diagnostic, range: allFileRange }, 'Autocorrect all occurrences');
+  const codeAction = buildCodeAction(
+    content,
+    document.uri,
+    { ...diagnostic, range: allFileRange },
+    'Autocorrect all occurrences'
+  );
 
   return codeAction;
 }
@@ -27,7 +32,7 @@ function buildCodeAction(content: string, uri: Uri, diagnostic: Diagnostic, acti
   const [rule, message] = diagnostic.message.split(':');
 
   const preferSingleQuoted = message.includes('Prefer single-quoted');
-  const quote = preferSingleQuoted ? '\'' : '"';
+  const quote = preferSingleQuoted ? "'" : '"';
   const regex = preferSingleQuoted ? DOUBLE_QUOTE_REGEX : SINGLE_QUOTE_REGEX;
   const offenses = content.match(regex);
 

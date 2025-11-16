@@ -15,7 +15,7 @@ export const HAML_LINT_DEFAULT_COPS: LinterConfig = {
     file_types: 'partials',
     matchers: {
       all: '.*',
-      partials: '\\A_.*\\.haml\\z'
-    }
+      partials: '\\A_.*\\.haml\\z',
+    },
   },
 };
