@@ -136,6 +136,10 @@
       {
         "language": "haml",
         "path": "./snippets/rails-snippets.json"
+      },
+      {
+        "language": "ruby",
+        "path": "./snippets/test-snippets.json"
       }
     ]
   },

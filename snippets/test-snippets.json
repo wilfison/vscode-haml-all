@@ -1,0 +1,180 @@
+{
+  "RSpec: View spec template": {
+    "prefix": "rspec_view",
+    "body": [
+      "require 'rails_helper'",
+      "",
+      "RSpec.describe '${1:views/controller/action}', type: :view do",
+      "  ${2:before do",
+      "    assign(:${3:variable}, ${4:value})",
+      "  end}",
+      "",
+      "  it 'renders ${5:expected content}' do",
+      "    render",
+      "",
+      "    expect(rendered).to ${6:have_text('${7:text}')}",
+      "  end",
+      "end",
+      "$0"
+    ],
+    "description": "Create an RSpec view spec template"
+  },
+  "RSpec: View spec with partial": {
+    "prefix": "rspec_view_partial",
+    "body": [
+      "require 'rails_helper'",
+      "",
+      "RSpec.describe '${1:views/shared/_partial}', type: :view do",
+      "  it 'renders ${2:expected content}' do",
+      "    render partial: '${3:shared/partial}'${4:, locals: { ${5:key}: ${6:value} \\}}",
+      "",
+      "    expect(rendered).to ${7:have_text('${8:text}')}",
+      "  end",
+      "end",
+      "$0"
+    ],
+    "description": "Create an RSpec view spec for a partial"
+  },
+  "RSpec: View expect to have text": {
+    "prefix": "rspec_have_text",
+    "body": [
+      "expect(rendered).to have_text('${1:text}')"
+    ],
+    "description": "Expect rendered view to have text"
+  },
+  "RSpec: View expect to have selector": {
+    "prefix": "rspec_have_selector",
+    "body": [
+      "expect(rendered).to have_selector('${1:selector}'${2:, text: '${3:text}'})"
+    ],
+    "description": "Expect rendered view to have CSS selector"
+  },
+  "RSpec: View expect to have link": {
+    "prefix": "rspec_have_link",
+    "body": [
+      "expect(rendered).to have_link('${1:text}', href: ${2:path})"
+    ],
+    "description": "Expect rendered view to have a link"
+  },
+  "RSpec: View expect to have button": {
+    "prefix": "rspec_have_button",
+    "body": [
+      "expect(rendered).to have_button('${1:text}')"
+    ],
+    "description": "Expect rendered view to have a button"
+  },
+  "RSpec: View assign variable": {
+    "prefix": "rspec_assign",
+    "body": [
+      "assign(:${1:variable}, ${2:value})"
+    ],
+    "description": "Assign instance variable for view spec"
+  },
+  "RSpec: Render partial": {
+    "prefix": "rspec_render_partial",
+    "body": [
+      "render partial: '${1:partial}'${2:, locals: { ${3:key}: ${4:value} \\}}"
+    ],
+    "description": "Render a partial in a view spec"
+  },
+  "Minitest: View test template": {
+    "prefix": "minitest_view",
+    "body": [
+      "require 'test_helper'",
+      "",
+      "class ${1:Controller}${2:Action}ViewTest < ActionView::TestCase",
+      "  test '${3:description}' do",
+      "    ${4:assign(:variable, value)}",
+      "    render template: '${5:controller/action}'",
+      "",
+      "    assert_select '${6:selector}'${7:, text: '${8:text}'}",
+      "  end",
+      "end",
+      "$0"
+    ],
+    "description": "Create a Minitest view test template"
+  },
+  "Minitest: View test partial": {
+    "prefix": "minitest_view_partial",
+    "body": [
+      "require 'test_helper'",
+      "",
+      "class ${1:Partial}ViewTest < ActionView::TestCase",
+      "  test '${2:description}' do",
+      "    render partial: '${3:shared/partial}'${4:, locals: { ${5:key}: ${6:value} \\}}",
+      "",
+      "    assert_select '${7:selector}'${8:, text: '${9:text}'}",
+      "  end",
+      "end",
+      "$0"
+    ],
+    "description": "Create a Minitest view test for a partial"
+  },
+  "Minitest: Assert select": {
+    "prefix": "minitest_assert_select",
+    "body": [
+      "assert_select '${1:selector}'${2:, text: '${3:text}'}"
+    ],
+    "description": "Assert HTML selector exists"
+  },
+  "Minitest: Assert select with count": {
+    "prefix": "minitest_assert_select_count",
+    "body": [
+      "assert_select '${1:selector}', count: ${2:1}"
+    ],
+    "description": "Assert HTML selector exists with specific count"
+  },
+  "Minitest: Assert match": {
+    "prefix": "minitest_assert_match",
+    "body": [
+      "assert_match /${1:pattern}/, rendered"
+    ],
+    "description": "Assert rendered output matches pattern"
+  },
+  "Minitest: Render template": {
+    "prefix": "minitest_render",
+    "body": [
+      "render template: '${1:controller/action}'"
+    ],
+    "description": "Render a template in view test"
+  },
+  "Minitest: Render partial": {
+    "prefix": "minitest_render_partial",
+    "body": [
+      "render partial: '${1:partial}'${2:, locals: { ${3:key}: ${4:value} \\}}"
+    ],
+    "description": "Render a partial in view test"
+  },
+  "View Helper: Stub helper method": {
+    "prefix": "stub_helper",
+    "body": [
+      "allow(view).to receive(:${1:helper_method}).and_return(${2:value})"
+    ],
+    "description": "Stub a helper method in view spec (RSpec)"
+  },
+  "View Helper: Mock current_user": {
+    "prefix": "mock_current_user",
+    "body": [
+      "let(:current_user) { create(:user${1:, :${2:trait}}) }",
+      "",
+      "before do",
+      "  allow(view).to receive(:current_user).and_return(current_user)",
+      "end"
+    ],
+    "description": "Mock current_user helper in view spec"
+  },
+  "View Test: Turbo frame": {
+    "prefix": "test_turbo_frame",
+    "body": [
+      "expect(rendered).to have_selector('turbo-frame#${1:id}')"
+    ],
+    "description": "Test for Turbo Frame in view"
+  },
+  "View Test: Stimulus controller": {
+    "prefix": "test_stimulus",
+    "body": [
+      "expect(rendered).to have_selector('[data-controller=\"${1:controller}\"]')"
+    ],
+    "description": "Test for Stimulus controller in view"
+  }
+}
