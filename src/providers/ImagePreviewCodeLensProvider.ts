@@ -190,18 +190,19 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     const isRemoteImage = imagePath.startsWith('http');
     const imageFileUri = isRemoteImage ? vscode.Uri.parse(imagePath) : vscode.Uri.file(imagePath);
 
-    const panel = vscode.window.createWebviewPanel('imagePreview', `🖼️ ${imageName}`, vscode.ViewColumn.Beside, {
+    const imageStats = isRemoteImage ? { size: 0 } : fs.statSync(imagePath);
+    const imageSizeKB = imageStats.size > 0 ? `${Math.round(imageStats.size / 1024)} KB` : 'Unknown';
+    const imageExt = path.extname(imagePath).toLowerCase();
+    const workspaceFolder = isRemoteImage ? undefined : vscode.workspace.workspaceFolders?.[0];
+    const relativePath = workspaceFolder ? path.relative(workspaceFolder.uri.fsPath, imagePath) : imageFileUri.authority;
+    const title = isRemoteImage ? `📷 (Remote) ${imageFileUri.authority}` : `📷 ${imageName}`;
+
+    const panel = vscode.window.createWebviewPanel('imagePreview', title, vscode.ViewColumn.Beside, {
       enableScripts: true,
       localResourceRoots: isRemoteImage ? undefined : [vscode.Uri.file(path.dirname(imagePath))],
     });
 
     const imageUri = panel.webview.asWebviewUri(imageFileUri);
-    const imageStats = isRemoteImage ? { size: 0 } : fs.statSync(imagePath);
-    const imageSizeKB = Math.round(imageStats.size / 1024);
-    const imageExt = path.extname(imagePath).toLowerCase();
-    const workspaceFolder = isRemoteImage ? undefined : vscode.workspace.workspaceFolders?.[0];
-    const relativePath = workspaceFolder ? path.relative(workspaceFolder.uri.fsPath, imagePath) : imagePath;
-
     panel.webview.html = ImagePreviewCodeLensProvider.getWebviewContent(imageUri, imageName, relativePath, imageSizeKB, imageExt);
 
     panel.onDidDispose(() => {
@@ -213,7 +214,7 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     imageUri: vscode.Uri,
     imageName: string,
     imagePath: string,
-    imageSize: number,
+    imageSize: string,
     imageExt: string
   ): string {
     const template = fs.readFileSync(path.join(__dirname, '..', '..', 'templates', 'webview_image_preview.html'), 'utf8');
@@ -222,7 +223,7 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
       .replace(/{{imageUri}}/g, imageUri.toString())
       .replace(/{{imageName}}/g, imageName)
       .replace(/{{imagePath}}/g, imagePath)
-      .replace(/{{imageSize}}/g, `${imageSize} KB`)
+      .replace(/{{imageSize}}/g, imageSize)
       .replace(/{{imageExt}}/g, imageExt.toUpperCase().substring(1));
   }
 }
