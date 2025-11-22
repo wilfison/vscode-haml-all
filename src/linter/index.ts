@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { DiagnosticCollection, languages, TextDocument, workspace, OutputChannel } from 'vscode';
+import { DiagnosticCollection, languages, TextDocument, workspace, OutputChannel, window } from 'vscode';
 
 import { LinterConfig, LinterOffense } from '../types';
 import { DiagnosticFull, parseLintOffence } from './parser';
@@ -62,6 +62,16 @@ export default class Linter {
       return Promise.resolve();
     } catch (error) {
       this.outputChanel.appendLine(`Error starting Haml Lint server: ${error}`);
+
+      // Show error notification to user
+      window
+        .showErrorMessage('Failed to start HAML Lint server. Check the output channel for details.', 'Show Output')
+        .then((selection) => {
+          if (selection === 'Show Output') {
+            this.outputChanel.show();
+          }
+        });
+
       return Promise.reject(error);
     }
   }

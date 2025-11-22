@@ -21,12 +21,22 @@ import { html2Haml } from './html2Haml';
 import { openFile } from './utils/file';
 import * as helpers from './Helpers';
 
+/**
+ * Manages the activation and registration of all extension features.
+ * Handles initialization of providers, commands, and event subscribers for both HAML and Rails-specific functionality.
+ */
 export class ExtensionActivator {
   private readonly HAML_SELECTOR = { language: 'haml', scheme: 'file' };
   private readonly RUBY_SELECTOR = { language: 'ruby', scheme: 'file' };
   private isARailsProject: boolean = false;
   private i18nProvider: I18nProvider;
 
+  /**
+   * Creates a new ExtensionActivator instance.
+   * @param context - The VS Code extension context
+   * @param outputChannel - Output channel for logging
+   * @param lintServer - The Ruby-based linting server instance
+   */
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly outputChannel: vscode.OutputChannel,
@@ -36,6 +46,10 @@ export class ExtensionActivator {
     this.i18nProvider = new I18nProvider(this.outputChannel);
   }
 
+  /**
+   * Activates the extension by registering all providers, commands, and event subscribers.
+   * This is called when the extension is first activated.
+   */
   public async activate(): Promise<void> {
     const eventSubscriber = new EventSubscriber(this.context, this.outputChannel, this.lintServer, this.isARailsProject);
 
@@ -189,6 +203,10 @@ export class ExtensionActivator {
     );
   }
 
+  /**
+   * Disposes of extension resources.
+   * Called when the extension is deactivated.
+   */
   public dispose(): void {
     this.i18nProvider.dispose();
   }

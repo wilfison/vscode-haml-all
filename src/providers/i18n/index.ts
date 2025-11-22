@@ -11,11 +11,20 @@ export type I18nLocaleConfig = {
   defaultLocale: string;
 };
 
+/**
+ * Manages I18n (internationalization) features including completion, definition, and diagnostics.
+ * Implements caching to improve performance when loading locale files.
+ */
 class I18nProvider {
   private localesData: CacheLocaleType = new Map();
   private localeConfig: I18nLocaleConfig = {
     defaultLocale: 'en',
   };
+
+  // Cache management
+  private lastLoadTime: number = 0;
+  private localeFilesModifiedTimes: Map<string, number> = new Map();
+  private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
   public i18nDiagnosticsProvider: I18nDiagnosticsProvider;
   public i18nCompletionProvider: I18nCompletionProvider;
@@ -29,6 +38,69 @@ class I18nProvider {
     this.setupData();
   }
 
+  /**
+   * Checks if any locale files have been modified since last load.
+   * @returns true if cache is valid, false if files have been modified
+   */
+  private async isCacheValid(): Promise<boolean> {
+    const now = Date.now();
+    const cacheAge = now - this.lastLoadTime;
+
+    // Check if cache has expired
+    if (cacheAge > this.CACHE_TTL) {
+      this.outputChannel.appendLine('I18n cache expired (TTL exceeded)');
+      return false;
+    }
+
+    // Check if any locale files have been modified
+    try {
+      const localeFiles = await workspace.findFiles('config/locales/**/*.{yml,yaml}');
+
+      for (const file of localeFiles) {
+        const filePath = file.fsPath;
+        const stats = fs.statSync(filePath);
+        const currentModTime = stats.mtimeMs;
+        const cachedModTime = this.localeFilesModifiedTimes.get(filePath) || 0;
+
+        if (currentModTime > cachedModTime) {
+          this.outputChannel.appendLine(`I18n cache invalidated (${filePath} modified)`);
+          return false;
+        }
+      }
+
+      // Check if files were deleted
+      if (localeFiles.length !== this.localeFilesModifiedTimes.size) {
+        this.outputChannel.appendLine('I18n cache invalidated (files added/removed)');
+        return false;
+      }
+    } catch (error) {
+      this.outputChannel.appendLine(`Error checking locale files: ${error}`);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Updates cache metadata with current file modification times.
+   */
+  private async updateCacheMetadata(): Promise<void> {
+    this.localeFilesModifiedTimes.clear();
+
+    try {
+      const localeFiles = await workspace.findFiles('config/locales/**/*.{yml,yaml}');
+
+      for (const file of localeFiles) {
+        const stats = fs.statSync(file.fsPath);
+        this.localeFilesModifiedTimes.set(file.fsPath, stats.mtimeMs);
+      }
+
+      this.lastLoadTime = Date.now();
+    } catch (error) {
+      this.outputChannel.appendLine(`Error updating I18n cache metadata: ${error}`);
+    }
+  }
+
   async setupData(): Promise<void> {
     await this.loadLocalesData();
 
@@ -37,11 +109,21 @@ class I18nProvider {
   }
 
   async loadLocalesData(): Promise<void> {
+    // Return cached data if still valid
+    if (this.localesData.size > 0 && (await this.isCacheValid())) {
+      this.outputChannel.appendLine(`Using cached I18n data (${this.localesData.size} locales)`);
+      return;
+    }
+
+    this.outputChannel.appendLine('Loading I18n locales data...');
     this.localesData.clear();
 
     try {
       await loadLocalesData(this.localesData);
-      this.outputChannel.appendLine('I18n locales data loaded successfully.');
+      await this.updateCacheMetadata();
+      this.outputChannel.appendLine(
+        `I18n locales data loaded successfully (${this.localesData.size} locales, cached for ${this.CACHE_TTL / 1000}s).`
+      );
     } catch (error: any) {
       this.outputChannel.appendLine(`Error loading i18n locales data: ${error.message}`);
     }
@@ -49,6 +131,7 @@ class I18nProvider {
 
   dispose(): void {
     this.localesData.clear();
+    this.localeFilesModifiedTimes.clear();
     this.i18nDiagnosticsProvider.dispose();
   }
 

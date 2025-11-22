@@ -5,35 +5,56 @@ import net from 'node:net';
 import { LinterOffense } from '../types';
 import { OutputChannel } from 'vscode';
 
-type CallbakFunc<T> = (data: T) => void;
+type CallbackFunc<T> = (data: T) => void;
 type ServerResponse<T> = {
   status: string;
   result: T;
 };
 
+/**
+ * Manages the Ruby-based HAML linting server.
+ * Maintains a persistent TCP socket connection to a Ruby server process for efficient linting operations.
+ */
 class LintServer {
   public rubyServerProcess: ChildProcessWithoutNullStreams | null = null;
   private serverPort = 7654;
 
   private readonly workingDirectory: string;
   private readonly useBundler: Boolean;
-  private readonly outputChanel: OutputChannel | null = null;
+  private readonly outputChannel: OutputChannel | null = null;
 
-  constructor(workingDirectory: string, useBundler: Boolean, outputChanel: OutputChannel | null = null) {
+  /**
+   * Creates a new LintServer instance.
+   * @param workingDirectory - The workspace root directory
+   * @param useBundler - Whether to use Bundler for gem management
+   * @param outputChannel - Optional output channel for logging (defaults to null)
+   */
+  constructor(workingDirectory: string, useBundler: Boolean, outputChannel: OutputChannel | null = null) {
     this.workingDirectory = workingDirectory;
     this.useBundler = useBundler;
-    this.outputChanel = outputChanel;
+    this.outputChannel = outputChannel;
   }
 
+  /**
+   * Logs a message to the output channel.
+   * @param message - The message to log
+   */
   printOutput(message: string): void {
-    if (this.outputChanel) {
-      this.outputChanel.appendLine(message);
-    } else {
-      console.log(message);
+    if (this.outputChannel) {
+      this.outputChannel.appendLine(message);
     }
+    // Note: If outputChannel is not available, message is silently ignored
+    // This should not happen in normal operation as outputChannel is provided during activation
   }
 
-  async lint(template: string, filePath: string, configPath: string, callback: CallbakFunc<LinterOffense[]>): Promise<void> {
+  /**
+   * Lints a HAML template and returns offenses via callback.
+   * @param template - The HAML template content to lint
+   * @param filePath - The file path of the template
+   * @param configPath - Path to the haml-lint configuration file
+   * @param callback - Callback function to receive linting results
+   */
+  async lint(template: string, filePath: string, configPath: string, callback: CallbackFunc<LinterOffense[]>): Promise<void> {
     const params = {
       action: 'lint',
       file_path: filePath,
@@ -47,18 +68,27 @@ class LintServer {
       const data = JSON.parse(response) as ServerResponse<LinterOffense[]>;
 
       if (data.status !== 'success') {
-        this.printOutput(`Error from server: ${data.result}`);
+        const errorMsg = `Linting failed for ${filePath}: ${data.result}`;
+        this.printOutput(errorMsg);
         callback([]);
         return;
       }
 
       callback(data.result);
     } catch (error) {
-      this.printOutput(`Error while linting: ${error}`);
+      const errorMsg = `Error while linting ${filePath}: ${error}`;
+      this.printOutput(errorMsg);
       callback([]);
     }
   }
 
+  /**
+   * Attempts to automatically correct linting issues in a HAML template.
+   * @param template - The HAML template content to correct
+   * @param filePath - The file path of the template
+   * @param configPath - Path to the haml-lint configuration file
+   * @returns The corrected template content, or original template if correction fails
+   */
   async autocorrect(template: string, filePath: string, configPath: string): Promise<string> {
     const params = {
       action: 'autocorrect',
@@ -88,6 +118,10 @@ class LintServer {
     }
   }
 
+  /**
+   * Retrieves the list of available haml-lint cops.
+   * @param callback - Callback function to receive the list of cops
+   */
   async listCops(callback: (data: any) => void): Promise<void> {
     const params = {
       action: 'list_cops',
@@ -111,6 +145,11 @@ class LintServer {
     }
   }
 
+  /**
+   * Compiles a HAML template to HTML.
+   * @param template - The HAML template content to compile
+   * @param callback - Callback function to receive the compiled HTML or error
+   */
   async compileHaml(template: string, callback: (data: any) => void): Promise<void> {
     if (!this.rubyServerProcess) {
       callback({ error: 'Server not started' });
@@ -141,6 +180,11 @@ class LintServer {
     }
   }
 
+  /**
+   * Starts the Ruby server process.
+   * Creates a new Ruby process that listens on a TCP socket for linting requests.
+   * @returns Promise that resolves to the spawned process or null if already running
+   */
   async start(): Promise<ChildProcessWithoutNullStreams | null> {
     if (this.rubyServerProcess) {
       return Promise.resolve(this.rubyServerProcess);
@@ -188,6 +232,10 @@ class LintServer {
     });
   }
 
+  /**
+   * Stops the Ruby server process.
+   * Kills the server process and cleans up resources.
+   */
   stop(): void {
     if (this.rubyServerProcess) {
       this.rubyServerProcess.kill();
