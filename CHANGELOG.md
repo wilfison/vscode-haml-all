@@ -1,5 +1,14 @@
 # Change Log
 
+## [UNRELEASED]
+
+- **Performance**: Add intelligent caching for Routes (5min TTL) and I18n locales (10min TTL) with automatic invalidation
+- **Testing**: Add 22 RSpec/Minitest snippets for view testing
+- **Documentation**: Add `CONTRIBUTING.md` and `docs/ARCHITECTURE.md`
+- **Code Quality**: Add JSDoc to public APIs, replace `console.log` with OutputChannel, apply Prettier formatting
+- **Error Handling**: Improve user feedback with notifications for critical errors
+- **Refactor**: Fix typos in folder names (`ultils` to `utils`), update ESLint and TypeScript configs
+
 ## [2.0.6] - 2025-10-10
 
 - Add **I18n Validation Configuration**: New settings to control I18n validation behavior
