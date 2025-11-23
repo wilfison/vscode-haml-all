@@ -85,16 +85,7 @@ class EventSubscriber {
       })
     );
 
-    this.context.subscriptions.push(
-      workspace.onDidOpenTextDocument((document) => {
-        // Only run diagnostics on documents that are actually visible in the editor
-        // Skip documents opened in the background (e.g., when reading partial locals)
-        if (window.visibleTextEditors.some((editor) => editor.document === document)) {
-          updateDiagnostics(document);
-        }
-      })
-    );
-
+    this.context.subscriptions.push(workspace.onDidOpenTextDocument(updateDiagnostics));
     this.context.subscriptions.push(workspace.onDidCloseTextDocument((document) => this.linter.clear(document)));
 
     this.context.subscriptions.push(

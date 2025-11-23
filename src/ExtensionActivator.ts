@@ -113,9 +113,7 @@ export class ExtensionActivator {
         });
 
         vscode.workspace.onDidOpenTextDocument((document) => {
-          // Only validate documents that are actually visible in the editor
-          // Skip documents opened in the background (e.g., when reading partial locals)
-          if (document.languageId === 'haml' && vscode.window.visibleTextEditors.some((editor) => editor.document === document)) {
+          if (document.languageId === 'haml') {
             this.i18nProvider.i18nDiagnosticsProvider.validateDocument(document);
           }
         });
