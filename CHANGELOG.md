@@ -1,5 +1,9 @@
 # Change Log
 
+## UNRELEASED
+
+- Fix: fix "Go to Definition" provider cursor position over partial strings.
+
 ## [2.0.7] - 2025-11-22
 
 - **Performance**: Add intelligent caching for Routes (5min TTL) and I18n locales (10min TTL) with automatic invalidation
