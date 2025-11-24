@@ -44,9 +44,7 @@
     "Shopify.ruby-lsp"
   ],
   "license": "MIT",
-  "activationEvents": [
-    "onLanguage:ruby"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
