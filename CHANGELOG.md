@@ -1,8 +1,10 @@
 # Change Log
 
-## UNRELEASED
+## [2.0.8] - 2025-12-08
 
-- Fix: fix "Go to Definition" provider cursor position over partial strings.
+- Add `AssetsDefinitionProvider` for asset helper definitions.
+- Fix `Go to Definition` provider cursor position over partial strings.
+- Fix `render` indentation to when creating partials from selection.
 
 ## [2.0.7] - 2025-11-22
 
