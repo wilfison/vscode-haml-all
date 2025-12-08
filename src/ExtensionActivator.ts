@@ -11,6 +11,7 @@ import FormattingEditProvider from './providers/FormattingEditProvider';
 import { ViewCodeActionProvider, createPartialFromSelection, wrapContentInBlock } from './providers/ViewCodeActionProvider';
 import DataAttributeCompletionProvider from './providers/DataAttributeCompletionProvider';
 import AssetsCompletionProvider from './providers/AssetsCompletionProvider';
+import AssetsDefinitionProvider from './providers/AssetsDefinitionProvider';
 import ImagePreviewCodeLensProvider from './providers/ImagePreviewCodeLensProvider';
 import I18nProvider from './providers/i18n';
 
@@ -155,6 +156,10 @@ export class ExtensionActivator {
 
     this.context.subscriptions.push(
       vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, new ViewFileDefinitionProvider())
+    );
+
+    this.context.subscriptions.push(
+      vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, new AssetsDefinitionProvider())
     );
 
     this.context.subscriptions.push(
