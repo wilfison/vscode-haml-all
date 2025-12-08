@@ -173,7 +173,7 @@ function formatPartialContent(partialName: string, content: string): [string, st
   });
 
   const globalVariables = globalVariableList(content);
-  const renderText = buildRenderText(partialName, globalVariables);
+  const renderText = `${firstLineIndentation}${buildRenderText(partialName, globalVariables)}`;
 
   let newContent = formattedLines.join('\n');
   newContent = formatPartialVariables(globalVariables, newContent);
