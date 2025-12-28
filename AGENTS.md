@@ -8,9 +8,41 @@
 
 The extension follows a **provider-based architecture** with three main subsystems:
 
-1. **Ruby Server Bridge** (`src/server/` + `lib/server.rb`): Persistent TCP socket server (port 7654+) for efficient haml-lint operations
-2. **Event-Driven Diagnostics** (`src/EventSubscriber.ts`): Centralized event handling for file watching and validation
+1. **LSP Client** (`src/lsp/LspManager.ts`): Manages the haml_lsp gem installation and Language Server Protocol client - **provides all linting and formatting**
+2. **Event-Driven Features** (`src/EventSubscriber.ts`): Centralized event handling for Rails-specific file watching (routes)
 3. **Rails-Aware Features** (`src/rails/`, `src/providers/`): Optional features activated when Rails project detected
+
+### LSP Manager & Client
+
+The LSP Manager (`src/lsp/LspManager.ts`) handles automatic installation and LSP client lifecycle:
+
+- Creates `.haml-lsp/` directory in project root with:
+  - `.gitignore` (ignores all contents)
+  - `Gemfile` (imports project's Gemfile and adds `gem "haml_lsp"`)
+  - `last_updated` (timestamp of last gem update)
+  - `README.md` (explains the directory purpose)
+- Runs `bundle install` on first activation
+- Checks every 24 hours for updates and runs `bundle update haml_lsp` if needed
+- Creates a `LanguageClient` from `vscode-languageclient/node`
+- Starts LSP server with `bundle exec haml_lsp --use-bundle --enable-lint` (flags based on config)
+- Communicates via stdin/stdout using VS Code's Language Client Protocol
+
+**Important**: The LSP path is no longer configurable - it's always managed in `.haml-lsp/`
+
+**Linting & Formatting**: **ALL linting and formatting is now provided by the LSP server** via the `haml_lsp` gem:
+
+- **Linting**: Powered by haml-lint, configured via `.haml-lint.yml` in project root
+- **Formatting**: LSP handles `textDocument/formatting` requests using haml-lint auto-correction
+- **Code Actions/Quick Fixes**: LSP provides quick fixes for haml-lint offenses
+- **Diagnostics**: Real-time diagnostics via LSP `textDocument/publishDiagnostics`
+
+**Deprecated**:
+
+- `lib/server.rb` - Old Ruby TCP server (kept for reference only)
+- `src/linter/index.ts` - Local linter (no-op, kept for compatibility)
+- `src/formatter/index.ts` - Local formatter (deprecated, not used)
+- `src/providers/FixActionsProvider.ts` - Quick fixes now from LSP
+- `.haml-lint.yml` file watching - LSP watches this automatically
 
 ## Critical Developer Workflows
 
@@ -32,17 +64,9 @@ The extension activates on `onLanguage:haml` event. To test:
 2. Press F5 to launch Extension Development Host
 3. Open `.haml` file to trigger activation
 4. Check Output Channel "Haml" for logs (`View > Output > Haml`)
+5. LSP server logs will also appear in the output channel
 
-### Ruby Server Lifecycle
-
-The linting server (`lib/server.rb`) starts automatically on activation:
-
-- Spawns Ruby process running TCP server on port 7654 (auto-increments if busy)
-- Handles `lint`, `autocorrect`, `compile`, and `list_cops` actions
-- Use `--use-bundler` flag when `hamlAll.useBundler` is enabled
-- Server logs appear in "Haml" output channel
-
-**Debugging Server Issues**: Check `outputChannel.appendLine()` calls in `src/server/index.ts` and Ruby STDOUT in `lib/server.rb`.
+**Debugging LSP Issues**: Check the "Haml" output channel for installation logs, bundle output, and LSP client status.
 
 ## Project-Specific Patterns
 
@@ -115,19 +139,22 @@ private subscribeFileWatcher(pattern: string, callback: (e: Uri) => void): void 
 }
 ```
 
-Watched patterns:
+Watched patterns (Rails-specific only):
 
-- `**/.haml-lint.yml` → reload linter config
 - `**/config/routes.rb`, `**/config/routes/**/*.rb` → reload routes
-- `**/config/locales/**/*.yml` → reload I18n data
+- `**/config/locales/**/*.yml` → reload I18n data (via I18nProvider)
+
+**Note**: `.haml-lint.yml` is watched automatically by the LSP server, not by EventSubscriber.
 
 ### Diagnostics Flow
 
-1. **Linting** (`src/linter/index.ts`):
-   - Runs on `onDidChangeTextDocument`, `onDidSaveTextDocument`, `onDidOpenTextDocument`
-   - Sends document content to Ruby server via TCP
-   - Parses offenses into VS Code diagnostics
-   - Uses `DiagnosticCollection` named `'haml-lint'`
+1. **HAML Linting** (via LSP server):
+   - Provided entirely by the `haml_lsp` gem running as LSP server
+   - Runs automatically on document open, change, and save
+   - Uses `textDocument/publishDiagnostics` LSP protocol
+   - Reads `.haml-lint.yml` configuration automatically
+   - Provides quick fixes via `textDocument/codeAction`
+   - **No local linting code** - `src/linter/index.ts` is deprecated
 
 2. **I18n Validation** (`src/providers/i18n/I18nDiagnosticsProvider.ts`):
    - Separate `DiagnosticCollection` for I18n-specific errors
@@ -136,40 +163,34 @@ Watched patterns:
 
 ### Code Actions (Quick Fixes)
 
-Two types registered separately:
+Two types of code actions:
 
-1. **Refactor Actions** (`ViewCodeActionProvider`): Extract to partial, wrap in conditional/block
-2. **Quick Fixes** (`FixActionsProvider`): Auto-fix haml-lint offenses
+1. **Refactor Actions** (`ViewCodeActionProvider`):
+   - Extract to partial
+   - Wrap in conditional/block
+   - Provided by local extension code
 
-Quick fixes are cop-specific (see `src/quick_fixes/`). Pattern:
-
-```typescript
-export function fixSpaceBeforeScript(offense, document): vscode.CodeAction[] {
-  const line = document.lineAt(offense.location.line - 1);
-  const edit = new vscode.WorkspaceEdit();
-  // Apply fix...
-  const action = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
-  action.edit = edit;
-  return [action];
-}
-```
+2. **Quick Fixes for Linting** (via LSP server):
+   - Auto-fix haml-lint offenses
+   - Provided by `haml_lsp` gem via `textDocument/codeAction`
+   - **Deprecated**: `FixActionsProvider` and `src/quick_fixes/` (kept for reference)
+   - LSP server handles all cop-specific fixes automatically
 
 ## Integration Points & External Dependencies
 
 ### Ruby Dependencies
 
-- **haml-lint** (required): Linting engine
-- **rubocop** (required): Used by haml-lint for formatting
-- **html2haml** (optional): HTML/ERB → HAML conversion
+**Required by LSP Server** (automatically managed in `.haml-lsp/`):
 
-Install via `Gemfile`:
+- **haml_lsp** (required): Main LSP server gem - provides all linting, formatting, and diagnostics
+- **haml-lint** (dependency of haml_lsp): Linting engine
+- **rubocop** (dependency of haml-lint): Used for formatting/auto-correction
 
-```ruby
-group :development, :test do
-  gem 'rubocop'
-  gem 'haml-lint', require: false
-end
-```
+**Optional** (for other features):
+
+- **html2haml**: HTML/ERB → HAML conversion (for `hamlAll.html2Haml` command)
+
+The extension automatically creates a Gemfile in `.haml-lsp/` that imports your project's Gemfile and adds `haml_lsp`.
 
 ### Rails Integration Points
 
@@ -192,7 +213,6 @@ User settings in `package.json` → `contributes.configuration`:
 ```json
 "hamlAll.lintEnabled": true,
 "hamlAll.useBundler": false,
-"hamlAll.linterExecutablePath": "haml-lint",
 "hamlAll.i18nValidation.enabled": true,
 "hamlAll.i18nValidation.defaultLocale": ""  // Auto-detects if empty
 ```
@@ -233,29 +253,38 @@ const result = await provider.provideCompletionItems(document, position);
 
 ## Common Gotchas
 
-1. **Server Not Starting**: Check if haml-lint gem is installed and executable path is correct
+1. **LSP Installation Issues**: The LSP is automatically managed in `.haml-lsp/` - if installation fails, check bundle output in the Output channel
 2. **Cache Invalidation**: Always update `lastLoadTime` and file `mtimeMs` after successful data load
 3. **Disposables**: All subscriptions, watchers, and providers MUST be added to `context.subscriptions` to prevent memory leaks
 4. **HAML Syntax**: Pay attention to filter blocks (`:javascript`, `:css`) - they have different indentation rules (see `formatter/index.ts`)
 5. **Rails Detection False Negatives**: Some Ruby projects may not have `bin/rails` but still need HAML support
 6. **I18n Key Syntax**: Support both `t('key')` and `t("key")` formats, with dot notation for nested keys
+7. **LSP Updates**: The gem auto-updates every 24 hours - update failures are non-blocking and logged to Output channel
 
 ## Key Files Reference
 
-- `src/extension.ts` - Entry point, activation/deactivation
+**Active Files**:
+
+- `src/extension.ts` - Entry point, activation/deactivation, LSP initialization
 - `src/ExtensionActivator.ts` - Feature registration hub
-- `src/EventSubscriber.ts` - Event coordination and file watching
-- `src/server/index.ts` - Ruby server TCP client
-- `lib/server.rb` - Ruby server implementation
-- `src/linter/index.ts` - Diagnostic management
-- `src/formatter/index.ts` - Auto-correction logic
+- `src/EventSubscriber.ts` - Rails-specific file watching (routes)
+- `src/lsp/LspManager.ts` - **LSP installation, updates, and lifecycle management**
 - `src/providers/i18n/index.ts` - I18n feature orchestration
 - `src/rails/routes.ts` - Rails routes parser & cache
+
+**Deprecated Files** (kept for reference/compatibility):
+
+- `src/linter/index.ts` - Linting (now via LSP)
+- `src/formatter/index.ts` - Formatting (now via LSP)
+- `src/providers/FixActionsProvider.ts` - Quick fixes (now via LSP)
+- `src/quick_fixes/` - Cop-specific fixes (now via LSP)
+- `src/server/index.ts` - Old Ruby TCP client
+- `lib/server.rb` - Old Ruby TCP server
 
 ## Extension Points for New Features
 
 1. **New Language Feature**: Create provider in `src/providers/`, register in `ExtensionActivator`
-2. **New Linting Rule**: Extend `lib/lint_server/cops.rb`, add quick fix in `src/quick_fixes/`
+2. **New Linting Rule**: Contribute to the `haml_lsp` gem repository - all linting is via LSP
 3. **New Rails Integration**: Add to `registerRailsProviders()`, use caching pattern from Routes/I18n
 4. **New Command**: Register in `package.json` → `contributes.commands` and `ExtensionActivator.registerCommands()`
 
@@ -264,5 +293,6 @@ const result = await provider.provideCompletionItems(document, position);
 **Pro Tips**:
 
 - Use `loadWithProgress()` from `rails/utils.ts` for long operations to show progress indicator
-- The Ruby server uses JSON for request/response - see `lib/lint_server/controller.rb` for protocol
+- **All linting/formatting is via LSP** - don't try to implement locally
 - HAML attribute syntaxes: `%div{class: 'foo'}`, `%div(class="foo")`, `%div{:class => 'foo'}` - support all three
+- Check LSP logs in Output channel "Haml" for debugging LSP issues

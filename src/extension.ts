@@ -1,41 +1,53 @@
 import * as vscode from 'vscode';
 
-import { hamlLintPresent } from './Helpers';
 import { getWorkspaceRoot } from './utils/file';
 import { ExtensionActivator } from './ExtensionActivator';
-import LintServer from './server';
+import { LspManager } from './lsp/LspManager';
 
-let lintServer: LintServer = new LintServer(getWorkspaceRoot(), false);
+let lspManager: LspManager | undefined;
 let activator: ExtensionActivator | undefined;
 
 let outputChanel = vscode.window.createOutputChannel('Haml');
 
 /**
  * Activates the HAML All-in-One extension.
- * Initializes the linting server, checks for haml-lint installation,
- * and sets up all extension features.
+ * Initializes the LSP manager and configures all extension features.
  * @param context - The VS Code extension context
  */
 export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration('hamlAll');
 
-  lintServer = new LintServer(getWorkspaceRoot(), config.useBundler, outputChanel);
+  // Initialize LSP Manager
+  lspManager = new LspManager(getWorkspaceRoot(), outputChanel, config, context);
 
-  if (!hamlLintPresent()) {
-    vscode.window.showErrorMessage('haml-lint not found. Please install haml-lint gem to use this extension.');
+  try {
+    const client = await lspManager.start();
+    outputChanel.appendLine('HAML LSP server started successfully');
+
+    // Register the client for cleanup
+    context.subscriptions.push({
+      dispose: async () => {
+        await lspManager?.dispose();
+      },
+    });
+  } catch (error) {
+    outputChanel.appendLine(`Failed to start HAML LSP server: ${error}`);
+    vscode.window.showWarningMessage(
+      'Failed to start HAML LSP server. Some features may not be available. Check the output for details.'
+    );
   }
 
-  activator = new ExtensionActivator(context, outputChanel, lintServer);
+  activator = new ExtensionActivator(context, outputChanel);
   await activator.activate();
 }
 
 /**
  * Deactivates the extension.
- * Stops the linting server and cleans up all resources.
+ * Stops the LSP manager and cleans up all resources.
  */
-export function deactivate() {
-  if (lintServer) {
-    lintServer.stop();
+export async function deactivate() {
+  if (lspManager) {
+    await lspManager.dispose();
   }
 
   if (activator) {

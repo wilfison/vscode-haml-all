@@ -1,132 +1,56 @@
-import path from 'node:path';
-import { DiagnosticCollection, languages, TextDocument, workspace, OutputChannel, window } from 'vscode';
+import { DiagnosticCollection, languages, OutputChannel } from 'vscode';
 
-import { LinterConfig, LinterOffense } from '../types';
-import { DiagnosticFull, parseLintOffence } from './parser';
+import { LinterConfig } from '../types';
 import { HAML_LINT_DEFAULT_COPS } from './cops';
-import LintServer from '../server';
 
 export const SOURCE = 'haml-lint';
 
+/**
+ * @deprecated This class is deprecated. Linting is now provided by the HAML LSP server (haml_lsp gem).
+ *
+ * The LSP server handles all linting, diagnostics, and quick fixes automatically.
+ * Configuration is read from .haml-lint.yml by the LSP server.
+ *
+ * This class is kept only for backward compatibility and does nothing.
+ */
 export default class Linter {
   public hamlLintConfig: LinterConfig = HAML_LINT_DEFAULT_COPS;
 
   private outputChanel: OutputChannel;
-  private lintServer: LintServer;
-  private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
+  private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint-deprecated');
 
-  constructor(outputChanel: OutputChannel, lintServer: LintServer) {
+  constructor(outputChanel: OutputChannel) {
     this.outputChanel = outputChanel;
-    this.lintServer = lintServer;
+    this.outputChanel.appendLine('[DEPRECATED] Linter class - All diagnostics now provided by HAML LSP server');
   }
 
   public dispose() {
     this.collection.dispose();
   }
 
-  public run(document: TextDocument) {
-    if (document.uri.scheme !== 'file' || document.languageId !== 'haml') {
-      return;
-    }
-
-    this.lint(document);
+  public run(_document: any) {
+    // No-op: Linting is now handled by the LSP server
   }
 
-  public clear(document: TextDocument) {
-    if (document.uri.scheme !== 'file' || document.languageId !== 'haml') {
-      return;
-    }
-
-    this.outputChanel.appendLine(`Clearing diagnostics for ${document.uri.scheme}:${document.uri.path}`);
-    this.collection.delete(document.uri);
+  public clear(_document: any) {
+    // No-op: Diagnostics managed by LSP
   }
 
   public clearAll() {
-    this.collection.clear();
+    // No-op: Diagnostics managed by LSP
   }
 
   public async loadConfigs() {
-    this.outputChanel.appendLine('Loading haml-lint config...');
-
-    await this.lintServer.listCops((data: any) => {
-      this.hamlLintConfig = { ...this.hamlLintConfig, ...data.haml_lint };
-    });
+    // No-op: Config loading handled by LSP server
   }
 
   public async startServer() {
-    try {
-      this.outputChanel.appendLine('Starting Haml Lint server...');
-      await this.lintServer.start();
-      this.outputChanel.appendLine('Haml Lint server started');
-
-      return Promise.resolve();
-    } catch (error) {
-      this.outputChanel.appendLine(`Error starting Haml Lint server: ${error}`);
-
-      // Show error notification to user
-      window
-        .showErrorMessage('Failed to start HAML Lint server. Check the output channel for details.', 'Show Output')
-        .then((selection) => {
-          if (selection === 'Show Output') {
-            this.outputChanel.show();
-          }
-        });
-
-      return Promise.reject(error);
-    }
+    // No-op: LSP server handles all linting
+    return Promise.resolve();
   }
 
-  public configFilePath(document: TextDocument) {
-    const workspaceFolder = workspace.getWorkspaceFolder(document.uri);
-
-    if (!workspaceFolder) {
-      return '';
-    }
-
-    return path.join(workspaceFolder.uri.fsPath, '.haml-lint.yml');
-  }
-
-  private async lint(document: TextDocument) {
-    const configPath = this.configFilePath(document);
-
-    if (!configPath) {
-      return;
-    }
-
-    if (!this.lintServer.rubyServerProcess) {
-      return;
-    }
-
-    const filePath = document.uri.fsPath;
-    this.outputChanel.appendLine(`Linting ${document.uri.scheme}:${document.uri.path}`);
-
-    await this.lintServer.lint(document.getText(), filePath, configPath, (data: LinterOffense[]) => {
-      this.collection.delete(document.uri);
-
-      if (data.length > 0) {
-        const diagnostics = this.parse(data, document);
-        this.collection.set(document.uri, diagnostics);
-      } else {
-        this.collection.delete(document.uri);
-      }
-    });
-  }
-
-  private parse(lintOffenses: LinterOffense[], document: TextDocument): DiagnosticFull[] {
-    // set unique key for each diagnostic and line
-    const offenses = new Map<string, any>();
-
-    lintOffenses.forEach((offense) => {
-      const key = `${offense.location.line}:${offense.message}`;
-      offenses.set(key, offense);
-    });
-
-    const diagnostics: DiagnosticFull[] = [];
-
-    offenses.forEach((offense) => {
-      diagnostics.push(parseLintOffence(document, offense));
-    });
-
-    return diagnostics;
+  public configFilePath(_document: any) {
+    // No-op: Config path is now managed by LSP server
+    return '';
   }
 }

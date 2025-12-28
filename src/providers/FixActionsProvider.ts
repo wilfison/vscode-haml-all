@@ -1,3 +1,12 @@
+/**
+ * @deprecated This provider is deprecated. Quick fixes for linting are now provided by the HAML LSP server.
+ *
+ * The LSP server provides code actions via textDocument/codeAction requests.
+ * All haml-lint offense fixes are handled automatically by the haml_lsp gem.
+ *
+ * This file is kept for backward compatibility but is no longer registered in ExtensionActivator.
+ */
+
 import {
   CodeActionProvider,
   TextDocument,

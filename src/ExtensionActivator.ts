@@ -16,7 +16,6 @@ import ImagePreviewCodeLensProvider from './providers/ImagePreviewCodeLensProvid
 import I18nProvider from './providers/i18n';
 
 import LivePreviewPanel from './LivePreviewPanel';
-import LintServer from './server';
 
 import { html2Haml } from './html2Haml';
 import { openFile } from './utils/file';
@@ -36,12 +35,10 @@ export class ExtensionActivator {
    * Creates a new ExtensionActivator instance.
    * @param context - The VS Code extension context
    * @param outputChannel - Output channel for logging
-   * @param lintServer - The Ruby-based linting server instance
    */
   constructor(
     private readonly context: vscode.ExtensionContext,
-    private readonly outputChannel: vscode.OutputChannel,
-    private readonly lintServer: LintServer
+    private readonly outputChannel: vscode.OutputChannel
   ) {
     this.isARailsProject = helpers.isARailsProject(this.outputChannel);
     this.i18nProvider = new I18nProvider(this.outputChannel);
@@ -52,7 +49,7 @@ export class ExtensionActivator {
    * This is called when the extension is first activated.
    */
   public async activate(): Promise<void> {
-    const eventSubscriber = new EventSubscriber(this.context, this.outputChannel, this.lintServer, this.isARailsProject);
+    const eventSubscriber = new EventSubscriber(this.context, this.outputChannel, this.isARailsProject);
 
     eventSubscriber.subscribe([this.i18nProvider.subscribeFileWatcher()]);
 
@@ -147,12 +144,8 @@ export class ExtensionActivator {
   }
 
   private registerHamlProviders(eventSubscriber: EventSubscriber): void {
-    this.context.subscriptions.push(
-      vscode.languages.registerDocumentFormattingEditProvider(
-        this.HAML_SELECTOR,
-        new FormattingEditProvider(eventSubscriber.linter, this.outputChannel, this.lintServer)
-      )
-    );
+    // Note: Formatting and linting are now provided by the HAML LSP server (haml_lsp gem)
+    // See src/lsp/LspManager.ts for LSP configuration
 
     this.context.subscriptions.push(
       vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, new ViewFileDefinitionProvider())
@@ -194,7 +187,7 @@ export class ExtensionActivator {
       vscode.commands.registerCommand('hamlAll.html2Haml', html2Haml),
 
       vscode.commands.registerCommand('hamlAll.livePreview', () => {
-        LivePreviewPanel.createOrShow(this.context.extensionUri, this.lintServer);
+        LivePreviewPanel.createOrShow(this.context.extensionUri);
       }),
 
       vscode.commands.registerCommand('hamlAll.openFile', (path, lineNumber) => {

@@ -21,3 +21,4 @@ test/**
 .prettierignore
 .rubocop.yml
 .github/**
+.env*

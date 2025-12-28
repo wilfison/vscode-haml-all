@@ -1,17 +1,14 @@
 import * as vscode from 'vscode';
-import LintServer from './server';
 
 export default class LivePreviewPanel {
   public static currentPanel: LivePreviewPanel | undefined;
 
-  private lintServer: LintServer;
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
 
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, lintServer: LintServer) {
+  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
     this._extensionUri = extensionUri;
-    this.lintServer = lintServer;
 
     const hamlContent = vscode.window.activeTextEditor?.document.getText();
     this.update(hamlContent);
@@ -26,16 +23,34 @@ export default class LivePreviewPanel {
       return;
     }
 
-    await this.lintServer.compileHaml(hamlContent, (result: any) => {
-      if (result.error) {
-        this._panel.webview.html = `<h1>${result.error}</h1>`;
-      } else {
-        this._panel.webview.html = result.result;
-      }
-    });
+    // For now, just display the HAML content
+    // TODO: Implement HAML compilation via LSP or another method
+    this._panel.webview.html = `
+      <html>
+        <head>
+          <style>
+            body { font-family: monospace; padding: 20px; }
+            pre { background: #f5f5f5; padding: 10px; border-radius: 5px; }
+          </style>
+        </head>
+        <body>
+          <h2>HAML Preview (compilation not yet implemented)</h2>
+          <pre>${this.escapeHtml(hamlContent)}</pre>
+        </body>
+      </html>
+    `;
   }
 
-  public static createOrShow(extensionUri: vscode.Uri, lintServer: LintServer) {
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  public static createOrShow(extensionUri: vscode.Uri) {
     const column = vscode.ViewColumn.Two;
 
     if (LivePreviewPanel.currentPanel) {
@@ -47,7 +62,7 @@ export default class LivePreviewPanel {
       enableScripts: true,
     });
 
-    LivePreviewPanel.currentPanel = new LivePreviewPanel(panel, extensionUri, lintServer);
+    LivePreviewPanel.currentPanel = new LivePreviewPanel(panel, extensionUri);
   }
 
   private _watchFile() {

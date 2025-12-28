@@ -134,18 +134,27 @@ You can customize this extension by creating a `.vscode/settings.json` file in y
 {
   "hamlAll.lintEnabled": true,
 
-  // Use 'bundle exec' to run haml-lint.
-  // (If true, the 'linterExecutablePath' setting is ignored.)
+  // Use 'bundle exec' to run commands in the LSP server
+  // (passes --use-bundle flag to haml_lsp)
   "hamlAll.useBundler": false,
-
-  // Specify the path to the haml-lint executable.
-  "hamlAll.linterExecutablePath": "haml-lint",
 
   // I18n validation settings
   "hamlAll.i18nValidation.enabled": true,
   "hamlAll.i18nValidation.defaultLocale": "en"
 }
 ```
+
+### LSP (Language Server Protocol)
+
+This extension now uses the **haml_lsp** gem, which is automatically managed by the extension.
+
+On first activation, the extension will:
+
+1. Create a `.haml-lsp/` directory in your project root
+2. Install the `haml_lsp` gem automatically
+3. Check for updates every 24 hours
+
+**No manual installation required!** The LSP provides enhanced language support including syntax highlighting, diagnostics, and formatting.
 
 ### I18n Configuration
 

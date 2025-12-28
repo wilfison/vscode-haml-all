@@ -1,3 +1,10 @@
+/**
+ * @deprecated Formatting is now provided by the HAML LSP server (haml_lsp gem).
+ *
+ * This file is kept for backward compatibility but is no longer used.
+ * The LSP server handles all formatting via textDocument/formatting requests.
+ */
+
 import Linter from '../linter';
 import { HAML_FILTERS } from '../utils/haml';
 

@@ -1,5 +1,16 @@
 # frozen_string_literal: true
 
+# ============================================================================
+# DEPRECATED: This TCP server is no longer used by the extension.
+#
+# All linting, formatting, and diagnostics are now provided by the HAML LSP
+# server via the haml_lsp gem. See src/lsp/LspManager.ts for the current
+# implementation.
+#
+# This file is kept for reference purposes only and may be removed in a future
+# version.
+# ============================================================================
+
 # Check if Bundler is being used
 require "bundler/setup" if ARGV.include?("--use-bundler")
 

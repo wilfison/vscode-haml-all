@@ -1,52 +1,34 @@
-import {
-  workspace,
-  languages,
-  CodeActionKind,
-  TextDocument,
-  ExtensionContext,
-  Uri,
-  OutputChannel,
-  window,
-  ProgressLocation,
-  FileSystemWatcher,
-} from 'vscode';
+import { workspace, ExtensionContext, Uri, OutputChannel } from 'vscode';
 
-import Linter from './linter';
-import FixActionsProvider from './providers/FixActionsProvider';
 import { loadWithProgress } from './rails/utils';
 import Routes from './rails/routes';
-import LintServer from './server';
 
+/**
+ * EventSubscriber - Manages file watchers and events for Rails-specific features.
+ * Note: Linting and formatting are now provided by the HAML LSP server.
+ */
 class EventSubscriber {
   public routes: Routes;
   public isARailsProject: boolean = false;
-  public linter: Linter;
 
   private context: ExtensionContext;
   private outputChanel: OutputChannel;
   private rootPath: Uri;
 
-  constructor(context: ExtensionContext, outputChanel: OutputChannel, lintServer: LintServer, isARailsProject: boolean) {
+  constructor(context: ExtensionContext, outputChanel: OutputChannel, isARailsProject: boolean) {
     this.context = context;
     this.outputChanel = outputChanel;
     this.rootPath = workspace.workspaceFolders![0].uri;
 
     this.isARailsProject = isARailsProject;
 
-    this.linter = new Linter(this.outputChanel, lintServer);
     this.routes = new Routes(this.rootPath.fsPath, this.outputChanel, isARailsProject);
   }
 
   public subscribe(otherEvents: any[] = []): void {
-    this.subscribeHaml();
     this.subscribeRails();
 
     otherEvents.forEach((event) => this.context.subscriptions.push(event));
-  }
-
-  public subscribeHaml() {
-    this.subscribeToEvents();
-    this.subscribeHamlWatchers();
   }
 
   public subscribeRails() {
@@ -56,70 +38,10 @@ class EventSubscriber {
     }
   }
 
-  public unsubscribe() {
-    this.context.subscriptions.forEach((subscription) => subscription.dispose());
-  }
-
-  public updateAllDiagnostics(_event: any = null) {
-    this.linter.clearAll();
-
-    workspace.textDocuments.forEach((document) => this.linter.run(document));
-  }
-
-  private async subscribeToEvents() {
-    const updateDiagnostics = (document: TextDocument) => this.linter.run(document);
-
-    this.context.subscriptions.push(this.linter);
-
-    this.context.subscriptions.push(
-      workspace.onDidSaveTextDocument(async (document: TextDocument) => {
-        updateDiagnostics(document);
-      })
-    );
-
-    this.context.subscriptions.push(
-      workspace.onDidChangeTextDocument(async (event) => {
-        if (event.contentChanges.length > 0 && event.document === window.activeTextEditor?.document) {
-          updateDiagnostics(event.document);
-        }
-      })
-    );
-
-    this.context.subscriptions.push(workspace.onDidOpenTextDocument(updateDiagnostics));
-    this.context.subscriptions.push(workspace.onDidCloseTextDocument((document) => this.linter.clear(document)));
-
-    this.context.subscriptions.push(
-      languages.registerCodeActionsProvider('haml', new FixActionsProvider(), {
-        providedCodeActionKinds: [CodeActionKind.QuickFix],
-      })
-    );
-
-    window.withProgress(
-      {
-        location: ProgressLocation.Window,
-        title: 'Initializing HAML Lint',
-      },
-      async () => {
-        await this.linter.startServer();
-        await this.onUpdateLintConfig();
-      }
-    );
-  }
-
-  private async onUpdateLintConfig() {
-    this.updateAllDiagnostics();
-    this.linter.loadConfigs();
-  }
-
-  private subscribeHamlWatchers() {
-    const watchFiles = ['**/.haml-lint.yml'];
-
-    watchFiles.forEach((pattern) =>
-      this.subscribeFileWatcher(pattern, () => {
-        loadWithProgress('Loading lint configs', this.onUpdateLintConfig.bind(this));
-      })
-    );
-  }
+  /**
+   * Note: Linting configuration is now managed by the HAML LSP server.
+   * The LSP server automatically watches for .haml-lint.yml changes.
+   */
 
   private subscribeRailsWatchers() {
     const watchRouteFiles = ['**/config/routes.rb', '**/config/routes/**/*.rb'];
