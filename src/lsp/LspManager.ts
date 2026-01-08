@@ -279,7 +279,7 @@ To force a reinstall, delete this directory and reload the VS Code window.
 
     const useBundler = this.config.get<boolean>('useBundler', false);
     const enableLint = this.config.get<boolean>('lintEnabled', true);
-    const args = ['exec', '--gemfile=.haml-lsp/Gemfile', 'haml_lsp'];
+    const args = ['exec', '--gemfile=.haml-lsp/Gemfile', 'haml_lsp', `--root-uri=${this.workspaceRoot}`];
 
     if (useBundler) {
       args.push('--use-bundle');

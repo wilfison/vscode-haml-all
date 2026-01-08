@@ -2,12 +2,9 @@ import * as vscode from 'vscode';
 
 import EventSubscriber from './EventSubscriber';
 import ViewCompletionProvider from './providers/ViewCompletionProvider';
-import ViewFileDefinitionProvider from './providers/ViewFileDefinitionProvider';
-import RoutesCompletionProvider from './providers/RoutesCompletionProvider';
 import RoutesDefinitionProvider from './providers/RoutesDefinitionProvider';
 import PartialSignatureHelpProvider from './providers/PartialSignatureHelpProvider';
 import CodeLensProvider from './providers/CodeLensProvider';
-import FormattingEditProvider from './providers/FormattingEditProvider';
 import { ViewCodeActionProvider, createPartialFromSelection, wrapContentInBlock } from './providers/ViewCodeActionProvider';
 import DataAttributeCompletionProvider from './providers/DataAttributeCompletionProvider';
 import AssetsCompletionProvider from './providers/AssetsCompletionProvider';
@@ -62,13 +59,6 @@ export class ExtensionActivator {
     if (!eventSubscriber.isARailsProject) {
       return;
     }
-
-    this.context.subscriptions.push(
-      vscode.languages.registerCompletionItemProvider(
-        [this.RUBY_SELECTOR, this.HAML_SELECTOR],
-        new RoutesCompletionProvider(eventSubscriber.routes)
-      )
-    );
 
     this.context.subscriptions.push(
       vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, new RoutesDefinitionProvider(eventSubscriber.routes))
@@ -144,13 +134,6 @@ export class ExtensionActivator {
   }
 
   private registerHamlProviders(eventSubscriber: EventSubscriber): void {
-    // Note: Formatting and linting are now provided by the HAML LSP server (haml_lsp gem)
-    // See src/lsp/LspManager.ts for LSP configuration
-
-    this.context.subscriptions.push(
-      vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, new ViewFileDefinitionProvider())
-    );
-
     this.context.subscriptions.push(
       vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, new AssetsDefinitionProvider())
     );

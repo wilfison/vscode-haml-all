@@ -33,7 +33,7 @@ class EventSubscriber {
 
   public subscribeRails() {
     if (this.isARailsProject) {
-      this.routes.load();
+      // this.routes.load();
       this.subscribeRailsWatchers();
     }
   }
