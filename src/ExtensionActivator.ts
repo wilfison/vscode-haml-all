@@ -7,8 +7,6 @@ import PartialSignatureHelpProvider from './providers/PartialSignatureHelpProvid
 import CodeLensProvider from './providers/CodeLensProvider';
 import { ViewCodeActionProvider, createPartialFromSelection, wrapContentInBlock } from './providers/ViewCodeActionProvider';
 import DataAttributeCompletionProvider from './providers/DataAttributeCompletionProvider';
-import AssetsCompletionProvider from './providers/AssetsCompletionProvider';
-import AssetsDefinitionProvider from './providers/AssetsDefinitionProvider';
 import ImagePreviewCodeLensProvider from './providers/ImagePreviewCodeLensProvider';
 import I18nProvider from './providers/i18n';
 
@@ -62,10 +60,6 @@ export class ExtensionActivator {
 
     this.context.subscriptions.push(
       vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, new RoutesDefinitionProvider(eventSubscriber.routes))
-    );
-
-    this.context.subscriptions.push(
-      vscode.languages.registerCompletionItemProvider(this.HAML_SELECTOR, new AssetsCompletionProvider(), '"', "'")
     );
 
     if (this.isARailsProject) {
@@ -134,10 +128,6 @@ export class ExtensionActivator {
   }
 
   private registerHamlProviders(eventSubscriber: EventSubscriber): void {
-    this.context.subscriptions.push(
-      vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, new AssetsDefinitionProvider())
-    );
-
     this.context.subscriptions.push(
       vscode.languages.registerCompletionItemProvider(this.HAML_SELECTOR, new ViewCompletionProvider(), '"', "'")
     );
