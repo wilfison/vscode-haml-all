@@ -309,13 +309,14 @@ To force a reinstall, delete this directory and reload the VS Code window.
         { scheme: 'untitled', language: 'haml' },
       ],
       outputChannel: this.outputChannel,
+      traceOutputChannel: this.outputChannel,
       synchronize: {
         fileEvents: workspace.createFileSystemWatcher('**/*.haml'),
       },
     };
 
     // Create and start the language client
-    this.client = new LanguageClient('hamlLsp', 'HAML Language Server', serverOptions, clientOptions);
+    this.client = new LanguageClient('haml-lsp', 'HAML Language Server', serverOptions, clientOptions);
 
     // Start the client and the server
     await this.client.start();
