@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 
 import EventSubscriber from './EventSubscriber';
 import ViewCompletionProvider from './providers/ViewCompletionProvider';
-import RoutesDefinitionProvider from './providers/RoutesDefinitionProvider';
 import PartialSignatureHelpProvider from './providers/PartialSignatureHelpProvider';
 import CodeLensProvider from './providers/CodeLensProvider';
 import { ViewCodeActionProvider, createPartialFromSelection, wrapContentInBlock } from './providers/ViewCodeActionProvider';
@@ -57,10 +56,6 @@ export class ExtensionActivator {
     if (!eventSubscriber.isARailsProject) {
       return;
     }
-
-    this.context.subscriptions.push(
-      vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, new RoutesDefinitionProvider(eventSubscriber.routes))
-    );
 
     if (this.isARailsProject) {
       this.context.subscriptions.push(
