@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**HAML All-in-One** is a VS Code extension providing comprehensive HAML development tools including syntax highlighting, linting, formatting, Rails integration (partials, routes, I18n), and HTML/ERB conversion.
+**HAML All-in-One** is a VS Code extension providing comprehensive HAML development tools including syntax highlighting, linting, formatting, Rails integration (partials, routes, assets), and HTML/ERB conversion.
 
 ### Core Architecture
 
@@ -23,6 +23,12 @@ npm test               # Run tests (requires compilation first)
 ```
 
 **Important**: Press `F5` in VS Code to launch Extension Development Host for testing.
+
+### Versioning & Changelog
+
+**Rule**: Do NOT bump the `version` in `package.json` as part of a feature/fix change. The version is bumped only at release time by the maintainer.
+
+When documenting changes in `CHANGELOG.md`, add them under an `## [Unreleased]` heading (create it if it doesn't exist) — do not invent a version number or release date. The maintainer promotes `[Unreleased]` to a real version when publishing.
 
 ### Testing Changes
 
@@ -51,7 +57,7 @@ The linting server (`lib/server.rb`) starts automatically on activation:
 All providers are registered in `ExtensionActivator.ts` with clear separation:
 
 - **HAML-only features**: `registerHamlProviders()` - formatting, partials, code actions
-- **Rails features**: `registerRailsProviders()` - routes, I18n, assets (only when `isARailsProject === true`)
+- **Rails features**: `registerRailsProviders()` - routes, assets (only when `isARailsProject === true`)
 
 Example: Adding a new completion provider:
 
@@ -79,7 +85,6 @@ this.context.subscriptions.push(
 **Critical**: All expensive operations use time-based + modification-time caching:
 
 - **Routes** (`src/rails/routes.ts`): 5-minute TTL + `routes.rb` mtime check
-- **I18n** (`src/providers/i18n/index.ts`): 10-minute TTL + all locale file mtime tracking
 - **Pattern**: Check `isCacheValid()` → return cached data → else reload
 
 Example from `Routes.load()`:
@@ -119,7 +124,6 @@ Watched patterns:
 
 - `**/.haml-lint.yml` → reload linter config
 - `**/config/routes.rb`, `**/config/routes/**/*.rb` → reload routes
-- `**/config/locales/**/*.yml` → reload I18n data
 
 ### Diagnostics Flow
 
@@ -128,11 +132,6 @@ Watched patterns:
    - Sends document content to Ruby server via TCP
    - Parses offenses into VS Code diagnostics
    - Uses `DiagnosticCollection` named `'haml-lint'`
-
-2. **I18n Validation** (`src/providers/i18n/I18nDiagnosticsProvider.ts`):
-   - Separate `DiagnosticCollection` for I18n-specific errors
-   - Only active when `hamlAll.i18nValidation.enabled === true`
-   - Checks for missing translation keys in loaded locales
 
 ### Code Actions (Quick Fixes)
 
@@ -174,9 +173,8 @@ end
 ### Rails Integration Points
 
 1. **Routes** (`src/rails/router_parser.ts`): Parses output of `bin/rails routes -E` (expanded format)
-2. **I18n**: Reads `config/locales/**/*.yml` files, detects `config.i18n.default_locale` in Rails config
-3. **Partials**: Resolves from `app/views/**/*.haml` using workspace file search
-4. **Assets**: Suggests paths from `app/assets/images/**`
+2. **Partials**: Resolves from `app/views/**/*.haml` using workspace file search
+3. **Assets**: Suggests paths from `app/assets/images/**`
 
 ### VS Code API Usage
 
@@ -192,9 +190,7 @@ User settings in `package.json` → `contributes.configuration`:
 ```json
 "hamlAll.lintEnabled": true,
 "hamlAll.useBundler": false,
-"hamlAll.linterExecutablePath": "haml-lint",
-"hamlAll.i18nValidation.enabled": true,
-"hamlAll.i18nValidation.defaultLocale": ""  // Auto-detects if empty
+"hamlAll.linterExecutablePath": "haml-lint"
 ```
 
 Access in code:
@@ -208,7 +204,7 @@ Listen for changes:
 
 ```typescript
 vscode.workspace.onDidChangeConfiguration((event) => {
-  if (event.affectsConfiguration('hamlAll.i18nValidation.enabled')) {
+  if (event.affectsConfiguration('hamlAll.lintEnabled')) {
     // React to config change
   }
 });
@@ -238,7 +234,6 @@ const result = await provider.provideCompletionItems(document, position);
 3. **Disposables**: All subscriptions, watchers, and providers MUST be added to `context.subscriptions` to prevent memory leaks
 4. **HAML Syntax**: Pay attention to filter blocks (`:javascript`, `:css`) - they have different indentation rules (see `formatter/index.ts`)
 5. **Rails Detection False Negatives**: Some Ruby projects may not have `bin/rails` but still need HAML support
-6. **I18n Key Syntax**: Support both `t('key')` and `t("key")` formats, with dot notation for nested keys
 
 ## Key Files Reference
 
@@ -249,14 +244,13 @@ const result = await provider.provideCompletionItems(document, position);
 - `lib/server.rb` - Ruby server implementation
 - `src/linter/index.ts` - Diagnostic management
 - `src/formatter/index.ts` - Auto-correction logic
-- `src/providers/i18n/index.ts` - I18n feature orchestration
 - `src/rails/routes.ts` - Rails routes parser & cache
 
 ## Extension Points for New Features
 
 1. **New Language Feature**: Create provider in `src/providers/`, register in `ExtensionActivator`
 2. **New Linting Rule**: Extend `lib/lint_server/cops.rb`, add quick fix in `src/quick_fixes/`
-3. **New Rails Integration**: Add to `registerRailsProviders()`, use caching pattern from Routes/I18n
+3. **New Rails Integration**: Add to `registerRailsProviders()`, use caching pattern from Routes
 4. **New Command**: Register in `package.json` → `contributes.commands` and `ExtensionActivator.registerCommands()`
 
 ---

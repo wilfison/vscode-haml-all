@@ -37,11 +37,9 @@ class EventSubscriber {
     this.routes = new Routes(this.rootPath.fsPath, this.outputChanel, isARailsProject);
   }
 
-  public subscribe(otherEvents: any[] = []): void {
+  public subscribe(): void {
     this.subscribeHaml();
     this.subscribeRails();
-
-    otherEvents.forEach((event) => this.context.subscriptions.push(event));
   }
 
   public subscribeHaml() {

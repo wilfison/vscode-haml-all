@@ -1,5 +1,10 @@
 # Change Log
 
+## [Unreleased]
+
+- **Remove I18n support**: Dropped all I18n features (completion, go-to-definition and validation diagnostics) along with the `config/locales/**/*.yml` file watcher and locale indexing. This eliminates the editor freeze on git branch switches caused by the unbounded locale reindexing (#25).
+  - Removed settings `hamlAll.i18nValidation.enabled` and `hamlAll.i18nValidation.defaultLocale`.
+
 ## [2.0.8] - 2025-12-08
 
 - Add `AssetsDefinitionProvider` for asset helper definitions.
