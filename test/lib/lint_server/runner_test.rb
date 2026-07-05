@@ -44,6 +44,8 @@ class LintServerRunnerTest < Minitest::Test
       "- foo(bar: baz)"
     ].join("\n")
 
-    assert_equal(expected_result, result)
+    # Tolerate a trailing newline: newer rubocop/haml_lint versions emit one
+    # after autocorrect, which is benign for the corrected output.
+    assert_equal(expected_result, result.chomp)
   end
 end

@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  quality-and-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Install dependencies
+        run: npm ci
+
+      # --- Code quality ---
+      - name: Format check
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Compile
+        run: npm run compile
+
+      # --- Tests ---
+      - name: Ruby tests (Minitest)
+        run: bundle exec ruby -Itest test/lib/lint_server/runner_test.rb
+
+      # vscode-test launches a headless VS Code instance; xvfb provides the
+      # virtual display it needs on Linux runners.
+      - name: Extension tests
+        run: xvfb-run -a npx vscode-test

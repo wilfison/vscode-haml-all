@@ -1,0 +1,140 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag to build (e.g. v3.0.0)"
+        required: true
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Re-run the CI gate so a tag can never ship a build that main would
+      # have rejected.
+      - name: Lint
+        run: npm run lint
+
+      - name: Compile
+        run: npm run compile
+
+      - name: Ruby tests (Minitest)
+        run: bundle exec ruby -Itest test/lib/lint_server/runner_test.rb
+
+      - name: Verify tag matches package.json version
+        env:
+          TAG: ${{ inputs.ref || github.ref_name }}
+        run: |
+          want="${TAG#v}"
+          pkg="$(jq -r '.version' package.json)"
+          if [ "$want" != "$pkg" ]; then
+            echo "::error::tag v$want does not match package.json version $pkg"
+            exit 1
+          fi
+
+      - name: Package extension
+        env:
+          TAG: ${{ inputs.ref || github.ref_name }}
+        run: |
+          VERSION="${TAG#v}"
+          npx vsce package --no-dependencies
+          VSIX="$(jq -r '.name' package.json)-${VERSION}.vsix"
+          echo "VSIX=$VSIX" >> "$GITHUB_ENV"
+          echo "Built $VSIX"
+
+      - name: Compute SHA256
+        run: |
+          sha256sum "$VSIX" > "$VSIX.sha256"
+          cat "$VSIX.sha256"
+
+      - name: Generate release body
+        env:
+          TAG: ${{ inputs.ref || github.ref_name }}
+        run: |
+          VERSION="${TAG#v}"
+          # `-Fxv "$TAG"`: -F fixed string (dots aren't regex wildcards),
+          # -x whole-line match. Robust against dots in version strings.
+          PREV_TAG=$(git tag --sort=-v:refname | grep -Fxv "$TAG" | head -1)
+
+          # Extract the matching "## [VERSION]" section from CHANGELOG.md if one
+          # exists (Keep-A-Changelog format). Skipped silently when absent.
+          : > changelog_section.md
+          if [ -f CHANGELOG.md ]; then
+            awk -v ver="$VERSION" '
+              BEGIN { hdr = "## [" ver "]" }
+              index($0, hdr) == 1 { flag=1; next }
+              flag && index($0, "## [") == 1 { exit }
+              flag { print }
+            ' CHANGELOG.md > changelog_section.md
+          fi
+
+          {
+            if [ -s changelog_section.md ]; then
+              echo "## What's changed"
+              echo
+              cat changelog_section.md
+              echo
+            fi
+
+            echo "## Install"
+            echo
+            echo "Download the \`.vsix\` below, then install it from the command line:"
+            echo
+            echo '```bash'
+            echo "code --install-extension ${VSIX}"
+            echo '```'
+            echo
+            echo "Or in VS Code: **Extensions** view → **...** menu → **Install from VSIX...**"
+            echo
+            echo "## Checksums (SHA256)"
+            echo '```'
+            cat "$VSIX.sha256"
+            echo '```'
+
+            if [ -n "$PREV_TAG" ]; then
+              echo
+              echo "**Full diff**: https://github.com/${GITHUB_REPOSITORY}/compare/${PREV_TAG}...${TAG}"
+            fi
+          } > body.md
+
+      - name: Create / update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.ref || github.ref_name }}
+        run: |
+          ASSETS="$VSIX $VSIX.sha256"
+          # Idempotent: a workflow_dispatch re-run against an existing tag
+          # overwrites assets and notes instead of failing.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" $ASSETS --clobber
+            gh release edit "$TAG" --notes-file body.md
+          else
+            gh release create "$TAG" $ASSETS \
+              --title "$TAG" \
+              --notes-file body.md \
+              --latest
+          fi
