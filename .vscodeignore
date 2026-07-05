@@ -21,3 +21,5 @@ test/**
 .prettierignore
 .rubocop.yml
 .github/**
+AGENTS.md
+CLAUDE.md
