@@ -225,7 +225,25 @@ const position = new vscode.Position(0, 5);
 const result = await provider.provideCompletionItems(document, position);
 ```
 
-**Important**: Ruby tests in `test/lib/lint_server/` use Minitest, run with `ruby -Itest test/**/*_test.rb`.
+### Ruby tests (linting server)
+
+The Ruby side (`lib/`) is tested with **Minitest**. Tests live under `test/`, mirroring the `lib/` layout (e.g. `lib/lint_server/dispatcher.rb` → `test/lib/lint_server/dispatcher_test.rb`).
+
+**Run the whole suite** via Rake (the `test` task is the default):
+
+```bash
+bundle exec rake         # runs all test/**/*_test.rb (default task)
+bundle exec rake test    # same, explicit
+bundle exec rake -T      # list available tasks
+```
+
+Do NOT run `ruby -Itest test/**/*_test.rb` — Ruby only executes the first file and passes the rest as ARGV, so most tests silently never run. Use the Rake task. To run a single file during development: `bundle exec ruby -Itest -Ilib test/lib/lint_server/dispatcher_test.rb`.
+
+**Conventions**:
+
+- `test/test_helper.rb` sets up the load path, requires all server components, and provides `FakeClient` (an in-memory socket stand-in with `#gets`/`#puts`/`#close`) for testing the connection layer without a real socket.
+- Keep units testable in isolation: `Dispatcher.dispatch(request)` takes a plain Hash (no socket), `Controller.handle(client)` takes any object responding to `#gets`/`#puts`/`#close`.
+- Both CI workflows (`.github/workflows/ci.yml` and `release.yml`) run `bundle exec rake test`, so a new `*_test.rb` file is picked up automatically.
 
 ## Common Gotchas
 
