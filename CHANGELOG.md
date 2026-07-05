@@ -1,8 +1,8 @@
 # Change Log
 
-## [Unreleased]
+## [3.0.0] - 2026-07-04
 
-- **Remove I18n support**: Dropped all I18n features (completion, go-to-definition and validation diagnostics) along with the `config/locales/**/*.yml` file watcher and locale indexing. This eliminates the editor freeze on git branch switches caused by the unbounded locale reindexing (#25).
+- **Remove I18n support** (breaking): Dropped all I18n features (completion, go-to-definition and validation diagnostics) along with the `config/locales/**/*.yml` file watcher and locale indexing. This eliminates the editor freeze on git branch switches caused by the unbounded locale reindexing (#25).
   - Removed settings `hamlAll.i18nValidation.enabled` and `hamlAll.i18nValidation.defaultLocale`.
 
 ## [2.0.8] - 2025-12-08
@@ -246,9 +246,5 @@
 - `Strict template locals`: change global variables to locals when creating a partial from selection.
 
 ## [0.0.1] - 2024-11-09
-
-- Initial release
-
-## [Unreleased]
 
 - Initial release
