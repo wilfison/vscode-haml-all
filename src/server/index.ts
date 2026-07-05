@@ -64,8 +64,7 @@ class LintServer {
     };
 
     try {
-      const response = await this.serverGet(params);
-      const data = JSON.parse(response) as ServerResponse<LinterOffense[]>;
+      const data = (await this.serverGet(params)) as ServerResponse<LinterOffense[]>;
 
       if (data.status !== 'success') {
         const errorMsg = `Linting failed for ${filePath}: ${data.result}`;
@@ -99,12 +98,10 @@ class LintServer {
     };
 
     try {
-      const response = await Promise.race([
+      const data = (await Promise.race([
         this.serverGet(params),
-        new Promise<string>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000)),
-      ]);
-
-      const data = JSON.parse(response) as ServerResponse<string>;
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000)),
+      ])) as ServerResponse<string>;
 
       if (data.status !== 'success') {
         this.printOutput(`autocorrect error: ${data.result}`);
@@ -129,8 +126,7 @@ class LintServer {
     };
 
     try {
-      const response = await this.serverGet(params);
-      const data = JSON.parse(response) as ServerResponse<any>;
+      const data = (await this.serverGet(params)) as ServerResponse<any>;
 
       if (data.status !== 'success') {
         this.printOutput(`Lint error from server: ${data}`);
@@ -164,8 +160,7 @@ class LintServer {
     };
 
     try {
-      const response = await this.serverGet(params);
-      const data = JSON.parse(response) as ServerResponse<any>;
+      const data = (await this.serverGet(params)) as ServerResponse<any>;
 
       if (data.status !== 'success') {
         this.printOutput(`Error from server: ${data.result}`);
@@ -243,7 +238,11 @@ class LintServer {
     }
   }
 
-  private serverGet(params: any): Promise<string> {
+  /**
+   * Sends a request to the Ruby server and returns the parsed response.
+   * The server replies with a single JSON line, so it is parsed exactly once here.
+   */
+  private serverGet(params: any): Promise<ServerResponse<any>> {
     return new Promise((resolve, reject) => {
       const client = new net.Socket();
 
@@ -261,7 +260,7 @@ class LintServer {
 
       client.on('end', () => {
         try {
-          const response = JSON.parse(data);
+          const response = JSON.parse(data) as ServerResponse<any>;
 
           resolve(response);
         } catch (e: any) {

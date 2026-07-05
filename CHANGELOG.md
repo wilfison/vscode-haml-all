@@ -1,5 +1,10 @@
 # Change Log
 
+## [Unreleased]
+
+- **Fix**: The linting server now selects its port by binding directly (retrying on conflict) instead of shelling out to `lsof`, which is unavailable on Windows and could prevent the server from starting.
+- **Fix**: A HAML syntax error in the compile/preview action now returns an error response instead of interrupting the linting server.
+
 ## [3.0.0] - 2026-07-04
 
 - **Remove I18n support** (breaking): Dropped all I18n features (completion, go-to-definition and validation diagnostics) along with the `config/locales/**/*.yml` file watcher and locale indexing. This eliminates the editor freeze on git branch switches caused by the unbounded locale reindexing (#25).

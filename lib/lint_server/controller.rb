@@ -1,54 +1,32 @@
 # frozen_string_literal: true
 
 module LintServer
+  # Orchestrates a single client connection: read the request line, dispatch it,
+  # and write the response. Kept thin on purpose — parsing/routing lives in
+  # Dispatcher and framing lives in Transport, both of which are unit-testable
+  # without a real socket.
   module Controller
-    def self.call(server)
-      client = server.accept
-      request = {}
+    module_function
 
-      begin
-        request = JSON.parse(client.gets)
-      rescue JSON::ParserError
-        send_response(client, { status: "error", result: "Invalid JSON" })
-        return
-      end
-
-      response = build_response(request).to_json
-      send_response(client, response)
+    # Accepts one pending connection from +server+ and handles it.
+    def call(server)
+      handle(server.accept)
     end
 
-    def self.send_response(client, response)
-      client.puts response.to_json
-      client.close
-    end
+    # Handles an already-accepted client. +client+ only needs to respond to
+    # #gets, #puts and #close, which makes this testable with a fake socket.
+    def handle(client)
+      line = Transport.read_line(client)
+      return client.close if line.nil? || line.strip.empty?
 
-    def self.build_response(request)
-      result = nil
+      response =
+        begin
+          Dispatcher.dispatch(JSON.parse(line))
+        rescue JSON::ParserError
+          Dispatcher.error("Invalid JSON")
+        end
 
-      begin
-        result = run_action(request)
-        status = "success"
-      rescue StandardError => e
-        result = "#{e.message}\n#{e.backtrace.join("\n")}"
-        status = "error"
-      end
-
-      { status: status, result: result }
-    end
-
-    def self.run_action(request)
-      case request["action"]
-      when "lint"
-        LintServer::Report.lint(request)
-      when "autocorrect"
-        LintServer::Report.autocorrect(request)
-      when "list_cops"
-        LintServer::Cops.list_cops
-      when "compile"
-        LintServer::Compile.call(request)
-      else
-        raise "Unknown action: #{request['action']}"
-      end
+      Transport.write_response(client, response)
     end
   end
 end
