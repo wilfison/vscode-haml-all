@@ -43,7 +43,7 @@ jobs:
         run: npm run compile
 
       - name: Ruby tests (Minitest)
-        run: bundle exec ruby -Itest test/lib/lint_server/runner_test.rb
+        run: bundle exec rake test
 
       - name: Verify tag matches package.json version
         env:

@@ -39,7 +39,7 @@ jobs:
 
       # --- Tests ---
       - name: Ruby tests (Minitest)
-        run: bundle exec ruby -Itest test/lib/lint_server/runner_test.rb
+        run: bundle exec rake test
 
       # vscode-test launches a headless VS Code instance; xvfb provides the
       # virtual display it needs on Linux runners.
