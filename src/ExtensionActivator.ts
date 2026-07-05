@@ -13,7 +13,6 @@ import DataAttributeCompletionProvider from './providers/DataAttributeCompletion
 import AssetsCompletionProvider from './providers/AssetsCompletionProvider';
 import AssetsDefinitionProvider from './providers/AssetsDefinitionProvider';
 import ImagePreviewCodeLensProvider from './providers/ImagePreviewCodeLensProvider';
-import I18nProvider from './providers/i18n';
 
 import LivePreviewPanel from './LivePreviewPanel';
 import LintServer from './server';
@@ -30,7 +29,6 @@ export class ExtensionActivator {
   private readonly HAML_SELECTOR = { language: 'haml', scheme: 'file' };
   private readonly RUBY_SELECTOR = { language: 'ruby', scheme: 'file' };
   private isARailsProject: boolean = false;
-  private i18nProvider: I18nProvider;
 
   /**
    * Creates a new ExtensionActivator instance.
@@ -44,7 +42,6 @@ export class ExtensionActivator {
     private readonly lintServer: LintServer
   ) {
     this.isARailsProject = helpers.isARailsProject(this.outputChannel);
-    this.i18nProvider = new I18nProvider(this.outputChannel);
   }
 
   /**
@@ -54,7 +51,7 @@ export class ExtensionActivator {
   public async activate(): Promise<void> {
     const eventSubscriber = new EventSubscriber(this.context, this.outputChannel, this.lintServer, this.isARailsProject);
 
-    eventSubscriber.subscribe([this.i18nProvider.subscribeFileWatcher()]);
+    eventSubscriber.subscribe();
 
     this.registerCommands();
     this.registerHamlProviders(eventSubscriber);
@@ -89,58 +86,6 @@ export class ExtensionActivator {
       this.context.subscriptions.push(
         vscode.languages.registerCodeLensProvider(this.HAML_SELECTOR, new ImagePreviewCodeLensProvider())
       );
-
-      this.context.subscriptions.push(
-        vscode.languages.registerCompletionItemProvider(
-          this.HAML_SELECTOR,
-          this.i18nProvider.i18nCompletionProvider,
-          '.',
-          '_',
-          "'",
-          '"'
-        )
-      );
-
-      this.context.subscriptions.push(
-        vscode.languages.registerDefinitionProvider(this.HAML_SELECTOR, this.i18nProvider.i18nDefinitionProvider)
-      );
-
-      // Only register validation listeners if I18n validation is enabled
-      if (this.i18nProvider.isI18nValidationEnabled()) {
-        vscode.workspace.onDidChangeTextDocument((event) => {
-          if (event.document.languageId === 'haml') {
-            this.i18nProvider.i18nDiagnosticsProvider.validateDocument(event.document);
-          }
-        });
-
-        vscode.workspace.onDidOpenTextDocument((document) => {
-          if (document.languageId === 'haml') {
-            this.i18nProvider.i18nDiagnosticsProvider.validateDocument(document);
-          }
-        });
-
-        // Listen for configuration changes to enable/disable validation dynamically
-        vscode.workspace.onDidChangeConfiguration((event) => {
-          if (event.affectsConfiguration('hamlAll.i18nValidation.enabled')) {
-            // If validation was disabled, clear all diagnostics
-            if (!this.i18nProvider.isI18nValidationEnabled()) {
-              this.i18nProvider.i18nDiagnosticsProvider.diagnosticCollection.clear();
-            } else {
-              // If validation was enabled, validate all open HAML documents
-              vscode.workspace.textDocuments.forEach((document) => {
-                if (document.languageId === 'haml') {
-                  this.i18nProvider.i18nDiagnosticsProvider.validateDocument(document);
-                }
-              });
-            }
-          }
-
-          // If default locale configuration changed, reload locales data
-          if (event.affectsConfiguration('hamlAll.i18nValidation.defaultLocale')) {
-            this.i18nProvider.setupData();
-          }
-        });
-      }
     }
 
     eventSubscriber.subscribeRails();
@@ -213,6 +158,6 @@ export class ExtensionActivator {
    * Called when the extension is deactivated.
    */
   public dispose(): void {
-    this.i18nProvider.dispose();
+    // No resources to dispose beyond context subscriptions.
   }
 }

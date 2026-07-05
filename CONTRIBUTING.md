@@ -69,9 +69,7 @@ vscode-haml-all/
 ├── src/                      # TypeScript source code
 │   ├── extension.ts          # Extension entry point
 │   ├── ExtensionActivator.ts # Feature registration
-│   ├── providers/            # Language feature providers
-│   │   ├── i18n/             # I18n-related providers
-│   │   └── *.ts              # Completion, hover, definition providers
+│   ├── providers/            # Language feature providers (completion, hover, definition)
 │   ├── formatter/            # Code formatting
 │   ├── linter/               # Linting integration
 │   ├── rails/                # Rails-specific features
@@ -91,7 +89,7 @@ vscode-haml-all/
 - **Linter**: Integrates with haml-lint for code quality
 - **Formatter**: Auto-formatting using haml-lint autocorrect
 - **Server**: Ruby-based TCP server for efficient linting
-- **Rails Integration**: Routes, I18n, partials, and assets support
+- **Rails Integration**: Routes, partials, and assets support
 
 ## Development Workflow
 
@@ -127,7 +125,7 @@ Types:
 Examples:
 
 ```
-feat(i18n): add hover provider for translation keys
+feat(routes): add hover provider for route helpers
 
 fix(linter): handle server connection errors gracefully
 
@@ -143,7 +141,7 @@ docs(contributing): add development setup instructions
 npm test
 
 # Run specific test file
-npm test -- --grep "I18nCompletionProvider"
+npm test -- --grep "RoutesCompletionProvider"
 
 # Run tests in watch mode
 npm run watch
@@ -215,7 +213,7 @@ npm run lint:fix
 1. **Type Safety**: Always use proper TypeScript types
 2. **Error Handling**: Use try-catch blocks and provide user feedback
 3. **Resource Management**: Dispose of resources properly (subscriptions, watchers)
-4. **Performance**: Cache expensive operations (routes, locales)
+4. **Performance**: Cache expensive operations (e.g. routes)
 5. **Logging**: Use OutputChannel instead of console.log
 
 ## Submitting Changes
