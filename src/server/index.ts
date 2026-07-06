@@ -166,38 +166,86 @@ class LintServer {
 
     return new Promise((resolve, reject) => {
       this.printOutput(`Starting Ruby server with args: ${args.join(' ')}`);
-      this.rubyServerProcess = spawn('ruby', args, {
+
+      const rubyProcess = spawn('ruby', args, {
         cwd: this.workingDirectory,
         env: { ...process.env, HAML_LINT_SERVER_TOKEN: this.token },
       });
+      this.rubyServerProcess = rubyProcess;
 
-      this.rubyServerProcess.stdout.on('data', (data) => {
-        this.printOutput(`Server output: ${data}`);
+      let stdoutBuffer = '';
+      let stderrBuffer = '';
+      let settled = false;
 
-        if (data.toString().includes('Server started')) {
-          const response = JSON.parse(data.toString());
-          this.serverPort = response.port;
+      const stderrTail = () => (stderrBuffer.trim() ? ` Last stderr: ${stderrBuffer.trim()}` : '');
 
-          resolve(this.rubyServerProcess);
+      // Settle the start-up promise exactly once and stop watching for the
+      // start-up line. The long-lived 'close' handler stays attached so the
+      // process is still reaped after a successful start.
+      const finish = (settle: () => void): void => {
+        if (settled) {
+          return;
         }
+        settled = true;
+        clearTimeout(timeout);
+        rubyProcess.stdout.off('data', onStdout);
+        settle();
+      };
+
+      // The start-up notify may not arrive as a single chunk, so buffer stdout
+      // and only parse complete newline-terminated lines. The start-up line is
+      // the only stdout line that carries a numeric `port`; a partial or
+      // non-JSON line is ignored instead of throwing out of this handler.
+      const onStdout = (data: Buffer): void => {
+        this.printOutput(`Server output: ${data}`);
+        stdoutBuffer += data.toString();
+
+        let newlineIndex = stdoutBuffer.indexOf('\n');
+        while (newlineIndex !== -1) {
+          const line = stdoutBuffer.slice(0, newlineIndex).trim();
+          stdoutBuffer = stdoutBuffer.slice(newlineIndex + 1);
+
+          if (line) {
+            try {
+              const response = JSON.parse(line);
+              if (typeof response.port === 'number') {
+                this.serverPort = response.port;
+                finish(() => resolve(rubyProcess));
+                return;
+              }
+            } catch (error: any) {
+              this.printOutput(`Ignoring non-JSON server output: ${error.message}`);
+            }
+          }
+
+          newlineIndex = stdoutBuffer.indexOf('\n');
+        }
+      };
+      rubyProcess.stdout.on('data', onStdout);
+
+      // Ruby/Bundler emit benign warnings to stderr on a healthy start, so
+      // collect them for diagnostics instead of failing the launch outright.
+      rubyProcess.stderr.on('data', (data) => {
+        stderrBuffer += data.toString();
+        this.printOutput(`Server stderr: ${data}`);
       });
 
-      this.rubyServerProcess.stderr.on('data', (data) => {
-        reject(`Server error: ${data}`);
+      // A spawn failure (e.g. `ruby` not on PATH -> ENOENT) is delivered as an
+      // event; without this listener Node rethrows it and crashes the host.
+      rubyProcess.on('error', (error) => {
+        this.rubyServerProcess = null;
+        finish(() => reject(new Error(`Failed to spawn Ruby server: ${error.message}`)));
       });
 
-      this.rubyServerProcess.on('close', (code) => {
+      rubyProcess.on('close', (code) => {
         this.printOutput(`Server process exited with code ${code}`);
         this.rubyServerProcess = null;
+        finish(() => reject(new Error(`Ruby server exited with code ${code} before it was ready.${stderrTail()}`)));
       });
 
-      // Timeout for initialization
-      setTimeout(() => {
-        if (this.rubyServerProcess) {
-          resolve(this.rubyServerProcess);
-        } else {
-          reject(new Error('Timeout starting Ruby server'));
-        }
+      // Fail the launch if the start-up line never arrives.
+      const timeout = setTimeout(() => {
+        finish(() => reject(new Error(`Timeout starting Ruby server.${stderrTail()}`)));
       }, 10000);
     });
   }
