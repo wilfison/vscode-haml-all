@@ -46,6 +46,12 @@
   "license": "MIT",
   "activationEvents": [],
   "main": "./out/extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Runs the project's Ruby tooling (haml-lint, RuboCop, Rails), which can execute code from project files (e.g. a `require:` directive in .haml-lint.yml). Trust the workspace before relying on linting or formatting."
+    }
+  },
   "contributes": {
     "configuration": {
       "type": "object",
@@ -59,12 +65,19 @@
         "hamlAll.linterExecutablePath": {
           "type": "string",
           "default": "haml-lint",
-          "description": "Path to haml-lint executable"
+          "scope": "machine",
+          "description": "Path to haml-lint executable. Machine-scoped for security: it cannot be set by a workspace's .vscode/settings.json, only in your user settings."
         },
         "hamlAll.useBundler": {
           "type": "boolean",
           "default": false,
           "description": "Use `bundle exec` to run haml-lint. (If this is true, the 'linterExecutablePath' setting is ignored.)"
+        },
+        "railsRoutes.railsCommand": {
+          "type": "string",
+          "default": "bin/rails",
+          "scope": "machine",
+          "description": "Command used to run Rails (e.g. for project detection and routes). Machine-scoped for security: it cannot be set by a workspace's .vscode/settings.json, only in your user settings."
         }
       }
     },
@@ -78,11 +91,6 @@
         "command": "hamlAll.html2Haml",
         "title": "HAML: Convert HTML to HAML",
         "enablement": "editorLangId =~ /html|erb|haml/"
-      },
-      {
-        "command": "hamlAll.livePreview",
-        "title": "HAML: Open Live Preview",
-        "enablement": "editorLangId == haml"
       },
       {
         "command": "hamlAll.wrapInConditional",

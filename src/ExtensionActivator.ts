@@ -14,7 +14,6 @@ import AssetsCompletionProvider from './providers/AssetsCompletionProvider';
 import AssetsDefinitionProvider from './providers/AssetsDefinitionProvider';
 import ImagePreviewCodeLensProvider from './providers/ImagePreviewCodeLensProvider';
 
-import LivePreviewPanel from './LivePreviewPanel';
 import LintServer from './server';
 
 import { html2Haml } from './html2Haml';
@@ -137,10 +136,6 @@ export class ExtensionActivator {
       }),
 
       vscode.commands.registerCommand('hamlAll.html2Haml', html2Haml),
-
-      vscode.commands.registerCommand('hamlAll.livePreview', () => {
-        LivePreviewPanel.createOrShow(this.context.extensionUri, this.lintServer);
-      }),
 
       vscode.commands.registerCommand('hamlAll.openFile', (path, lineNumber) => {
         this.outputChannel.appendLine(`Opening file: ${path}:${lineNumber}`);

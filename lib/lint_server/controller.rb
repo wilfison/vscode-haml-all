@@ -21,12 +21,37 @@ module LintServer
 
       response =
         begin
-          Dispatcher.dispatch(JSON.parse(line))
+          request = JSON.parse(line)
+          authorized?(request) ? Dispatcher.dispatch(request) : Dispatcher.error("Unauthorized")
         rescue JSON::ParserError
           Dispatcher.error("Invalid JSON")
         end
 
       Transport.write_response(client, response)
+    end
+
+    # The extension launches the server with a per-session token in the
+    # HAML_LINT_SERVER_TOKEN env var and echoes it in every request. Requests
+    # without a matching token are rejected, so another local process — or
+    # another user sharing 127.0.0.1 on a multi-user host — cannot drive the
+    # server (it can run arbitrary Ruby via lint/autocorrect configs). When no
+    # token is configured (manual runs, tests) auth is skipped.
+    def authorized?(request)
+      expected = ENV["HAML_LINT_SERVER_TOKEN"].to_s
+      return true if expected.empty?
+      return false unless request.is_a?(Hash)
+
+      tokens_match?(expected, request["token"].to_s)
+    end
+
+    # Length-checked constant-time string comparison, to avoid leaking the token
+    # a byte at a time through response timing.
+    def tokens_match?(expected, provided)
+      return false unless expected.bytesize == provided.bytesize
+
+      diff = 0
+      expected.bytes.zip(provided.bytes) { |x, y| diff |= x ^ y }
+      diff.zero?
     end
   end
 end

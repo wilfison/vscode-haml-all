@@ -6,6 +6,7 @@ require "bundler/setup" if ARGV.include?("--use-bundler")
 require "socket"
 require "json"
 require "stringio"
+require "pathname"
 
 begin
   require "haml_lint"
@@ -19,14 +20,12 @@ require_relative "lint_server/dispatcher"
 require_relative "lint_server/controller"
 require_relative "lint_server/report"
 require_relative "lint_server/cops"
-require_relative "lint_server/compile"
 require_relative "lint_server/runner"
 
 module LintServer
-  # TCP server that keeps a Ruby process warm so the extension can lint,
-  # autocorrect and compile HAML without paying interpreter start-up on every
-  # request. Handles one connection at a time, which is plenty for a single
-  # editor.
+  # TCP server that keeps a Ruby process warm so the extension can lint and
+  # autocorrect HAML without paying interpreter start-up on every request.
+  # Handles one connection at a time, which is plenty for a single editor.
   class Server
     DEFAULT_PORT = 7654
     MAX_PORT_ATTEMPTS = 50

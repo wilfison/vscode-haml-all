@@ -3,23 +3,13 @@
 require "test_helper"
 
 class LintServerDispatcherTest < Minitest::Test
+  include LintServerTestHelpers
+
   def test_dispatch_lint_returns_success_envelope
-    response = LintServer::Dispatcher.dispatch(
-      "action" => "lint",
-      "template" => "%p Hello",
-      "file_path" => "x.haml",
-      "config_file" => HAML_LINT_CONFIG_PATH
-    )
+    response = LintServer::Dispatcher.dispatch(lint_request)
 
     assert_equal("success", response[:status])
     assert_kind_of(Array, response[:result])
-  end
-
-  def test_dispatch_compile_returns_html
-    response = LintServer::Dispatcher.dispatch("action" => "compile", "template" => "%h1 Hi")
-
-    assert_equal("success", response[:status])
-    assert_equal("<h1>Hi</h1>\n", response[:result])
   end
 
   def test_dispatch_unknown_action_returns_error
@@ -30,7 +20,9 @@ class LintServerDispatcherTest < Minitest::Test
   end
 
   def test_dispatch_captures_handler_errors_instead_of_raising
-    response = LintServer::Dispatcher.dispatch("action" => "compile", "template" => "%p= )bad syntax(")
+    # A non-string template makes the handler raise deep inside haml_lint
+    # (StringIO.new(Integer) -> TypeError); dispatch must wrap it, not propagate.
+    response = LintServer::Dispatcher.dispatch(lint_request(template: 123))
 
     assert_equal("error", response[:status])
     assert_kind_of(String, response[:result])

@@ -25,7 +25,7 @@ module LintServer
       config = HamlLint::ConfigurationLoader.load_applicable_config
       config = config.hash["linters"]
 
-      config.select { |cop, _| HAML_LINT_COPS.include?(cop) }
+      config.slice(*HAML_LINT_COPS)
     rescue StandardError => e
       { "error" => e.message }
     end
