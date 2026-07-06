@@ -24,7 +24,6 @@ The following features are supported to make your HAML development effortless:
 | ✅     | Convert HTML/ERB to HAML   | [`html2haml`](https://github.com/haml/html2haml) gem |
 | ✅     | Snippets - HAML            |                                                      |
 | ✅     | Snippets - Rails           |                                                      |
-| ✅     | Live Preview               | Use `HAML: Open Live Preview` command                |
 | ✅     | Wrap in Conditional        |                                                      |
 
 ---

@@ -21,7 +21,6 @@ require "lint_server/dispatcher"
 require "lint_server/controller"
 require "lint_server/report"
 require "lint_server/cops"
-require "lint_server/compile"
 require "lint_server/runner"
 
 # In-memory stand-in for a TCP client socket. Feeds +input+ to #gets and
@@ -56,5 +55,15 @@ class FakeClient
   # The response parsed from the wire (single JSON decode).
   def response
     JSON.parse(@output.strip)
+  end
+end
+
+# Helpers mixed into test cases that exercise the dispatch/round-trip path.
+module LintServerTestHelpers
+  # A minimal valid `lint` request (string keys, as it arrives parsed from the
+  # wire). `lint` is the lightest real action for round-trip tests now that the
+  # dependency-free `compile` action has been removed.
+  def lint_request(template: "%p Hello")
+    { "action" => "lint", "template" => template, "file_path" => "x.haml", "config_file" => HAML_LINT_CONFIG_PATH }
   end
 end

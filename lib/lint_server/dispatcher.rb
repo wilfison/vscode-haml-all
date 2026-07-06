@@ -13,8 +13,7 @@ module LintServer
     HANDLERS = {
       "lint" => ->(request) { Report.lint(request) },
       "autocorrect" => ->(request) { Report.autocorrect(request) },
-      "list_cops" => ->(_request) { Cops.list_cops },
-      "compile" => ->(request) { Compile.call(request) }
+      "list_cops" => ->(_request) { Cops.list_cops }
     }.freeze
 
     # Runs the handler for +request+ and returns a response Hash. Never raises:
@@ -26,9 +25,8 @@ module LintServer
 
       success(handler.call(request))
     rescue StandardError, ScriptError => e
-      # ScriptError (e.g. SyntaxError) is not a StandardError but a malformed
-      # template compile can raise it — catch it so one bad request never takes
-      # down the connection.
+      # ScriptError (e.g. SyntaxError) is not a StandardError; catch it too so a
+      # bad request never takes down the connection.
       error("#{e.message}\n#{e.backtrace.join("\n")}")
     end
 

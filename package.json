@@ -49,7 +49,7 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "Runs the project's Ruby tooling (haml-lint, RuboCop, Rails) and compiles HAML, which can execute code from project files (.haml-lint.yml `require:`, embedded Ruby in the Live Preview). Trust the workspace before relying on linting, formatting, or the Live Preview."
+      "description": "Runs the project's Ruby tooling (haml-lint, RuboCop, Rails), which can execute code from project files (e.g. a `require:` directive in .haml-lint.yml). Trust the workspace before relying on linting or formatting."
     }
   },
   "contributes": {
@@ -91,11 +91,6 @@
         "command": "hamlAll.html2Haml",
         "title": "HAML: Convert HTML to HAML",
         "enablement": "editorLangId =~ /html|erb|haml/"
-      },
-      {
-        "command": "hamlAll.livePreview",
-        "title": "HAML: Open Live Preview",
-        "enablement": "editorLangId == haml"
       },
       {
         "command": "hamlAll.wrapInConditional",

