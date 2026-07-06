@@ -32,4 +32,27 @@ class LintServerControllerTest < Minitest::Test
     assert(client.closed)
     assert_empty(client.written)
   end
+
+  def test_handle_rejects_request_without_matching_token_when_configured
+    with_env("HAML_LINT_SERVER_TOKEN", "s3cret") do
+      client = FakeClient.new("#{lint_request.to_json}\n") # no token field
+
+      LintServer::Controller.handle(client)
+
+      assert_equal("error", client.response["status"])
+      assert_equal("Unauthorized", client.response["result"])
+      assert(client.closed)
+    end
+  end
+
+  def test_handle_accepts_request_with_matching_token
+    with_env("HAML_LINT_SERVER_TOKEN", "s3cret") do
+      client = FakeClient.new("#{lint_request.merge('token' => 's3cret').to_json}\n")
+
+      LintServer::Controller.handle(client)
+
+      assert_equal("success", client.response["status"])
+      assert(client.closed)
+    end
+  end
 end

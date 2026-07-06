@@ -8,7 +8,7 @@
 
 Provider-based, with three subsystems:
 
-1. **Ruby Server Bridge** (`src/server/` + `lib/server.rb`): persistent TCP socket server (port 7654+, auto-increments if busy) for haml-lint operations. Actions: `lint`, `autocorrect`, `compile`, `list_cops`. Uses `--use-bundler` when `hamlAll.useBundler` is set. JSON protocol — see `lib/lint_server/controller.rb`. Logs go to the "Haml" output channel.
+1. **Ruby Server Bridge** (`src/server/` + `lib/server.rb`): persistent TCP socket server on `127.0.0.1` (port 7654+, auto-increments if busy) for haml-lint operations. Actions: `lint`, `autocorrect`, `list_cops`. Uses `--use-bundler` when `hamlAll.useBundler` is set. JSON protocol — see `lib/lint_server/controller.rb`. Logs go to the "Haml" output channel. **Security**: the client passes a per-session token via the `HAML_LINT_SERVER_TOKEN` env var and echoes it in every request (`Controller#authorized?` rejects mismatches); `config_file` is confined to the server's working dir (the workspace root) in `Report.safe_config_file`, since a config's `require:` can execute Ruby.
 2. **Event-Driven Diagnostics** (`src/EventSubscriber.ts`): file watching and validation.
 3. **Rails-Aware Features** (`src/rails/`, `src/providers/`): active only when `bin/rails` exists (`Helpers.isARailsProject()`).
 

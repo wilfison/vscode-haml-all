@@ -6,6 +6,7 @@ require "bundler/setup" if ARGV.include?("--use-bundler")
 require "socket"
 require "json"
 require "stringio"
+require "pathname"
 
 begin
   require "haml_lint"

@@ -66,4 +66,13 @@ module LintServerTestHelpers
   def lint_request(template: "%p Hello")
     { "action" => "lint", "template" => template, "file_path" => "x.haml", "config_file" => HAML_LINT_CONFIG_PATH }
   end
+
+  # Sets an env var for the duration of the block, restoring the prior value.
+  def with_env(key, value)
+    original = ENV.fetch(key, nil)
+    ENV[key] = value
+    yield
+  ensure
+    ENV[key] = original
+  end
 end

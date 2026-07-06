@@ -1,4 +1,5 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import net from 'node:net';
 
@@ -22,6 +23,11 @@ class LintServer {
   private readonly workingDirectory: string;
   private readonly useBundler: Boolean;
   private readonly outputChannel: OutputChannel | null = null;
+
+  // Per-session secret shared only with the server process we spawn. Every
+  // request carries it so another local process cannot drive our server over
+  // the loopback socket. See lib/lint_server/controller.rb#authorized?.
+  private readonly token = crypto.randomBytes(32).toString('hex');
 
   /**
    * Creates a new LintServer instance.
@@ -160,7 +166,10 @@ class LintServer {
 
     return new Promise((resolve, reject) => {
       this.printOutput(`Starting Ruby server with args: ${args.join(' ')}`);
-      this.rubyServerProcess = spawn('ruby', args, { cwd: this.workingDirectory });
+      this.rubyServerProcess = spawn('ruby', args, {
+        cwd: this.workingDirectory,
+        env: { ...process.env, HAML_LINT_SERVER_TOKEN: this.token },
+      });
 
       this.rubyServerProcess.stdout.on('data', (data) => {
         this.printOutput(`Server output: ${data}`);
@@ -214,7 +223,7 @@ class LintServer {
 
       this.printOutput(`Server request: ${params.action}`);
       client.connect(this.serverPort, '127.0.0.1', () => {
-        const request = JSON.stringify(params);
+        const request = JSON.stringify({ ...params, token: this.token });
         client.write(request + '\n');
       });
 

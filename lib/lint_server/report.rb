@@ -5,7 +5,7 @@ module LintServer
     def self.options_from_request(request)
       template = request["template"]
       file_path = request["file_path"]
-      config_file = request["config_file"] if request["config_file"] && File.exist?(request["config_file"])
+      config_file = safe_config_file(request["config_file"])
 
       {
         template: template,
@@ -13,6 +13,24 @@ module LintServer
         config_file: config_file,
         reporter: json_reporter
       }
+    end
+
+    # Only honor a config_file that exists AND lives inside the server's working
+    # directory (the workspace root the extension launched us in). A request
+    # cannot change our cwd, so this stops a client from pointing us at an
+    # arbitrary config elsewhere on disk: haml-lint/RuboCop configs can `require:`
+    # Ruby, which would otherwise be arbitrary code execution. A path outside the
+    # workspace is ignored, falling back to haml-lint's default config discovery.
+    def self.safe_config_file(path)
+      return nil unless path && File.exist?(path)
+
+      root = Pathname.new(File.realpath(Dir.pwd))
+      resolved = Pathname.new(File.realpath(path))
+      return resolved.to_s if resolved.ascend.any?(root)
+
+      nil
+    rescue StandardError
+      nil
     end
 
     # @param [Hash] options
