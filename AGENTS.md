@@ -38,9 +38,22 @@ bundle exec ruby -Itest -Ilib test/lib/lint_server/dispatcher_test.rb   # single
 
 Do NOT run `ruby -Itest test/**/*_test.rb` — Ruby executes only the first file and passes the rest as ARGV, so most tests silently never run. Use Rake.
 
-- `test/test_helper.rb` sets the load path, requires server components, and provides `FakeClient` (in-memory socket with `#gets`/`#puts`/`#close`).
+- `test/test_helper.rb` sets the load path, requires server components, and provides `FakeClient` (in-memory socket with `#gets`/`#puts`/`#close`) plus `LintServerTestHelpers` (`lint_request` — the lightest real action for round-trip tests).
 - Keep units socket-free: `Dispatcher.dispatch(request)` takes a Hash; `Controller.handle(client)` takes anything with `#gets`/`#puts`/`#close`.
 - CI (`.github/workflows/ci.yml`, `release.yml`) runs `bundle exec rake test`, so new `*_test.rb` files are picked up automatically.
+
+### Ruby linting (RuboCop)
+
+The project's own Ruby (`lib/` + `test/`) is linted with **RuboCop** (config in `.rubocop.yml`: TargetRubyVersion 3.3, double-quoted strings, `NewCops: enable`, `Metrics/MethodLength` Max 20, `Metrics/AbcSize` at the default 17).
+
+```bash
+bundle exec rubocop      # check
+bundle exec rubocop -A   # safe autocorrect
+```
+
+CI (`ci.yml`, `release.yml`) runs `bundle exec rubocop` as a gate, so a Ruby change with any offense fails the build. The **default rake task is just `test`** (RuboCop is not in it), so run `bundle exec rubocop` locally before pushing — keep it at **0 offenses**. `NewCops: enable` means a gem bump can surface new offenses in untouched files; fix them in the same change. Don't add inline `# rubocop:disable` to dodge `Metrics/*` — extract a helper instead (see the `free_port` / `start_server_in_thread` split in `test/lib/server_test.rb`).
+
+Note: RuboCop is also a runtime dependency (haml-lint uses it for formatting) — that's separate from this dev-time linting.
 
 ## Project-Specific Patterns
 

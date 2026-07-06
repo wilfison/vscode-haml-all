@@ -39,6 +39,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: RuboCop (Ruby lint)
+        run: bundle exec rubocop
+
       - name: Compile
         run: npm run compile
 
