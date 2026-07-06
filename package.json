@@ -46,6 +46,12 @@
   "license": "MIT",
   "activationEvents": [],
   "main": "./out/extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Runs the project's Ruby tooling (haml-lint, RuboCop, Rails) and compiles HAML, which can execute code from project files (.haml-lint.yml `require:`, embedded Ruby in the Live Preview). Trust the workspace before relying on linting, formatting, or the Live Preview."
+    }
+  },
   "contributes": {
     "configuration": {
       "type": "object",
@@ -59,12 +65,19 @@
         "hamlAll.linterExecutablePath": {
           "type": "string",
           "default": "haml-lint",
-          "description": "Path to haml-lint executable"
+          "scope": "machine",
+          "description": "Path to haml-lint executable. Machine-scoped for security: it cannot be set by a workspace's .vscode/settings.json, only in your user settings."
         },
         "hamlAll.useBundler": {
           "type": "boolean",
           "default": false,
           "description": "Use `bundle exec` to run haml-lint. (If this is true, the 'linterExecutablePath' setting is ignored.)"
+        },
+        "railsRoutes.railsCommand": {
+          "type": "string",
+          "default": "bin/rails",
+          "scope": "machine",
+          "description": "Command used to run Rails (e.g. for project detection and routes). Machine-scoped for security: it cannot be set by a workspace's .vscode/settings.json, only in your user settings."
         }
       }
     },
