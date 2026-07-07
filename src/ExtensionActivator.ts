@@ -86,8 +86,6 @@ export class ExtensionActivator {
         vscode.languages.registerCodeLensProvider(this.HAML_SELECTOR, new ImagePreviewCodeLensProvider())
       );
     }
-
-    eventSubscriber.subscribeRails();
   }
 
   private registerHamlProviders(eventSubscriber: EventSubscriber): void {
