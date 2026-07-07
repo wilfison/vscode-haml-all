@@ -26,6 +26,9 @@ class EventSubscriber {
   private outputChanel: OutputChannel;
   private rootPath: Uri;
 
+  private changeDebounce?: NodeJS.Timeout;
+  private readonly CHANGE_DEBOUNCE_MS = 300;
+
   constructor(context: ExtensionContext, outputChanel: OutputChannel, lintServer: LintServer, isARailsProject: boolean) {
     this.context = context;
     this.outputChanel = outputChanel;
@@ -79,10 +82,22 @@ class EventSubscriber {
     this.context.subscriptions.push(
       workspace.onDidChangeTextDocument(async (event) => {
         if (event.contentChanges.length > 0 && event.document === window.activeTextEditor?.document) {
-          updateDiagnostics(event.document);
+          if (this.changeDebounce) {
+            clearTimeout(this.changeDebounce);
+          }
+
+          this.changeDebounce = setTimeout(() => updateDiagnostics(event.document), this.CHANGE_DEBOUNCE_MS);
         }
       })
     );
+
+    this.context.subscriptions.push({
+      dispose: () => {
+        if (this.changeDebounce) {
+          clearTimeout(this.changeDebounce);
+        }
+      },
+    });
 
     this.context.subscriptions.push(workspace.onDidOpenTextDocument(updateDiagnostics));
     this.context.subscriptions.push(workspace.onDidCloseTextDocument((document) => this.linter.clear(document)));

@@ -13,6 +13,7 @@
 - **Fix**: Opening a lone `.haml` file with no folder open no longer breaks activation. The extension previously assumed a workspace folder was always present, throwing on startup so that no providers or linting were registered.
 - **Fix**: Editing `config/routes.rb` now reloads the Rails routes again. The reload passed the `load` method without binding its receiver, so it threw and the route cache stayed stale until the extension restarted.
 - **Fix**: The Rails routes watcher is no longer registered twice on activation, so editing `config/routes.rb` reloads routes and shows the progress notification once instead of twice.
+- **Performance**: Linting while typing is now debounced (300ms), so it runs once after you pause instead of opening a new connection to the lint server on every keystroke.
 
 ## [3.0.0] - 2026-07-04
 
