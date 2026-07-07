@@ -10,6 +10,7 @@ export const SOURCE = 'haml-lint';
 
 export default class Linter {
   public hamlLintConfig: LinterConfig = HAML_LINT_DEFAULT_COPS;
+  public hamlLintSupportsNativeAutocorrect = false;
 
   private outputChanel: OutputChannel;
   private lintServer: LintServer;
@@ -50,7 +51,22 @@ export default class Linter {
 
     await this.lintServer.listCops((data: any) => {
       this.hamlLintConfig = { ...this.hamlLintConfig, ...data.haml_lint };
+      this.hamlLintSupportsNativeAutocorrect = data.supports_native_autocorrect === true;
     });
+  }
+
+  /**
+   * Whether the extension's own TypeScript autocorrection (src/formatter) should
+   * run on top of the server-side haml-lint autocorrect.
+   *
+   * haml-lint gained native safe autocorrect for its own linters in 0.74.0, which
+   * makes our formatter fixers redundant (and potentially conflicting) from that
+   * version on. The server reports that capability via `supports_native_autocorrect`;
+   * we default to running the legacy fixers until it confirms native support (the
+   * flag stays false until the server has answered list_cops).
+   */
+  public legacyAutocorrectNeeded(): boolean {
+    return !this.hamlLintSupportsNativeAutocorrect;
   }
 
   public async startServer() {

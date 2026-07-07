@@ -22,7 +22,10 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
     const edits: TextEdit[] = [];
 
     let fixedText = await this.lintServer.autocorrect(text, document.fileName, this.linter.configFilePath(document));
-    fixedText = autoCorrectAll(document.fileName, fixedText, this.linter);
+
+    if (this.linter.legacyAutocorrectNeeded()) {
+      fixedText = autoCorrectAll(document.fileName, fixedText, this.linter);
+    }
 
     if (fixedText === text) {
       return [];
