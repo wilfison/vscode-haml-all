@@ -17,7 +17,9 @@ module LintServer
     # #gets, #puts and #close, which makes this testable with a fake socket.
     def handle(client)
       line = Transport.read_line(client)
-      return client.close if line.nil? || line.strip.empty?
+      return client.close if line.nil?
+      return Transport.write_response(client, Dispatcher.error("Request too large")) if Transport.line_too_long?(line)
+      return client.close if line.strip.empty?
 
       response =
         begin

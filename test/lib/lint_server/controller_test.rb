@@ -24,6 +24,16 @@ class LintServerControllerTest < Minitest::Test
     assert_equal("Invalid JSON", client.response["result"])
   end
 
+  def test_handle_rejects_an_oversized_request
+    client = FakeClient.new("a" * LintServer::Transport::MAX_REQUEST_BYTES)
+
+    LintServer::Controller.handle(client)
+
+    assert_equal("error", client.response["status"])
+    assert_equal("Request too large", client.response["result"])
+    assert(client.closed)
+  end
+
   def test_handle_closes_client_on_empty_request
     client = FakeClient.new("")
 

@@ -34,8 +34,8 @@ class FakeClient
     @closed = false
   end
 
-  def gets
-    @input.gets
+  def gets(*)
+    @input.gets(*)
   end
 
   def puts(str)

@@ -10,11 +10,25 @@ module LintServer
   module Transport
     module_function
 
-    # Reads a single request line from the client. Returns the raw line
-    # (including trailing newline) or nil when the client closed without
-    # sending anything.
-    def read_line(client)
-      client.gets
+    # Cap on a single request line. Without it, a client that streams bytes
+    # without ever sending a newline makes #gets buffer until the process runs
+    # out of memory and dies with a NoMemoryError — which is not a
+    # StandardError, so the accept loop's rescue would not catch it. 16 MiB is
+    # far above any real lint/autocorrect payload.
+    MAX_REQUEST_BYTES = 16 * 1024 * 1024
+
+    # Reads a single request line from the client, reading at most +limit+
+    # bytes. Returns the raw line (including trailing newline) or nil when the
+    # client closed without sending anything. An over-limit line comes back
+    # truncated and without a newline — see #line_too_long?.
+    def read_line(client, limit: MAX_REQUEST_BYTES)
+      client.gets("\n", limit)
+    end
+
+    # True when +line+ hit the byte cap without a terminating newline, i.e. the
+    # client sent an oversized or unframed request that #read_line truncated.
+    def line_too_long?(line, limit: MAX_REQUEST_BYTES)
+      line.bytesize >= limit && !line.end_with?("\n")
     end
 
     # Serializes +payload+ to a single JSON line, writes it, and closes the

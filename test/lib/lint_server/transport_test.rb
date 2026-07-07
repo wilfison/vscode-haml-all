@@ -13,6 +13,20 @@ class LintServerTransportTest < Minitest::Test
     assert_nil(LintServer::Transport.read_line(FakeClient.new("")))
   end
 
+  def test_read_line_truncates_a_line_past_the_byte_limit
+    client = FakeClient.new("#{'a' * 20}\n")
+
+    line = LintServer::Transport.read_line(client, limit: 8)
+
+    assert_equal(8, line.bytesize)
+    refute(line.end_with?("\n"), "an over-limit line is truncated before its newline")
+    assert(LintServer::Transport.line_too_long?(line, limit: 8))
+  end
+
+  def test_line_too_long_is_false_for_a_complete_line_within_the_limit
+    refute(LintServer::Transport.line_too_long?("{\"action\":\"lint\"}\n", limit: 8))
+  end
+
   def test_write_response_single_encodes_and_closes
     client = FakeClient.new
 
