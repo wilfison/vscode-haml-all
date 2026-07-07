@@ -1,16 +1,12 @@
-import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
+import { ChildProcessWithoutNullStreams } from 'node:child_process';
 import crypto from 'node:crypto';
-import path from 'node:path';
-import net from 'node:net';
 
 import { LinterOffense } from '../types';
 import { OutputChannel } from 'vscode';
 
-type CallbackFunc<T> = (data: T) => void;
-type ServerResponse<T> = {
-  status: string;
-  result: T;
-};
+import { ACTIONS, CallbackFunc, ServerResponse, TIMEOUTS } from './protocol';
+import { sendRequest } from './transport';
+import { startRubyServer } from './processRunner';
 
 /**
  * Manages the Ruby-based HAML linting server.
@@ -45,7 +41,7 @@ class LintServer {
    * Logs a message to the output channel.
    * @param message - The message to log
    */
-  printOutput(message: string): void {
+  private printOutput(message: string): void {
     if (this.outputChannel) {
       this.outputChannel.appendLine(message);
     }
@@ -62,7 +58,7 @@ class LintServer {
    */
   async lint(template: string, filePath: string, configPath: string, callback: CallbackFunc<LinterOffense[]>): Promise<void> {
     const params = {
-      action: 'lint',
+      action: ACTIONS.lint,
       file_path: filePath,
       template: template,
       config_file: configPath,
@@ -96,7 +92,7 @@ class LintServer {
    */
   async autocorrect(template: string, filePath: string, configPath: string): Promise<string> {
     const params = {
-      action: 'autocorrect',
+      action: ACTIONS.autocorrect,
       file_path: filePath,
       template: template,
       config_file: configPath,
@@ -104,10 +100,9 @@ class LintServer {
     };
 
     try {
-      const data = (await Promise.race([
-        this.serverGet(params),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000)),
-      ])) as ServerResponse<string>;
+      // Autocorrect runs on format, so it uses a tight timeout enforced by the
+      // transport (which also tears the socket down on timeout).
+      const data = (await this.serverGet(params, TIMEOUTS.autocorrectMs)) as ServerResponse<string>;
 
       if (data.status !== 'success') {
         this.printOutput(`autocorrect error: ${data.result}`);
@@ -127,7 +122,7 @@ class LintServer {
    */
   async listCops(callback: (data: any) => void): Promise<void> {
     const params = {
-      action: 'list_cops',
+      action: ACTIONS.listCops,
       workspace: this.workingDirectory,
     };
 
@@ -148,106 +143,37 @@ class LintServer {
   }
 
   /**
-   * Starts the Ruby server process.
-   * Creates a new Ruby process that listens on a TCP socket for linting requests.
-   * @returns Promise that resolves to the spawned process or null if already running
+   * Starts the Ruby server process (idempotent).
+   * Delegates the spawn + start-up handshake to {@link startRubyServer}, then
+   * tracks the process so a later exit flips the "server running" gate off.
+   * @returns Promise that resolves to the running process (existing or new)
    */
   async start(): Promise<ChildProcessWithoutNullStreams | null> {
     if (this.rubyServerProcess) {
-      return Promise.resolve(this.rubyServerProcess);
+      return this.rubyServerProcess;
     }
 
-    const libPath = path.join(__dirname, '..', '..', 'lib');
-    const args = [`${libPath}/server.rb`, 'start'];
+    const { process: rubyProcess, port } = await startRubyServer(
+      {
+        workingDirectory: this.workingDirectory,
+        useBundler: this.useBundler,
+        token: this.token,
+      },
+      { log: (message) => this.printOutput(message) }
+    );
 
-    if (this.useBundler) {
-      args.push('--use-bundler');
-    }
+    this.serverPort = port;
+    this.rubyServerProcess = rubyProcess;
 
-    return new Promise((resolve, reject) => {
-      this.printOutput(`Starting Ruby server with args: ${args.join(' ')}`);
+    // Once the server dies, drop our handle so callers stop sending requests
+    // (see src/linter/index.ts, which gates linting on rubyServerProcess).
+    const clearHandle = () => {
+      this.rubyServerProcess = null;
+    };
+    rubyProcess.on('close', clearHandle);
+    rubyProcess.on('error', clearHandle);
 
-      const rubyProcess = spawn('ruby', args, {
-        cwd: this.workingDirectory,
-        env: { ...process.env, HAML_LINT_SERVER_TOKEN: this.token },
-      });
-      this.rubyServerProcess = rubyProcess;
-
-      let stdoutBuffer = '';
-      let stderrBuffer = '';
-      let settled = false;
-
-      const stderrTail = () => (stderrBuffer.trim() ? ` Last stderr: ${stderrBuffer.trim()}` : '');
-
-      // Settle the start-up promise exactly once and stop watching for the
-      // start-up line. The long-lived 'close' handler stays attached so the
-      // process is still reaped after a successful start.
-      const finish = (settle: () => void): void => {
-        if (settled) {
-          return;
-        }
-        settled = true;
-        clearTimeout(timeout);
-        rubyProcess.stdout.off('data', onStdout);
-        settle();
-      };
-
-      // The start-up notify may not arrive as a single chunk, so buffer stdout
-      // and only parse complete newline-terminated lines. The start-up line is
-      // the only stdout line that carries a numeric `port`; a partial or
-      // non-JSON line is ignored instead of throwing out of this handler.
-      const onStdout = (data: Buffer): void => {
-        this.printOutput(`Server output: ${data}`);
-        stdoutBuffer += data.toString();
-
-        let newlineIndex = stdoutBuffer.indexOf('\n');
-        while (newlineIndex !== -1) {
-          const line = stdoutBuffer.slice(0, newlineIndex).trim();
-          stdoutBuffer = stdoutBuffer.slice(newlineIndex + 1);
-
-          if (line) {
-            try {
-              const response = JSON.parse(line);
-              if (typeof response.port === 'number') {
-                this.serverPort = response.port;
-                finish(() => resolve(rubyProcess));
-                return;
-              }
-            } catch (error: any) {
-              this.printOutput(`Ignoring non-JSON server output: ${error.message}`);
-            }
-          }
-
-          newlineIndex = stdoutBuffer.indexOf('\n');
-        }
-      };
-      rubyProcess.stdout.on('data', onStdout);
-
-      // Ruby/Bundler emit benign warnings to stderr on a healthy start, so
-      // collect them for diagnostics instead of failing the launch outright.
-      rubyProcess.stderr.on('data', (data) => {
-        stderrBuffer += data.toString();
-        this.printOutput(`Server stderr: ${data}`);
-      });
-
-      // A spawn failure (e.g. `ruby` not on PATH -> ENOENT) is delivered as an
-      // event; without this listener Node rethrows it and crashes the host.
-      rubyProcess.on('error', (error) => {
-        this.rubyServerProcess = null;
-        finish(() => reject(new Error(`Failed to spawn Ruby server: ${error.message}`)));
-      });
-
-      rubyProcess.on('close', (code) => {
-        this.printOutput(`Server process exited with code ${code}`);
-        this.rubyServerProcess = null;
-        finish(() => reject(new Error(`Ruby server exited with code ${code} before it was ready.${stderrTail()}`)));
-      });
-
-      // Fail the launch if the start-up line never arrives.
-      const timeout = setTimeout(() => {
-        finish(() => reject(new Error(`Timeout starting Ruby server.${stderrTail()}`)));
-      }, 10000);
-    });
+    return rubyProcess;
   }
 
   /**
@@ -263,40 +189,18 @@ class LintServer {
 
   /**
    * Sends a request to the Ruby server and returns the parsed response.
-   * The server replies with a single JSON line, so it is parsed exactly once here.
+   * The token is attached here so every request is authenticated; the socket
+   * transport itself is token-agnostic. A per-request timeout guards against a
+   * stuck server hanging the caller.
    */
-  private serverGet(params: any): Promise<ServerResponse<any>> {
-    return new Promise((resolve, reject) => {
-      const client = new net.Socket();
-
-      this.printOutput(`Server request: ${params.action}`);
-      client.connect(this.serverPort, '127.0.0.1', () => {
-        const request = JSON.stringify({ ...params, token: this.token });
-        client.write(request + '\n');
-      });
-
-      let data = '';
-
-      client.on('data', (chunk) => {
-        data += chunk.toString();
-      });
-
-      client.on('end', () => {
-        try {
-          const response = JSON.parse(data) as ServerResponse<any>;
-
-          resolve(response);
-        } catch (e: any) {
-          this.printOutput(`Error parsing server response: ${e.message}`);
-
-          reject(new Error(`Failed to parse response: ${e.message}`));
-        }
-      });
-
-      client.on('error', (err) => {
-        reject(err);
-      });
-    });
+  private serverGet(params: any, timeoutMs: number = TIMEOUTS.requestMs): Promise<ServerResponse<any>> {
+    return sendRequest(
+      this.serverPort,
+      '127.0.0.1',
+      { ...params, token: this.token },
+      (message) => this.printOutput(message),
+      timeoutMs
+    );
   }
 }
 

