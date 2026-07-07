@@ -8,9 +8,11 @@ module LintServer
   module Controller
     module_function
 
-    # Accepts one pending connection from +server+ and handles it.
+    # Accepts one pending connection from +server+ and handles it. The read
+    # timeout is armed here, on the real socket, so a stalled client cannot
+    # block the single-threaded accept loop.
     def call(server)
-      handle(server.accept)
+      handle(Transport.apply_read_timeout(server.accept))
     end
 
     # Handles an already-accepted client. +client+ only needs to respond to

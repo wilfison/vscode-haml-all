@@ -43,6 +43,18 @@ class LintServerControllerTest < Minitest::Test
     assert_empty(client.written)
   end
 
+  def test_handle_closes_a_client_that_stalls_past_the_read_timeout
+    client = FakeClient.new("")
+    def client.gets(*)
+      raise IO::TimeoutError
+    end
+
+    LintServer::Controller.handle(client)
+
+    assert(client.closed)
+    assert_empty(client.written)
+  end
+
   def test_handle_rejects_request_without_matching_token_when_configured
     with_env("HAML_LINT_SERVER_TOKEN", "s3cret") do
       client = FakeClient.new("#{lint_request.to_json}\n") # no token field

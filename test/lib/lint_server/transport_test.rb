@@ -27,6 +27,29 @@ class LintServerTransportTest < Minitest::Test
     refute(LintServer::Transport.line_too_long?("{\"action\":\"lint\"}\n", limit: 8))
   end
 
+  def test_read_line_returns_nil_when_the_read_times_out
+    client = Object.new
+    def client.gets(*)
+      raise IO::TimeoutError
+    end
+
+    assert_nil(LintServer::Transport.read_line(client))
+  end
+
+  def test_apply_read_timeout_arms_the_socket
+    socket = Struct.new(:timeout).new
+
+    LintServer::Transport.apply_read_timeout(socket, seconds: 3)
+
+    assert_equal(3, socket.timeout)
+  end
+
+  def test_apply_read_timeout_is_a_noop_without_timeout_support
+    client = FakeClient.new
+
+    assert_same(client, LintServer::Transport.apply_read_timeout(client))
+  end
+
   def test_write_response_single_encodes_and_closes
     client = FakeClient.new
 

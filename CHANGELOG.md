@@ -9,6 +9,7 @@
 - **Fix**: Made linting-server startup more robust. A missing `ruby` executable now surfaces a clear error instead of crashing the extension host; benign Ruby/Bundler warnings on stderr no longer make startup fail with "Failed to start HAML Lint server"; the start-up handshake is parsed from complete output lines so it no longer times out when the output arrives in chunks; and a missing `haml_lint` gem that cannot be installed automatically (no network or permissions) now fails with a clear error instead of retrying the install forever while the server never starts.
 - **Fix**: Requests to the linting server now have a timeout and always release their socket, so a linting server that stops responding can no longer hang linting/formatting or leak connections.
 - **Fix**: The linting server now caps the size of a single request, so a client that streams data without ever sending a newline can no longer exhaust memory and crash the server; over-large requests are rejected with a "Request too large" error.
+- **Fix**: The linting server now applies a read timeout to each connection, so a slow or half-open connection can no longer stall the server and block every following lint/format request.
 
 ## [3.0.0] - 2026-07-04
 
