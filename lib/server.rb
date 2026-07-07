@@ -8,10 +8,17 @@ require "json"
 require "stringio"
 require "pathname"
 
+# Install haml_lint on demand if it is missing, but only once.
+haml_lint_installed = false
+
 begin
   require "haml_lint"
 rescue LoadError
-  system("gem", "install", "haml_lint")
+  raise "haml_lint could not be loaded even after installing it." if haml_lint_installed
+
+  haml_lint_installed = system("gem", "install", "haml_lint")
+  raise "Failed to install the haml_lint gem. Check network access and permissions." unless haml_lint_installed
+
   retry
 end
 
