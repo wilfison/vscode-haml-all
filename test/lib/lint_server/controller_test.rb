@@ -55,6 +55,16 @@ class LintServerControllerTest < Minitest::Test
     assert_empty(client.written)
   end
 
+  def test_handle_releases_the_socket_even_when_processing_raises
+    # A non-UTF-8 line makes String#strip raise. Over a real TCP socket the bytes
+    # arrive as ASCII-8BIT and strip wouldn't raise, but handle must still close
+    # the socket on any raising path so malformed requests can't leak FDs.
+    client = FakeClient.new("\xFF\n")
+
+    assert_raises(ArgumentError) { LintServer::Controller.handle(client) }
+    assert(client.closed, "socket must be released even when handling raises")
+  end
+
   def test_handle_rejects_request_without_matching_token_when_configured
     with_env("HAML_LINT_SERVER_TOKEN", "s3cret") do
       client = FakeClient.new("#{lint_request.to_json}\n") # no token field

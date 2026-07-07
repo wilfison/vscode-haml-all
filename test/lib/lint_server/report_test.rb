@@ -34,4 +34,24 @@ class LintServerReportTest < Minitest::Test
 
     assert_nil(options[:config_file])
   end
+
+  Lint = Struct.new(:line, :severity, :message, :linter)
+  Linter = Struct.new(:name)
+
+  def test_lint_hash_uses_the_linter_name_when_present
+    lint = Lint.new(3, :warning, "boom", Linter.new("RuboCop"))
+
+    assert_equal("RuboCop", LintServer::Report.lint_hash(lint)[:linter_name])
+  end
+
+  def test_lint_hash_falls_back_when_linter_is_nil
+    # A HAML syntax error yields a lint with no linter; #name must not be called
+    # on nil.
+    lint = Lint.new(1, :error, "unexpected end", nil)
+
+    hash = LintServer::Report.lint_hash(lint)
+
+    assert_equal("Syntax", hash[:linter_name])
+    assert_equal(1, hash[:location][:line])
+  end
 end

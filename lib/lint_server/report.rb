@@ -49,14 +49,21 @@ module LintServer
         reporter: options[:reporter]
       )
 
-      report.lints.map do |lint|
-        {
-          location: { line: lint.line },
-          severity: lint.severity,
-          message: lint.message,
-          linter_name: lint.linter.name
-        }
-      end
+      report.lints.map { |lint| lint_hash(lint) }
+    end
+
+    # A lint carries no linter when haml-lint reports a HAML parse/syntax error
+    # (and haml-lint's own reporter guards this with `offense.linter.name if
+    # offense.linter`). Call #name unconditionally and a syntax error — exactly
+    # when a diagnostic matters most — would raise NoMethodError and be turned
+    # into a server error instead. Guard it and fall back to a "Syntax" label.
+    def self.lint_hash(lint)
+      {
+        location: { line: lint.line },
+        severity: lint.severity,
+        message: lint.message,
+        linter_name: lint.linter&.name || "Syntax"
+      }
     end
 
     # @return String the autocorrected source code

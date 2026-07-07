@@ -19,19 +19,26 @@ module LintServer
     # #gets, #puts and #close, which makes this testable with a fake socket.
     def handle(client)
       line = Transport.read_line(client)
-      return client.close if line.nil?
+      return if line.nil?
       return Transport.write_response(client, Dispatcher.error("Request too large")) if Transport.line_too_long?(line)
-      return client.close if line.strip.empty?
+      return if line.strip.empty?
 
-      response =
-        begin
-          request = JSON.parse(line)
-          authorized?(request) ? Dispatcher.dispatch(request) : Dispatcher.error("Unauthorized")
-        rescue JSON::ParserError
-          Dispatcher.error("Invalid JSON")
-        end
+      Transport.write_response(client, build_response(line))
+    ensure
+      # Guarantee the socket is released on *every* path — the early returns, a
+      # normal response, or an unexpected raise (e.g. String#strip raising on a
+      # non-UTF-8 line) — so a stream of malformed requests can't leak file
+      # descriptors. write_response already closes on the paths that reach it;
+      # closing again here is a harmless no-op.
+      client.close
+    end
 
-      Transport.write_response(client, response)
+    # Parses one request line and routes it, returning the response envelope.
+    def build_response(line)
+      request = JSON.parse(line)
+      authorized?(request) ? Dispatcher.dispatch(request) : Dispatcher.error("Unauthorized")
+    rescue JSON::ParserError
+      Dispatcher.error("Invalid JSON")
     end
 
     # The extension launches the server with a per-session token in the
