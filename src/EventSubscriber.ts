@@ -125,7 +125,7 @@ class EventSubscriber {
 
     watchRouteFiles.forEach((pattern) =>
       this.subscribeFileWatcher(pattern, () => {
-        loadWithProgress('Loading rails routes', this.routes.load);
+        loadWithProgress('Loading rails routes', () => this.routes.load());
       })
     );
   }
