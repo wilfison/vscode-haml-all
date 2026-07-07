@@ -23,7 +23,7 @@ export function isPartialDocument(document: TextDocument): boolean {
 }
 
 export function getWorkspaceRoot(): string {
-  return workspace.workspaceFolders?.[0]?.uri.path || '';
+  return workspace.workspaceFolders?.[0]?.uri.fsPath || '';
 }
 
 export function getPartialName(document: TextDocument, position: Position): string {
