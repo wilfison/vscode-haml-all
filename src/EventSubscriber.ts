@@ -29,7 +29,8 @@ class EventSubscriber {
   constructor(context: ExtensionContext, outputChanel: OutputChannel, lintServer: LintServer, isARailsProject: boolean) {
     this.context = context;
     this.outputChanel = outputChanel;
-    this.rootPath = workspace.workspaceFolders![0].uri;
+    const workspaceFolder = workspace.workspaceFolders?.[0];
+    this.rootPath = workspaceFolder ? workspaceFolder.uri : Uri.file('');
 
     this.isARailsProject = isARailsProject;
 

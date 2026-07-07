@@ -10,6 +10,7 @@
 - **Fix**: Requests to the linting server now have a timeout and always release their socket, so a linting server that stops responding can no longer hang linting/formatting or leak connections.
 - **Fix**: The linting server now caps the size of a single request, so a client that streams data without ever sending a newline can no longer exhaust memory and crash the server; over-large requests are rejected with a "Request too large" error.
 - **Fix**: The linting server now applies a read timeout to each connection, so a slow or half-open connection can no longer stall the server and block every following lint/format request.
+- **Fix**: Opening a lone `.haml` file with no folder open no longer breaks activation. The extension previously assumed a workspace folder was always present, throwing on startup so that no providers or linting were registered.
 
 ## [3.0.0] - 2026-07-04
 
