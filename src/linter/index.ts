@@ -16,6 +16,11 @@ export default class Linter {
   private lintServer: LintServer;
   private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
 
+  // Monotonic per-document lint counter. A response is only applied if it is
+  // still the latest request for that document, so a slow older lint cannot
+  // overwrite the diagnostics of a newer one (see lint()).
+  private lintVersions = new Map<string, number>();
+
   constructor(outputChanel: OutputChannel, lintServer: LintServer) {
     this.outputChanel = outputChanel;
     this.lintServer = lintServer;
@@ -25,8 +30,19 @@ export default class Linter {
     this.collection.dispose();
   }
 
+  public isEnabled(): boolean {
+    return workspace.getConfiguration('hamlAll').get<boolean>('lintEnabled', true);
+  }
+
   public run(document: TextDocument) {
     if (document.uri.scheme !== 'file' || document.languageId !== 'haml') {
+      return;
+    }
+
+    // Respect the user's `hamlAll.lintEnabled` setting: when disabled, clear any
+    // existing diagnostics for the document and skip the work entirely.
+    if (!this.isEnabled()) {
+      this.collection.delete(document.uri);
       return;
     }
 
@@ -39,6 +55,9 @@ export default class Linter {
     }
 
     this.outputChanel.appendLine(`Clearing diagnostics for ${document.uri.scheme}:${document.uri.path}`);
+    // Bump the version so any lint still in flight for this document is dropped
+    // instead of re-populating diagnostics we just cleared.
+    this.bumpVersion(document.uri.toString());
     this.collection.delete(document.uri);
   }
 
@@ -102,6 +121,12 @@ export default class Linter {
     return path.join(workspaceFolder.uri.fsPath, '.haml-lint.yml');
   }
 
+  private bumpVersion(key: string): number {
+    const version = (this.lintVersions.get(key) ?? 0) + 1;
+    this.lintVersions.set(key, version);
+    return version;
+  }
+
   private async lint(document: TextDocument) {
     const configPath = this.configFilePath(document);
 
@@ -114,10 +139,17 @@ export default class Linter {
     }
 
     const filePath = document.uri.fsPath;
+    const key = document.uri.toString();
+    const version = this.bumpVersion(key);
+
     this.outputChanel.appendLine(`Linting ${document.uri.scheme}:${document.uri.path}`);
 
     await this.lintServer.lint(document.getText(), filePath, configPath, (data: LinterOffense[]) => {
-      this.collection.delete(document.uri);
+      // A newer lint (or a clear) has superseded this request — drop the stale
+      // result so it cannot clobber fresher diagnostics.
+      if (this.lintVersions.get(key) !== version) {
+        return;
+      }
 
       if (data.length > 0) {
         const diagnostics = this.parse(data, document);

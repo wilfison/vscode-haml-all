@@ -77,6 +77,9 @@ class EventSubscriber {
 
     this.context.subscriptions.push(
       workspace.onDidSaveTextDocument(async (document: TextDocument) => {
+        // Saving lints immediately, so drop any pending change-debounced lint to
+        // avoid running the same document twice back to back.
+        this.clearChangeDebounce();
         updateDiagnostics(document);
       })
     );
@@ -84,21 +87,22 @@ class EventSubscriber {
     this.context.subscriptions.push(
       workspace.onDidChangeTextDocument(async (event) => {
         if (event.contentChanges.length > 0 && event.document === window.activeTextEditor?.document) {
-          if (this.changeDebounce) {
-            clearTimeout(this.changeDebounce);
-          }
-
+          this.clearChangeDebounce();
           this.changeDebounce = setTimeout(() => updateDiagnostics(event.document), this.CHANGE_DEBOUNCE_MS);
         }
       })
     );
 
-    this.context.subscriptions.push({
-      dispose: () => {
-        if (this.changeDebounce) {
-          clearTimeout(this.changeDebounce);
+    this.context.subscriptions.push(
+      workspace.onDidChangeConfiguration((event) => {
+        if (event.affectsConfiguration('hamlAll.lintEnabled')) {
+          this.updateAllDiagnostics();
         }
-      },
+      })
+    );
+
+    this.context.subscriptions.push({
+      dispose: () => this.clearChangeDebounce(),
     });
 
     this.context.subscriptions.push(workspace.onDidOpenTextDocument(updateDiagnostics));
@@ -120,6 +124,13 @@ class EventSubscriber {
         await this.onUpdateLintConfig();
       }
     );
+  }
+
+  private clearChangeDebounce() {
+    if (this.changeDebounce) {
+      clearTimeout(this.changeDebounce);
+      this.changeDebounce = undefined;
+    }
   }
 
   private async onUpdateLintConfig() {
