@@ -4,6 +4,31 @@ import { CancellationToken, CodeLens, TextDocument, CodeLensProvider as VSCodeLe
 
 import * as fileHelper from '../utils/file';
 
+// Caches each controller's split lines keyed by mtime, so the CodeLens — which
+// re-runs on every edit of the view — reads and splits the controller file only
+// when it actually changes instead of on each refresh.
+const controllerLinesCache = new Map<string, { mtimeMs: number; lines: string[] }>();
+
+function readControllerLines(controllerPath: string): string[] {
+  let mtimeMs: number;
+
+  try {
+    mtimeMs = fs.statSync(controllerPath).mtimeMs;
+  } catch (error) {
+    return [];
+  }
+
+  const cached = controllerLinesCache.get(controllerPath);
+  if (cached && cached.mtimeMs === mtimeMs) {
+    return cached.lines;
+  }
+
+  const lines = fs.readFileSync(controllerPath, 'utf-8').split('\n');
+  controllerLinesCache.set(controllerPath, { mtimeMs, lines });
+
+  return lines;
+}
+
 class CodeLensProvider implements VSCodeLensProvider {
   public provideCodeLenses(document: TextDocument, token: CancellationToken): CodeLens[] {
     const [controllerPath, lineNumber] = this.getControllerFilePath(document);
@@ -50,8 +75,7 @@ class CodeLensProvider implements VSCodeLensProvider {
       return 0;
     }
 
-    const controllerContent = fs.readFileSync(controllerPath, 'utf-8');
-    const actionLine = controllerContent.split('\n').findIndex((line) => {
+    const actionLine = readControllerLines(controllerPath).findIndex((line) => {
       return line.includes(` def ${action}`);
     });
 

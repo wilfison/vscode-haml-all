@@ -3,6 +3,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { IMAGE_EXTENSIONS, IMAGE_HELPERS } from '../data/rails_helpers';
+import { AssetFile, listAssetFiles } from '../rails/assetIndex';
+
+// Compiled once and reused. Both carry the global flag, so `lastIndex` is reset
+// before each scan (see findImageReferences).
+const IMAGE_WITH_EXT_REGEX = /['"]([\w\-\.\/\\:]+\.(png|jpg|jpeg|gif|svg|webp|ico|bmp|avif))['"]/gi;
+const IMAGE_WITHOUT_EXT_REGEX = /['"]([\w\-\.\/\\:]+)['"]/gi;
 
 export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
@@ -12,6 +18,10 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     const codeLenses: vscode.CodeLens[] = [];
 
     for (let lineIndex = 0; lineIndex < document.lineCount; lineIndex++) {
+      if (token.isCancellationRequested) {
+        return codeLenses;
+      }
+
       const line = document.lineAt(lineIndex);
       const imageReferences = this.findImageReferences(line.text, lineIndex);
 
@@ -40,7 +50,8 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     }
 
     // First check for images with explicit extensions
-    const regexWithExt = /['"]([\w\-\.\/\\:]+\.(png|jpg|jpeg|gif|svg|webp|ico|bmp|avif))['"]/gi;
+    const regexWithExt = IMAGE_WITH_EXT_REGEX;
+    regexWithExt.lastIndex = 0;
     let match;
 
     while ((match = regexWithExt.exec(lineText)) !== null) {
@@ -55,7 +66,7 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
 
     // Then check for images without extensions (Rails convention)
     if (references.length === 0) {
-      const regexWithoutExt = /['"]([\w\-\.\/\\:]+)['"]/gi;
+      const regexWithoutExt = IMAGE_WITHOUT_EXT_REGEX;
       regexWithoutExt.lastIndex = 0;
 
       while ((match = regexWithoutExt.exec(lineText)) !== null) {
@@ -107,11 +118,9 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     const imageDirectories = this.getImageDirectories(workspaceFolder.uri.fsPath);
 
     for (const dir of imageDirectories) {
-      if (fs.existsSync(dir)) {
-        const imagePath = this.searchImageInDirectory(dir, imageName);
-        if (imagePath) {
-          return imagePath;
-        }
+      const imagePath = this.searchImageInDirectory(dir, imageName);
+      if (imagePath) {
+        return imagePath;
       }
     }
 
@@ -129,61 +138,56 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
   }
 
   private searchImageInDirectory(directory: string, imageName: string): string | null {
-    try {
-      const items = fs.readdirSync(directory, { withFileTypes: true });
-
-      for (const item of items) {
-        const fullPath = path.join(directory, item.name);
-
-        if (item.isDirectory()) {
-          const found = this.searchImageInDirectory(fullPath, imageName);
-          if (found) {
-            return found;
-          }
-        } else if (item.isFile()) {
-          const ext = path.extname(item.name).toLowerCase();
-          const nameWithoutExt = path.basename(item.name, ext);
-
-          if (IMAGE_EXTENSIONS.includes(ext)) {
-            // Exact match with extension
-            if (item.name === imageName) {
-              return fullPath;
-            }
-
-            // Match without extension (Rails convention)
-            if (nameWithoutExt === imageName || nameWithoutExt === path.basename(imageName, path.extname(imageName))) {
-              return fullPath;
-            }
-
-            // Match with path
-            const relativePath = path.relative(directory, fullPath);
-            const normalizedRelativePath = relativePath.replace(/\\/g, '/');
-            const normalizedImageName = imageName.replace(/\\/g, '/');
-
-            if (
-              normalizedRelativePath === normalizedImageName ||
-              normalizedRelativePath === normalizedImageName + ext ||
-              path.basename(normalizedRelativePath, ext) === path.basename(normalizedImageName, path.extname(normalizedImageName))
-            ) {
-              return fullPath;
-            }
-
-            // Try subdirectory matching for nested images
-            const pathParts = normalizedImageName.split('/');
-            if (pathParts.length > 1) {
-              const fileName = pathParts[pathParts.length - 1];
-              if (nameWithoutExt === fileName || item.name === fileName) {
-                return fullPath;
-              }
-            }
-          }
-        }
+    for (const file of listAssetFiles(directory)) {
+      if (this.matchesImage(file, imageName)) {
+        return file.fullPath;
       }
-    } catch (error) {
-      // Ignore directories that don't exist or can't be read
     }
 
     return null;
+  }
+
+  private matchesImage(file: AssetFile, imageName: string): boolean {
+    const { name, nameWithoutExt, ext } = file;
+
+    if (!IMAGE_EXTENSIONS.includes(ext)) {
+      return false;
+    }
+
+    // Exact match with extension
+    if (name === imageName) {
+      return true;
+    }
+
+    // Match without extension (Rails convention)
+    if (nameWithoutExt === imageName || nameWithoutExt === path.basename(imageName, path.extname(imageName))) {
+      return true;
+    }
+
+    // Match against the file name. (The original recursive scan compared the
+    // path relative to the *immediate* parent directory, which always reduced
+    // to the base name — preserved here.)
+    const normalizedName = name.replace(/\\/g, '/');
+    const normalizedImageName = imageName.replace(/\\/g, '/');
+
+    if (
+      normalizedName === normalizedImageName ||
+      normalizedName === normalizedImageName + ext ||
+      path.basename(normalizedName, ext) === path.basename(normalizedImageName, path.extname(normalizedImageName))
+    ) {
+      return true;
+    }
+
+    // Try subdirectory matching for nested images
+    const pathParts = normalizedImageName.split('/');
+    if (pathParts.length > 1) {
+      const fileName = pathParts[pathParts.length - 1];
+      if (nameWithoutExt === fileName || name === fileName) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   public static async showImagePreview(imagePath: string, imageName: string): Promise<void> {

@@ -16,6 +16,16 @@ import {
 } from '../data/html_attributes';
 import { RAILS_HELPERS } from '../data/rails_helpers';
 
+// Rails-helper matchers built once from RAILS_HELPERS. These were previously
+// recompiled up to three times per keystroke (helper context, insert-text and
+// presence checks); none use the global flag, so they are safe to share.
+const RAILS_HELPERS_ALTERNATION = RAILS_HELPERS.join('|');
+const RAILS_HELPER_CONTEXT_REGEX = new RegExp(
+  `(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS_ALTERNATION})\\b.*?(?:,\\s*|\\s+)([^,\\s]*)$`
+);
+const RAILS_HELPER_HASH_REGEX = new RegExp(`(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS_ALTERNATION})\\b.*?\\{\\s*([^,}]*)$`);
+const RAILS_HELPER_PRESENCE_REGEX = new RegExp(`(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS_ALTERNATION})\\b`);
+
 export default class DataAttributeCompletionProvider implements CompletionItemProvider {
   private allDataAttributes = [
     ...HTML_DATA_ATTRIBUTES,
@@ -149,9 +159,7 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
     // = form_with model: @model, data_
     // = button_to "Delete", path, method: :delete, data_
     // = text_field :user, :name, data_
-    const helperPattern = new RegExp(`(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS.join('|')})\\b.*?(?:,\\s*|\\s+)([^,\\s]*)$`);
-
-    const match = cleanedCursor.match(helperPattern);
+    const match = cleanedCursor.match(RAILS_HELPER_CONTEXT_REGEX);
     if (match) {
       const potentialAttr = match[1];
 
@@ -167,8 +175,7 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
 
       // Also check for hash-like syntax within helpers
       // = link_to "Text", path, { data_
-      const hashInHelperPattern = new RegExp(`(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS.join('|')})\\b.*?\\{\\s*([^,}]*)$`);
-      const hashInHelperMatch = cleanedCursor.match(hashInHelperPattern);
+      const hashInHelperMatch = cleanedCursor.match(RAILS_HELPER_HASH_REGEX);
       if (hashInHelperMatch) {
         const hashAttr = hashInHelperMatch[1];
         if (hashAttr.startsWith('data_') || hashAttr.startsWith('data-') || hashAttr === 'data' || hashAttr === '') {
@@ -229,7 +236,6 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
   }
 
   private isInRailsHelperContext(cleanedCursor: string): boolean {
-    const helperPattern = new RegExp(`(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS.join('|')})\\b`);
-    return helperPattern.test(cleanedCursor);
+    return RAILS_HELPER_PRESENCE_REGEX.test(cleanedCursor);
   }
 }

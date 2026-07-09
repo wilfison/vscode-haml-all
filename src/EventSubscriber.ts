@@ -14,6 +14,7 @@ import {
 import Linter from './linter';
 import FixActionsProvider from './providers/FixActionsProvider';
 import { loadWithProgress } from './rails/utils';
+import { invalidateAssetIndex } from './rails/assetIndex';
 import Routes from './rails/routes';
 import LintServer from './server';
 
@@ -55,6 +56,7 @@ class EventSubscriber {
     if (this.isARailsProject) {
       this.routes.load();
       this.subscribeRailsWatchers();
+      this.subscribeAssetWatchers();
     }
   }
 
@@ -143,6 +145,28 @@ class EventSubscriber {
         loadWithProgress('Loading rails routes', () => this.routes.load());
       })
     );
+  }
+
+  // Invalidate the cached asset listing when files appear or disappear under an
+  // asset directory. A content edit is ignored on purpose: the index only holds
+  // paths, so only create/delete changes the file set.
+  private subscribeAssetWatchers() {
+    const assetPatterns = [
+      '**/app/assets/**',
+      '**/app/javascript/**',
+      '**/app/frontend/**',
+      '**/public/**',
+      '**/vendor/assets/**',
+    ];
+
+    assetPatterns.forEach((pattern) => {
+      const watcher = workspace.createFileSystemWatcher(pattern, false, true, false);
+
+      watcher.onDidCreate(() => invalidateAssetIndex());
+      watcher.onDidDelete(() => invalidateAssetIndex());
+
+      this.context.subscriptions.push(watcher);
+    });
   }
 
   private subscribeFileWatcher(pattern: string, callback: (e: Uri) => void): void {

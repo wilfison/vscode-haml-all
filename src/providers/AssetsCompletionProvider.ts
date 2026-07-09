@@ -1,6 +1,11 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
+
+import { AssetFile, listAssetFiles } from '../rails/assetIndex';
+
+// Matches a bare `{ '` / `{ "` opening (helper-independent), so it is compiled
+// once instead of per helper on every completion trigger.
+const BRACE_STRING_PATTERN = /\{\s*['"](.*?)$/;
 
 export default class AssetsCompletionProvider implements vscode.CompletionItemProvider {
   private assetHelpers = [
@@ -18,6 +23,25 @@ export default class AssetsCompletionProvider implements vscode.CompletionItemPr
     'vite_stylesheet_tag',
     'vite_asset_path',
   ];
+
+  // Per-helper matching patterns, compiled once. Rebuilding these on every
+  // keystroke (5 patterns × 13 helpers) was pure, avoidable GC churn.
+  private readonly helperPatterns: Map<string, RegExp[]>;
+
+  constructor() {
+    this.helperPatterns = new Map(
+      this.assetHelpers.map((helper) => [
+        helper,
+        [
+          new RegExp(`=\\s*${helper}\\s*\\(?\\s*['"](.*?)$`),
+          new RegExp(`=\\s*${helper}\\s*\\(?\\s*([^'"][^,\\)\\s]*?)$`),
+          new RegExp(`=\\s*${helper}\\s*\\(\\s*['"](.*?)$`),
+          new RegExp(`\\b${helper}\\s*\\(?\\s*['"](.*?)$`),
+          BRACE_STRING_PATTERN,
+        ],
+      ])
+    );
+  }
 
   public provideCompletionItems(
     document: vscode.TextDocument,
@@ -38,17 +62,15 @@ export default class AssetsCompletionProvider implements vscode.CompletionItemPr
 
   private getAssetContext(linePrefix: string): { helper: string; prefix: string } | null {
     for (const helper of this.assetHelpers) {
-      const patterns = [
-        new RegExp(`=\\s*${helper}\\s*\\(?\\s*['"](.*?)$`),
-        new RegExp(`=\\s*${helper}\\s*\\(?\\s*([^'"][^,\\)\\s]*?)$`),
-        new RegExp(`=\\s*${helper}\\s*\\(\\s*['"](.*?)$`),
-        new RegExp(`\\b${helper}\\s*\\(?\\s*['"](.*?)$`),
-        new RegExp('\\{\\s*[\'\"](.*?)$'),
-      ];
+      if (!linePrefix.includes(helper)) {
+        continue;
+      }
+
+      const patterns = this.helperPatterns.get(helper) ?? [];
 
       for (const pattern of patterns) {
         const match = linePrefix.match(pattern);
-        if (match && linePrefix.includes(helper)) {
+        if (match) {
           return {
             helper,
             prefix: match[1] || '',
@@ -66,18 +88,18 @@ export default class AssetsCompletionProvider implements vscode.CompletionItemPr
       return [];
     }
 
-    const assetPaths = this.getAssetPaths(helper, workspaceFolder.uri.fsPath);
+    const assetFiles = this.getAssetFiles(helper, workspaceFolder.uri.fsPath);
     const completions: vscode.CompletionItem[] = [];
 
-    for (const assetPath of assetPaths) {
-      const assetName = this.getAssetName(helper, assetPath);
+    for (const assetFile of assetFiles) {
+      const assetName = this.getAssetName(helper, assetFile);
 
       if (assetName.startsWith(prefix)) {
         const completion = new vscode.CompletionItem(assetName, vscode.CompletionItemKind.File);
-        completion.detail = this.getAssetDetail(helper, assetPath);
+        completion.detail = this.getAssetDetail(helper, assetFile.relativePath);
         completion.insertText = assetName;
         completion.sortText = assetName;
-        completion.documentation = new vscode.MarkdownString(`**File:** \`${assetPath}\``);
+        completion.documentation = new vscode.MarkdownString(`**File:** \`${assetFile.relativePath}\``);
         completions.push(completion);
       }
     }
@@ -85,20 +107,23 @@ export default class AssetsCompletionProvider implements vscode.CompletionItemPr
     return completions;
   }
 
-  private getAssetName(helper: string, assetPath: string): string {
+  private getAssetName(helper: string, assetFile: AssetFile): string {
     if (helper.includes('javascript') || helper.includes('stylesheet') || helper.includes('vite')) {
-      return path.basename(assetPath, path.extname(assetPath));
+      return assetFile.nameWithoutExt;
     }
-    return assetPath;
+    return assetFile.relativePath;
   }
 
-  private getAssetPaths(helper: string, workspacePath: string): string[] {
+  private getAssetFiles(helper: string, workspacePath: string): AssetFile[] {
     const assetDirectories = this.getAssetDirectories(helper, workspacePath);
-    const assets: string[] = [];
+    const extensions = this.getAssetExtensions(helper);
+    const assets: AssetFile[] = [];
 
     for (const dir of assetDirectories) {
-      if (fs.existsSync(dir)) {
-        assets.push(...this.scanDirectory(dir, this.getAssetExtensions(helper)));
+      for (const file of listAssetFiles(dir)) {
+        if (extensions.length === 0 || extensions.includes(file.ext)) {
+          assets.push(file);
+        }
       }
     }
 
@@ -188,32 +213,6 @@ export default class AssetsCompletionProvider implements vscode.CompletionItemPr
     }
 
     return [];
-  }
-
-  private scanDirectory(directory: string, extensions: string[]): string[] {
-    const assets: string[] = [];
-
-    try {
-      const items = fs.readdirSync(directory, { withFileTypes: true });
-
-      for (const item of items) {
-        const fullPath = path.join(directory, item.name);
-
-        if (item.isDirectory()) {
-          const subdirAssets = this.scanDirectory(fullPath, extensions);
-          assets.push(...subdirAssets.map((asset) => path.join(item.name, asset)));
-        } else if (item.isFile()) {
-          const ext = path.extname(item.name).toLowerCase();
-          if (extensions.length === 0 || extensions.includes(ext)) {
-            assets.push(item.name);
-          }
-        }
-      }
-    } catch (error) {
-      // Ignore directories that don't exist or can't be read
-    }
-
-    return assets;
   }
 
   private getAssetDetail(helper: string, assetPath: string): string {
