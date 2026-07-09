@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Performance**: Activation no longer boots Ruby or Rails. The extension previously ran `bin/rails --version` (which can load Spring or part of the app and take several seconds) synchronously during startup to detect a Rails project, and probed `haml-lint --version` on the same blocking path — both froze the editor's extension host while they ran. Rails detection now checks whether the rails command exists on disk, and the haml-lint probe runs in the background, so activation is no longer delayed.
 - **Fix**: Formatting no longer double-corrects HAML on haml-lint 0.74.0+. Since 0.74.0 haml-lint applies safe autocorrect to its own linters, so the extension's built-in fixers now run only when haml-lint is older than 0.74.0; on newer versions formatting relies on haml-lint's native autocorrect.
 - **Remove**: The Live Preview feature (`HAML: Open Live Preview` command) has been removed. Rendering a HAML template executes the Ruby embedded in it, so previewing a `.haml` file from an untrusted repository could run arbitrary code; the webview also rendered the compiled HTML without a Content-Security-Policy. The feature is dropped rather than sandboxed.
 - **Security**: The linting server now only accepts a `.haml-lint.yml` located inside the workspace and requires a per-session token on every request. A haml-lint/RuboCop config can load Ruby via `require:`, so this stops another local process (or another user on a shared machine) from driving the loopback server or pointing it at an arbitrary config elsewhere on disk to run code.

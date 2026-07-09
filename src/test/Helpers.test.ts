@@ -30,29 +30,29 @@ suite('Helpers Tests', () => {
   const nodeBinary = process.execPath;
 
   suite('hamlLintPresent', () => {
-    test('returns true when the configured executable exists', () => {
+    test('returns true when the configured executable exists', async () => {
       const restore = stubConfiguration('hamlAll', { linterExecutablePath: nodeBinary });
 
       try {
-        assert.strictEqual(hamlLintPresent(), true);
+        assert.strictEqual(await hamlLintPresent(), true);
       } finally {
         restore();
       }
     });
 
-    test('returns false when the configured executable is missing', () => {
+    test('returns false when the configured executable is missing', async () => {
       const restore = stubConfiguration('hamlAll', {
         linterExecutablePath: '/nonexistent/definitely-not-haml-lint'
       });
 
       try {
-        assert.strictEqual(hamlLintPresent(), false);
+        assert.strictEqual(await hamlLintPresent(), false);
       } finally {
         restore();
       }
     });
 
-    test('does not run shell metacharacters from the executable path (no command injection)', () => {
+    test('does not run shell metacharacters from the executable path (no command injection)', async () => {
       const marker = path.join(os.tmpdir(), 'haml-all-injection-marker-lint.txt');
 
       // Clean any leftover from a previous run so the assertion is meaningful.
@@ -62,14 +62,14 @@ suite('Helpers Tests', () => {
         // ignore
       }
 
-      // With exec()/a shell this would run `touch <marker>`. With execFileSync
+      // With exec()/a shell this would run `touch <marker>`. With execFile
       // (argv form) it is treated as a single executable name that does not
       // exist, so nothing is written and the probe simply returns false.
       const payload = `${nodeBinary}; touch ${marker}`;
       const restore = stubConfiguration('hamlAll', { linterExecutablePath: payload });
 
       try {
-        assert.strictEqual(hamlLintPresent(), false);
+        assert.strictEqual(await hamlLintPresent(), false);
         assert.strictEqual(fs.existsSync(marker), false, 'injected command must not have executed');
       } finally {
         restore();
@@ -114,6 +114,9 @@ suite('Helpers Tests', () => {
         // ignore
       }
 
+      // Rails detection now checks the command on disk (existsSync) instead of
+      // spawning it, so the payload is treated as a single (nonexistent) path
+      // and nothing is ever executed.
       const payload = `${nodeBinary}; touch ${marker}`;
       const restore = stubConfiguration('railsRoutes', { railsCommand: payload });
 

@@ -21,9 +21,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
   lintServer = new LintServer(getWorkspaceRoot(), config.useBundler, outputChanel);
 
-  if (!hamlLintPresent()) {
-    vscode.window.showErrorMessage('haml-lint not found. Please install haml-lint gem to use this extension.');
-  }
+  // Probe for haml-lint in the background so a slow Ruby boot never delays
+  // activation; surface the error only if the gem is genuinely missing.
+  hamlLintPresent().then((present) => {
+    if (!present) {
+      vscode.window.showErrorMessage('haml-lint not found. Please install haml-lint gem to use this extension.');
+    }
+  });
 
   activator = new ExtensionActivator(context, outputChanel, lintServer);
   await activator.activate();
