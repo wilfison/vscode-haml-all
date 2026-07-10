@@ -31,6 +31,16 @@ Log via `window.createOutputChannel('Haml')`, never `console.log()`.
 - Do NOT bump `version` in `package.json` for a feature/fix — the maintainer bumps it at release.
 - Document changes in `CHANGELOG.md` under `## [Unreleased]` (create if missing). No invented versions/dates. Only user-visible changes belong here — not CI/infra.
 
+### Releasing
+
+Releases are cut by pushing a git tag; `.github/workflows/release.yml` does the rest (package → publish → GitHub Release). To cut version `X.Y.Z`:
+
+1. On `main` with CI green, bump `version` in `package.json` and `package-lock.json` to `X.Y.Z`.
+2. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` and start a fresh empty `## [Unreleased]` above it. The release notes are auto-extracted from the `## [X.Y.Z]` section, so the header must match the version **exactly**.
+3. Commit both, then tag and push: `git tag vX.Y.Z && git push origin main --tags`.
+
+The tag **must** be a lowercase `v` + the exact `package.json` version (`v3.0.1` for `3.0.1`). The workflow triggers on `v*`, strips the leading `v` (`${TAG#v}`), and fails the "Verify tag matches package.json version" step on any mismatch. Note: legacy tags (`V3.0.0`) used an uppercase `V` and predate this workflow — they would neither trigger it nor pass the check. Use lowercase.
+
 ### Ruby tests (linting server)
 
 `lib/` is tested with **Minitest** under `test/`, mirroring the `lib/` layout (`lib/lint_server/dispatcher.rb` → `test/lib/lint_server/dispatcher_test.rb`).
