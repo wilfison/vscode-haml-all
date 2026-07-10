@@ -4,6 +4,7 @@ import * as fs from 'fs';
 
 import { IMAGE_EXTENSIONS, IMAGE_HELPERS } from '../data/rails_helpers';
 import { AssetFile, listAssetFiles } from '../rails/assetIndex';
+import { getExtensionRoot } from '../utils/extensionRoot';
 
 // Compiled once and reused. Both carry the global flag, so `lastIndex` is reset
 // before each scan (see findImageReferences).
@@ -221,7 +222,7 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     imageSize: string,
     imageExt: string
   ): string {
-    const template = fs.readFileSync(path.join(__dirname, '..', '..', 'templates', 'webview_image_preview.html'), 'utf8');
+    const template = fs.readFileSync(path.join(getExtensionRoot(), 'templates', 'webview_image_preview.html'), 'utf8');
 
     return template
       .replace(/{{imageUri}}/g, imageUri.toString())

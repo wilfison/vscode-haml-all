@@ -14,11 +14,15 @@ Provider-based, with three subsystems:
 
 ## Build & Test
 
+The extension ships as a single **esbuild** bundle at `dist/extension.js` (the `main` entry). `tsc` is used only for type-checking (`--noEmit`) and for compiling the test tree to `out/`; the shipped code never comes from `out/`.
+
 ```bash
-npm run watch      # auto-compile TypeScript (dev)
-npm run compile    # one-time compilation
-npm test           # TS/extension tests (compile first)
+npm run watch      # dev: esbuild + tsc type-check watchers in parallel
+npm run compile    # one-time: type-check, lint, then esbuild bundle -> dist/
+npm test           # TS/extension tests (pretest compiles tests -> out/ and the bundle -> dist/)
 ```
+
+Bundling collapses every module into `dist/extension.js`, so `__dirname` can no longer walk up to the extension root (its depth differs between the bundle and the `tsc` test build). Resolve bundled asset paths (`lib/`, `templates/`) via `getExtensionRoot()` (`src/utils/extensionRoot.ts`), seeded from `context.extensionPath` at the top of `activate()` — never `path.join(__dirname, '..', ...)`.
 
 Log via `window.createOutputChannel('Haml')`, never `console.log()`.
 

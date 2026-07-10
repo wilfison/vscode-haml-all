@@ -12,10 +12,11 @@ import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import path from 'node:path';
 
 import { Logger, TIMEOUTS } from './protocol';
+import { getExtensionRoot } from '../utils/extensionRoot';
 
-/** Where the extension bundles the Ruby server (repo `lib/`, `out/lib/` when packaged). */
+/** Where the extension ships the Ruby server (`lib/` under the extension root). */
 function defaultLibPath(): string {
-  return path.join(__dirname, '..', '..', 'lib');
+  return path.join(getExtensionRoot(), 'lib');
 }
 
 export interface RubyServerConfig {

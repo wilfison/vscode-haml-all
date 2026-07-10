@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Performance**: The extension now ships as a single minified bundle instead of dozens of separate files, so it loads faster and uses less memory at startup.
 - **Fix**: The `hamlAll.lintEnabled` setting is now honoured. Linting previously always ran even with the setting turned off; disabling it now clears existing diagnostics and stops linting, and toggling it re-evaluates open files immediately.
 - **Fix**: Diagnostics no longer flicker back to a stale state. When several lints of the same file overlapped (for example a save landing while a change-triggered lint was still running), a slow older response could overwrite the newer results; each response is now applied only if it is still the latest for that file.
 - **Performance**: Saving a file no longer lints it twice. A save lints immediately and now cancels the pending change-debounced lint instead of letting both run back to back.

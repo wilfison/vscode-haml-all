@@ -2,10 +2,11 @@ import * as vscode from 'vscode';
 
 import { hamlLintPresent } from './Helpers';
 import { getWorkspaceRoot } from './utils/file';
+import { setExtensionRoot } from './utils/extensionRoot';
 import { ExtensionActivator } from './ExtensionActivator';
 import LintServer from './server';
 
-let lintServer: LintServer = new LintServer(getWorkspaceRoot(), false);
+let lintServer: LintServer | undefined;
 let activator: ExtensionActivator | undefined;
 
 let outputChanel = vscode.window.createOutputChannel('Haml');
@@ -17,6 +18,10 @@ let outputChanel = vscode.window.createOutputChannel('Haml');
  * @param context - The VS Code extension context
  */
 export async function activate(context: vscode.ExtensionContext) {
+  // Capture the install path first: bundled asset lookups (lib/, templates/)
+  // resolve against it instead of __dirname. See utils/extensionRoot.
+  setExtensionRoot(context.extensionPath);
+
   const config = vscode.workspace.getConfiguration('hamlAll');
 
   lintServer = new LintServer(getWorkspaceRoot(), config.useBundler, outputChanel);
