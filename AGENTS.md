@@ -33,7 +33,9 @@ Log via `window.createOutputChannel('Haml')`, never `console.log()`.
 
 ### Releasing
 
-Releases are cut by pushing a git tag; `.github/workflows/release.yml` does the rest (package → publish → GitHub Release). To cut version `X.Y.Z`:
+Releases are cut by pushing a git tag; `.github/workflows/release.yml` does the rest: re-runs the CI gate (lint, RuboCop, compile, Minitest), verifies the tag matches `package.json`, packages the `.vsix` with `vsce package`, and creates (or updates) the GitHub Release with the `.vsix` and its SHA256 attached. It does **not** run `vsce publish` — **publishing to the Marketplace is manual**.
+
+To cut version `X.Y.Z`:
 
 1. On `main` with CI green, bump `version` in `package.json` and `package-lock.json` to `X.Y.Z`.
 2. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` and start a fresh empty `## [Unreleased]` above it. The release notes are auto-extracted from the `## [X.Y.Z]` section, so the header must match the version **exactly**.
