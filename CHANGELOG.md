@@ -27,6 +27,9 @@
 - A mounted engine (`mount Sidekiq::Web`) or extra output before the first route no longer breaks route parsing.
 - `hamlAll.linterExecutablePath` no longer claims to control linting: it is only used to check that haml-lint is available (documented in the setting and the README).
 - With `hamlAll.useBundler` on, activation no longer claims "haml-lint not found" when the gem is only inside the bundle.
+- Pressing Enter only indents where HAML actually nests — after a Ruby block, a `do`, a tag with no inline content or a filter. `= render "foo"`, `%p Hello world` and `= link_to "x", path` no longer indent the next line.
+- Typing `- else`, `- elsif`, `- when`, `- rescue`, `- ensure` or `- end` now outdents.
+- Removed the invalid block-comment definition (HAML has no delimited block comment); `-#` line comments are unaffected.
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09

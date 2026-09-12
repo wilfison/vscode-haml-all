@@ -1,7 +1,6 @@
 {
   "comments": {
-    "lineComment": "-#",
-    "blockComment": ["-#", ""]
+    "lineComment": "-#"
   },
   "brackets": [
     ["{", "}"],
@@ -35,12 +34,39 @@
   "onEnterRules": [
     {
       "beforeText": {
-        "pattern": "^\\s*[%\\.#-=][\\w\\s][\\w\\d\\-\\|]*[^>]*[^\\)]$",
-        "flags": "i"
+        "pattern": "^\\s*-\\s*(if|unless|case|while|until|for|begin)\\b"
+      },
+      "action": {
+        "indent": "indent"
+      }
+    },
+    {
+      "beforeText": {
+        "pattern": "\\bdo(\\s*\\|[^|]*\\|)?\\s*$"
+      },
+      "action": {
+        "indent": "indent"
+      }
+    },
+    {
+      "beforeText": {
+        "pattern": "^\\s*[%.#][\\w\\-.#]*(\\{.*\\}|\\(.*\\))?\\s*$"
+      },
+      "action": {
+        "indent": "indent"
+      }
+    },
+    {
+      "beforeText": {
+        "pattern": "^\\s*:[a-z]+\\s*$"
       },
       "action": {
         "indent": "indent"
       }
     }
-  ]
+  ],
+  "indentationRules": {
+    "increaseIndentPattern": "^\\s*(-\\s*(if|unless|case|while|until|for|begin)\\b|[%.#][\\w\\-.#]*(\\{.*\\}|\\(.*\\))?\\s*$|:[a-z]+\\s*$)|\\bdo(\\s*\\|[^|]*\\|)?\\s*$",
+    "decreaseIndentPattern": "^\\s*-\\s*(else|elsif|when|rescue|ensure|end)\\b"
+  }
 }
