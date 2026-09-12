@@ -25,23 +25,12 @@
     "Linters",
     "Formatters"
   ],
-  "tags": [
-    "haml",
-    "ruby",
-    "lint",
-    "linter",
-    "snippets"
-  ],
   "keywords": [
     "haml",
     "ruby",
     "lint",
     "linter",
     "snippets"
-  ],
-  "recommendations": [
-    "wilfison.one-dark-dracula",
-    "Shopify.ruby-lsp"
   ],
   "license": "MIT",
   "activationEvents": [],

@@ -1,5 +1,5 @@
-import { Diagnostic, DiagnosticSeverity, OutputChannel, Position, Range, TextDocument, Uri } from 'vscode';
-import { LinterConfigWithErrors, LinterOffense } from '../types';
+import { Diagnostic, DiagnosticSeverity, Position, Range, TextDocument, Uri } from 'vscode';
+import { LinterOffense } from '../types';
 import { hamlCopUrl } from '../utils/uris';
 
 const RUBOCOP_COP_NAME_REGEX = /([\w\/]*):/;
@@ -69,12 +69,4 @@ export function parseLintOffence(document: TextDocument, offense: LinterOffense)
   const diagnostic = new DiagnosticFull(range, message, code, source, severity);
 
   return diagnostic;
-}
-
-// show vs code notification error if config has errors
-export function notifyErrors(configs: LinterConfigWithErrors, outputChanel: OutputChannel) {
-  if (configs.haml_lint.error) {
-    outputChanel.appendLine(`Haml-Lint: ${configs.haml_lint.error}`);
-    outputChanel.show();
-  }
 }

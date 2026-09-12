@@ -67,7 +67,7 @@ export default class FixActionsProvider implements CodeActionProvider {
     this.codeActions.push(disableFix);
   }
 
-  private createWorkspaceEdit(document: TextDocument, rule: string, disable: string, enable?: string) {
+  private createWorkspaceEdit(document: TextDocument, rule: string, disable: string) {
     const edit = new WorkspaceEdit();
     let position = new Position(0, 0);
 
@@ -77,10 +77,6 @@ export default class FixActionsProvider implements CodeActionProvider {
     }
 
     edit.insert(document.uri, position, `-# ${disable} ${rule}\n`);
-
-    if (enable) {
-      edit.insert(document.uri, new Position(document.lineCount + 1, 0), `-# ${enable} ${rule}\n`);
-    }
 
     return edit;
   }

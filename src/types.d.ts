@@ -3,7 +3,6 @@ import { CompletionItem } from 'vscode';
 type ExtensionConfig = {
   lintEnabled: boolean;
   linterExecutablePath: string;
-  simpleAutoFixOnSave: boolean;
   useBundler: boolean;
 };
 
@@ -32,10 +31,6 @@ export type CompletionItemWithScore = {
 
 type LinterConfigEnabler = {
   enabled: boolean;
-};
-
-export type LinterConfigWithErrors = {
-  haml_lint: { error?: string };
 };
 
 type LinterRubocopIgnores = {
