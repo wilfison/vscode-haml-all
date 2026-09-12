@@ -5,6 +5,8 @@ import * as path from 'node:path';
 import { Route, parseRoutes } from './router_parser';
 import { OutputChannel } from 'vscode';
 
+import { isPathCommand, railsCommand, splitCommand } from '../Helpers';
+
 /**
  * Manages Rails routes loading and caching.
  * Implements intelligent caching based on routes.rb file modification time.
@@ -138,8 +140,12 @@ export default class Routes {
       this.process = null;
     }
 
-    const command = 'bin/rails';
-    const args = ['routes', '-E'];
+    // Read the command on every run so a settings change takes effect without a
+    // window reload. It may carry arguments ("bundle exec rails"), which go to
+    // spawn's argv — never through a shell, since the value comes from settings.
+    const [executable, ...commandArgs] = splitCommand(railsCommand());
+    const command = isPathCommand(executable) && !path.isAbsolute(executable) ? path.join(this.rootPath, executable) : executable;
+    const args = [...commandArgs, 'routes', '-E'];
     const options = { cwd: this.rootPath };
     const label = `${command} ${args.join(' ')}`;
 

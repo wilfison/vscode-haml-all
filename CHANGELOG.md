@@ -10,6 +10,10 @@
 - The linting server refuses to start without its session token, so a manual run does not leave an open endpoint behind.
 - The image preview no longer runs scripts and escapes file names, under a strict Content-Security-Policy. Remote previews are limited to `https:`.
 
+### Added
+
+- `hamlAll.railsCommand` replaces `railsRoutes.railsCommand`, and it is now actually used to load routes — `bin/rails` used to be hardcoded. It accepts arguments, so `bundle exec rails` works. The old setting is deprecated but still read when the new one is unset.
+
 ### Fixes
 
 - Quick fixes are offered again: the lightbulb now appears for haml-lint **and** RuboCop offenses, at any severity. Previously almost none of them ever showed up.

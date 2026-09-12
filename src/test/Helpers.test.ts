@@ -4,17 +4,23 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 
-import { hamlLintPresent, isARailsProject } from '../Helpers';
+import { hamlLintPresent, isARailsProject, resolveRailsCommand, splitCommand } from '../Helpers';
 
 // Overrides workspace.getConfiguration so that a given config section returns
-// `values` (property access, matching how Helpers.ts reads the settings).
-// Returns a restore function.
+// `values`, supporting both the property access and the inspect() call that
+// Helpers.ts uses. Returns a restore function.
 function stubConfiguration(section: string, values: Record<string, unknown>): () => void {
   const original = vscode.workspace.getConfiguration;
 
+  const stub = {
+    ...values,
+    get: (key: string, fallback?: unknown) => values[key] ?? fallback,
+    inspect: (key: string) => (key in values ? { key, globalValue: values[key] } : undefined),
+  };
+
   (vscode.workspace as any).getConfiguration = (requested?: string) => {
     if (requested === section) {
-      return values as any;
+      return stub as any;
     }
     return (original as any)(requested);
   };
@@ -82,9 +88,28 @@ suite('Helpers Tests', () => {
     });
   });
 
+  suite('resolveRailsCommand', () => {
+    test('prefers hamlAll.railsCommand', () => {
+      assert.strictEqual(resolveRailsCommand('bundle exec rails', 'bin/rails'), 'bundle exec rails');
+    });
+
+    test('falls back to the deprecated setting, then to the default', () => {
+      assert.strictEqual(resolveRailsCommand(undefined, 'bundle exec rails'), 'bundle exec rails');
+      assert.strictEqual(resolveRailsCommand('', '   '), 'bin/rails');
+      assert.strictEqual(resolveRailsCommand(undefined, undefined), 'bin/rails');
+    });
+  });
+
+  suite('splitCommand', () => {
+    test('splits a command with arguments into argv form', () => {
+      assert.deepStrictEqual(splitCommand('bundle exec rails'), ['bundle', 'exec', 'rails']);
+      assert.deepStrictEqual(splitCommand('  bin/rails  '), ['bin/rails']);
+    });
+  });
+
   suite('isARailsProject', () => {
     test('returns true when the configured rails command exists', () => {
-      const restore = stubConfiguration('railsRoutes', { railsCommand: nodeBinary });
+      const restore = stubConfiguration('hamlAll', { railsCommand: nodeBinary });
 
       try {
         assert.strictEqual(isARailsProject(null), true);
@@ -105,6 +130,16 @@ suite('Helpers Tests', () => {
       }
     });
 
+    test('falls back to the deprecated railsRoutes.railsCommand', () => {
+      const restore = stubConfiguration('railsRoutes', { railsCommand: nodeBinary });
+
+      try {
+        assert.strictEqual(isARailsProject(null), true);
+      } finally {
+        restore();
+      }
+    });
+
     test('does not run shell metacharacters from the rails command (no command injection)', () => {
       const marker = path.join(os.tmpdir(), 'haml-all-injection-marker-rails.txt');
 
@@ -114,14 +149,14 @@ suite('Helpers Tests', () => {
         // ignore
       }
 
-      // Rails detection now checks the command on disk (existsSync) instead of
-      // spawning it, so the payload is treated as a single (nonexistent) path
-      // and nothing is ever executed.
+      // Rails detection checks the command on disk (existsSync) instead of
+      // spawning it, and the routes command goes to spawn in argv form, so a
+      // shell metacharacter is never interpreted.
       const payload = `${nodeBinary}; touch ${marker}`;
       const restore = stubConfiguration('railsRoutes', { railsCommand: payload });
 
       try {
-        assert.strictEqual(isARailsProject(null), false);
+        isARailsProject(null);
         assert.strictEqual(fs.existsSync(marker), false, 'injected command must not have executed');
       } finally {
         restore();

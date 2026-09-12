@@ -30,6 +30,49 @@ export function hamlLintPresent(): Promise<boolean> {
   return commandAvailable(executable);
 }
 
+export const DEFAULT_RAILS_COMMAND = 'bin/rails';
+
+/**
+ * Picks the rails command out of the new setting, the deprecated one, then the
+ * default. Pure so it can be tested without a configuration.
+ */
+export function resolveRailsCommand(hamlAllValue?: string, deprecatedValue?: string): string {
+  return hamlAllValue?.trim() || deprecatedValue?.trim() || DEFAULT_RAILS_COMMAND;
+}
+
+/**
+ * Splits a configured command into argv form ("bundle exec rails" ->
+ * ["bundle", "exec", "rails"]). The value comes from settings, so it is never
+ * handed to a shell.
+ */
+export function splitCommand(command: string): string[] {
+  return command.trim().split(/\s+/).filter(Boolean);
+}
+
+/**
+ * Whether a command token is a path (and therefore resolvable against the
+ * workspace root) rather than a bare name looked up in PATH.
+ */
+export function isPathCommand(executable: string): boolean {
+  return path.isAbsolute(executable) || /[\\/]/.test(executable);
+}
+
+// Value explicitly set by the user, ignoring the package.json default — that is
+// what tells us whether to fall back to the deprecated setting.
+function explicitValue(section: string, key: string): string | undefined {
+  const inspected = workspace.getConfiguration(section).inspect<string>(key);
+
+  return inspected?.workspaceFolderValue ?? inspected?.workspaceValue ?? inspected?.globalValue;
+}
+
+/**
+ * The rails command to run, honouring `hamlAll.railsCommand` and falling back to
+ * the deprecated `railsRoutes.railsCommand`.
+ */
+export function railsCommand(): string {
+  return resolveRailsCommand(explicitValue('hamlAll', 'railsCommand'), explicitValue('railsRoutes', 'railsCommand'));
+}
+
 // Detects a Rails project by checking whether the rails command exists on disk,
 // instead of spawning it. Booting `bin/rails` just to detect the project can
 // take seconds (it may load Spring or part of the app) and, since this runs
@@ -37,10 +80,12 @@ export function hamlLintPresent(): Promise<boolean> {
 // command (the default `bin/rails`) is resolved against the workspace root; an
 // absolute path is checked as-is.
 export function isARailsProject(outputChanel: OutputChannel | null): boolean {
-  const config = workspace.getConfiguration('railsRoutes');
-  const railsCommand = config.railsCommand || 'bin/rails';
+  const [executable] = splitCommand(railsCommand());
 
-  const railsPath = path.isAbsolute(railsCommand) ? railsCommand : path.join(getWorkspaceRoot(), railsCommand);
+  // A bare name ("bundle") cannot be checked on disk, so probe the default
+  // bin/rails instead — every generated Rails app ships it.
+  const probe = isPathCommand(executable) ? executable : DEFAULT_RAILS_COMMAND;
+  const railsPath = path.isAbsolute(probe) ? probe : path.join(getWorkspaceRoot(), probe);
 
   if (existsSync(railsPath)) {
     outputChanel?.appendLine('Rails project detected.');

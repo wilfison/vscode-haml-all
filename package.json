@@ -76,11 +76,18 @@
           "default": false,
           "description": "Use `bundle exec` to run haml-lint. (If this is true, the 'linterExecutablePath' setting is ignored.)"
         },
+        "hamlAll.railsCommand": {
+          "type": "string",
+          "default": "bin/rails",
+          "scope": "machine",
+          "description": "Command used to run Rails (project detection and `rails routes`). May include arguments, e.g. `bundle exec rails`. Machine-scoped for security: it cannot be set by a workspace's .vscode/settings.json, only in your user settings."
+        },
         "railsRoutes.railsCommand": {
           "type": "string",
           "default": "bin/rails",
           "scope": "machine",
-          "description": "Command used to run Rails (e.g. for project detection and routes). Machine-scoped for security: it cannot be set by a workspace's .vscode/settings.json, only in your user settings."
+          "description": "Command used to run Rails (e.g. for project detection and routes). Machine-scoped for security: it cannot be set by a workspace's .vscode/settings.json, only in your user settings.",
+          "deprecationMessage": "Deprecated: use `hamlAll.railsCommand` instead. This setting is still read when `hamlAll.railsCommand` is not set."
         }
       }
     },
