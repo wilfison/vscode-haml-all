@@ -14,7 +14,7 @@ import {
 
 import * as path from 'path';
 
-import { toPosix } from '../utils/file';
+import { fileExists } from '../utils/file';
 
 export class ViewCodeActionProvider implements CodeActionProvider {
   public provideCodeActions(document: TextDocument, range: Range): CodeAction[] | null {
@@ -75,6 +75,69 @@ function buildWrapInBlockAction(range: Range): CodeAction | null {
   return wrapAction;
 }
 
+const VIEWS_SEGMENT = '/app/views/';
+
+/**
+ * Cleans up the name the user typed, or returns null when it cannot be used.
+ *
+ * A "/" is kept so `shared/foo` can create `app/views/shared/_foo.html.haml`;
+ * `.`/`..` segments and absolute paths are refused, since the name ends up in a
+ * file path.
+ */
+export function sanitizePartialName(input: string): string | null {
+  const trimmed = input.trim().replace(/\\/g, '/');
+
+  if (!trimmed || trimmed.startsWith('/')) {
+    return null;
+  }
+
+  const segments = trimmed.split('/').filter(Boolean);
+
+  if (segments.some((segment) => segment === '.' || segment === '..')) {
+    return null;
+  }
+
+  const sanitized = segments.map((segment) => segment.replace(/[^a-zA-Z0-9_-]/g, '_'));
+  const last = sanitized.length - 1;
+
+  if (last < 0) {
+    return null;
+  }
+
+  // Only the file name carries the partial's leading underscore, and we add it.
+  sanitized[last] = sanitized[last].replace(/^_+/, '');
+
+  return sanitized[last] ? sanitized.join('/') : null;
+}
+
+/**
+ * Where a new partial goes and how `render` should reference it.
+ *
+ * A name with a "/" is a path under app/views; a bare name lands next to the
+ * current document. documentPath is a `Uri.path`, i.e. POSIX on every platform.
+ */
+export function resolvePartialTarget(documentPath: string, name: string): { filePath: string; renderName: string } {
+  const viewsIndex = documentPath.lastIndexOf(VIEWS_SEGMENT);
+
+  // A .haml outside app/views has no view-relative name: keep it a sibling file.
+  if (viewsIndex === -1) {
+    return {
+      filePath: path.posix.join(path.posix.dirname(documentPath), `_${path.posix.basename(name)}.html.haml`),
+      renderName: name,
+    };
+  }
+
+  const viewsRoot = documentPath.slice(0, viewsIndex + VIEWS_SEGMENT.length - 1);
+  const currentDir = path.posix.dirname(documentPath.slice(viewsIndex + VIEWS_SEGMENT.length));
+
+  const renderName = name.includes('/') ? name : path.posix.join(currentDir === '.' ? '' : currentDir, name);
+
+  return {
+    filePath: path.posix.join(viewsRoot, path.posix.dirname(renderName), `_${path.posix.basename(renderName)}.html.haml`),
+    renderName,
+  };
+}
+
 export async function createPartialFromSelection(): Promise<void> {
   const editor = window.activeTextEditor;
 
@@ -82,17 +145,27 @@ export async function createPartialFromSelection(): Promise<void> {
     return;
   }
 
-  let name = await window.showInputBox({ prompt: 'Input partial name:' });
+  const input = await window.showInputBox({ prompt: 'Input partial name:' });
 
-  if (!name) {
+  if (!input) {
     return;
   }
 
-  // sanitize name
-  name = name
-    .trim()
-    .replace(/^_*/, '')
-    .replaceAll(/[^a-zA-Z0-9_]/g, '_');
+  const name = sanitizePartialName(input);
+
+  if (!name) {
+    window.showErrorMessage('Invalid partial name. Use letters, numbers, "_", "-" and "/" — no "..", no absolute path.');
+    return;
+  }
+
+  const { filePath, renderName } = resolvePartialTarget(editor.document.uri.path, name);
+
+  // createFile() fails silently on an existing file, so check first instead of
+  // letting applyEdit return false with nothing to show for it.
+  if (fileExists(filePath)) {
+    window.showErrorMessage(`\`${renderName}\` already exists. Pick another name.`);
+    return;
+  }
 
   // change vscode selection to whole line
   editor.selection = new Selection(
@@ -100,48 +173,44 @@ export async function createPartialFromSelection(): Promise<void> {
     editor.selection.end.with({ character: Number.MAX_VALUE })
   );
 
-  const filePath = getPartialFilePath(editor.document.uri.path, name);
-  const partialName = getPartialName(editor.document.uri, name);
   const uri = Uri.file(filePath);
-
-  const [partialContent, renderText] = formatPartialContent(partialName, editor.document.getText(editor.selection));
+  const [partialContent, renderText] = formatPartialContent(renderName, editor.document.getText(editor.selection));
 
   const edit = new WorkspaceEdit();
   edit.createFile(uri);
   edit.insert(uri, new Position(0, 0), partialContent);
   edit.replace(editor.document.uri, editor.selection, renderText);
 
-  await workspace.applyEdit(edit);
+  if (!(await workspace.applyEdit(edit))) {
+    window.showErrorMessage(`Could not create \`${renderName}\`. See the "Haml" output for details.`);
+  }
 }
 
-// documentPath is a Uri.path, which is POSIX on every platform.
-function getPartialFilePath(documentPath: string, name: string): string {
-  return path.posix.join(path.posix.dirname(documentPath), `_${name}.html.haml`);
-}
+// Instance variables only: a word character or a second @ before the sigil means
+// this is an email address or a class variable, not a local to extract.
+const INSTANCE_VARIABLE_REGEX = /(?<![\w@])@[A-Za-z_]\w*/g;
 
-function getPartialName(documentUri: Uri, name: string): string {
-  const relativePath = toPosix(workspace.asRelativePath(documentUri));
-  const [, , ...parts] = path.posix.dirname(relativePath).split('/');
-
-  return path.posix.join(...parts, name);
-}
-
-function globalVariableList(content: string): string[] {
-  const globalVariables = content.match(/(@[\w\d_]*)/g) || [];
+export function globalVariableList(content: string): string[] {
+  const globalVariables = content.match(INSTANCE_VARIABLE_REGEX) || [];
   const globalVariablesSet = new Set(globalVariables);
 
   // sort by length to replace correctly
   return Array.from(globalVariablesSet).sort((a, b) => b.length - a.length);
 }
 
-function formatPartialVariables(globalVariables: string[], content: string): string {
+function escapeForRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+export function formatPartialVariables(globalVariables: string[], content: string): string {
   if (globalVariables.length === 0) {
     return content;
   }
 
   const globalVariablesKeys = globalVariables.map((variable) => `${variable.replace('@', '')}:`).join(', ');
   const newContent = globalVariables.reduce((acc, variable) => {
-    return acc.replace(new RegExp(variable, 'g'), variable.replace('@', ''));
+    // Right boundary: @user must not match inside @user_id.
+    return acc.replace(new RegExp(`${escapeForRegex(variable)}(?![\\w])`, 'g'), variable.replace('@', ''));
   }, content);
 
   return `-# locals: (${globalVariablesKeys})\n\n${newContent}`;
@@ -193,20 +262,11 @@ export async function wrapContentInBlock(block: string): Promise<void> {
     return;
   }
 
-  let selection;
-
-  if (editor.selection.isEmpty) {
-    selection = new Selection(
-      editor.selection.start.with({ character: 0 }),
-      editor.selection.end.with({ character: Number.MAX_VALUE })
-    );
-  } else {
-    // Expand selection to full lines
-    selection = new Selection(
-      editor.selection.start.with({ character: 0 }),
-      editor.selection.end.with({ character: Number.MAX_VALUE })
-    );
-  }
+  // Expand the selection to full lines (an empty selection becomes its line).
+  const selection = new Selection(
+    editor.selection.start.with({ character: 0 }),
+    editor.selection.end.with({ character: Number.MAX_VALUE })
+  );
 
   const selectedText = editor.document.getText(selection);
   const lines = selectedText.split('\n');

@@ -41,6 +41,8 @@
 - Converting a `.htm` file now produces a `.haml` file instead of leaving the extension untouched.
 - A lint server that dies (out of memory, `kill`, a `bundle install` mid-session) is restarted automatically — up to 3 attempts with backoff — and the diagnostics come back with it. Linting used to go quiet until the window was reloaded.
 - The Ruby server now exits when the extension host does, instead of surviving a crashed host and holding its port.
+- "Create a partial from selection" accepts a path (`shared/foo` creates `app/views/shared/_foo.html.haml`), refuses `..` and absolute paths, and says so instead of silently doing nothing when the partial already exists.
+- The extracted partial's `locals` no longer include an email address's domain (`foo@bar.com`) or a class variable, and replacing `@user` no longer corrupts `@user_id`.
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09
