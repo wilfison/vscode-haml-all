@@ -8,18 +8,15 @@ require "json"
 require "stringio"
 require "pathname"
 
-# Install haml_lint on demand if it is missing, but only once.
-haml_lint_installed = false
-
+# Fail closed when the gem is missing. Installing it here would reach the
+# network and write to the user's GEM_HOME without consent, and it would not
+# even help under --use-bundler, where a gem outside the bundle is unloadable.
 begin
   require "haml_lint"
 rescue LoadError
-  raise "haml_lint could not be loaded even after installing it." if haml_lint_installed
-
-  haml_lint_installed = system("gem", "install", "haml_lint")
-  raise "Failed to install the haml_lint gem. Check network access and permissions." unless haml_lint_installed
-
-  retry
+  warn "haml_lint gem not found. Install it with: gem install haml_lint " \
+       "(or add it to your Gemfile and enable hamlAll.useBundler)."
+  exit 1
 end
 
 require_relative "lint_server/transport"

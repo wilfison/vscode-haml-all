@@ -98,14 +98,16 @@ export default class Linter {
     } catch (error) {
       this.outputChanel.appendLine(`Error starting Haml Lint server: ${error}`);
 
-      // Show error notification to user
-      window
-        .showErrorMessage('Failed to start HAML Lint server. Check the output channel for details.', 'Show Output')
-        .then((selection) => {
-          if (selection === 'Show Output') {
-            this.outputChanel.show();
-          }
-        });
+      // Surface the failure reason (it carries the server's stderr tail, e.g.
+      // the "install it with: gem install haml_lint" hint) instead of a
+      // generic message the user cannot act on.
+      const reason = error instanceof Error ? error.message : String(error);
+
+      window.showErrorMessage(`Failed to start HAML Lint server. ${reason}`, 'Show Output').then((selection) => {
+        if (selection === 'Show Output') {
+          this.outputChanel.show();
+        }
+      });
 
       return Promise.reject(error);
     }
