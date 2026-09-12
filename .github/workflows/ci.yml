@@ -13,19 +13,26 @@ jobs:
   quality-and-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 20
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           ruby-version: "3.4"
           bundler-cache: true
 
       - name: Install dependencies
         run: npm ci
+
+      # Fails the build on a known high/critical CVE in the dependency tree.
+      # Dependabot was removed deliberately, so this is the only automatic
+      # signal. A false positive is pinned away with an `overrides` entry in
+      # package.json, not by downgrading this gate.
+      - name: Audit npm dependencies
+        run: npm audit --audit-level=high
 
       # --- Code quality ---
       - name: Format check
