@@ -14,6 +14,8 @@ import {
 
 import * as path from 'path';
 
+import { toPosix } from '../utils/file';
+
 export class ViewCodeActionProvider implements CodeActionProvider {
   public provideCodeActions(document: TextDocument, range: Range): CodeAction[] | null {
     const actions: (CodeAction | null)[] = [
@@ -112,15 +114,16 @@ export async function createPartialFromSelection(): Promise<void> {
   await workspace.applyEdit(edit);
 }
 
+// documentPath is a Uri.path, which is POSIX on every platform.
 function getPartialFilePath(documentPath: string, name: string): string {
-  return path.join(path.dirname(documentPath), `_${name}.html.haml`);
+  return path.posix.join(path.posix.dirname(documentPath), `_${name}.html.haml`);
 }
 
 function getPartialName(documentUri: Uri, name: string): string {
-  const relativePath = workspace.asRelativePath(documentUri);
-  const [, , ...parts] = path.dirname(relativePath).split(path.sep);
+  const relativePath = toPosix(workspace.asRelativePath(documentUri));
+  const [, , ...parts] = path.posix.dirname(relativePath).split('/');
 
-  return path.join(...parts, name);
+  return path.posix.join(...parts, name);
 }
 
 function globalVariableList(content: string): string[] {

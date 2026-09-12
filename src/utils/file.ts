@@ -1,11 +1,22 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import { Position, Range, TextDocument, Uri, window, workspace } from 'vscode';
 
 const PARTIAL_EXPLICIT_REGEX = /partial\:\s*["':\/\-_]?([\/\-_\w]+)/;
 const PARTIAL_IMPLICIT_REGEX = /["':\/\-_]([\/\-_\w]+)/;
 
-export function openFile(path: string, lineNumber: number): void {
-  const uri = Uri.file(path);
+/**
+ * Normalizes a path to `/` separators. `Uri.path` and `workspace.asRelativePath`
+ * already use `/` everywhere, but `fsPath`/`document.fileName` use `\` on
+ * Windows — and these paths are split, compared and even inserted into HAML, so
+ * they all have to agree on one separator. Idempotent.
+ */
+export function toPosix(filePath: string): string {
+  return filePath.split(path.sep).join('/');
+}
+
+export function openFile(filePath: string, lineNumber: number): void {
+  const uri = Uri.file(filePath);
 
   workspace.openTextDocument(uri).then((document) => {
     window.showTextDocument(document, {
@@ -19,7 +30,7 @@ export function isPartialDocument(document: TextDocument): boolean {
     return false;
   }
 
-  return (document.fileName.split('/').pop() || '')?.startsWith('_');
+  return (toPosix(document.fileName).split('/').pop() || '')?.startsWith('_');
 }
 
 export function getWorkspaceRoot(): string {
@@ -94,7 +105,9 @@ function findFileInProjects(partialName: string, workspacePath: string, fileExte
 }
 
 export function resolvePartialFilePath(partialName: string, fileBaseName: string): string[] {
-  const workspaceBasePath = fileBaseName.substring(0, fileBaseName.indexOf('/views/') + 6);
+  // fileBaseName is a document.fileName, i.e. native separators on Windows.
+  const basePath = toPosix(fileBaseName);
+  const workspaceBasePath = basePath.substring(0, basePath.indexOf('/views/') + 6);
   const fileExtensions = ['.html.haml', '.haml', '.html.erb', '.erb'];
 
   if (partialName.includes('/')) {
@@ -102,7 +115,7 @@ export function resolvePartialFilePath(partialName: string, fileBaseName: string
   }
 
   const possibleFileLocations: string[] = [];
-  const viewBasePath = fileBaseName.split('/').slice(0, -1).join('/');
+  const viewBasePath = basePath.split('/').slice(0, -1).join('/');
 
   findFileExistsInWorkspace(viewBasePath, partialName, fileExtensions).forEach((filePath) => {
     if (!possibleFileLocations.includes(filePath)) {

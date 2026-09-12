@@ -33,6 +33,7 @@
 - Formatting a large file works again: the autocorrect budget went from 1s to 10s and the pending lint is dropped first, so it no longer loses its whole budget queued behind a RuboCop run.
 - A formatting run that fails or times out now says so (once per session, rearmed after the next success) instead of silently leaving the file unchanged. Every failure is logged to the "Haml" output.
 - With `hamlAll.lintEnabled` off, formatting no longer calls the lint server.
+- Windows: partial completions, extracted partial names and asset paths no longer mix `\` and `/`, so the name inserted into the HAML is the right one.
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09

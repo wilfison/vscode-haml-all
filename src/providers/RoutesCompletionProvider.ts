@@ -1,5 +1,3 @@
-import * as path from 'path';
-
 import {
   CompletionItem,
   CompletionItemKind,
@@ -13,12 +11,13 @@ import {
 
 import Routes from '../rails/routes';
 import { buildRouteHelperDetails, buildRouteHelperSnippet } from '../rails/utils';
+import { toPosix } from '../utils/file';
 
 const LINE_REGEXP = /(?:link_to|redirect_to|button_to|form_for|visit|url|path|href)/;
 
 const matchScore = (path1: string, path2: string): number => {
-  const parts1 = path1.split(path.sep);
-  const parts2 = path2.split(path.sep);
+  const parts1 = path1.split('/');
+  const parts2 = path2.split('/');
 
   let score = 0;
   parts1.some((part, index) => {
@@ -48,7 +47,7 @@ export default class RoutesCompletionProvider implements CompletionItemProvider 
   }
 
   private buildCompletionItems(currentUri: Uri) {
-    const currentController = workspace.asRelativePath(currentUri).replace(/app\/(?:controllers|views)\//, '');
+    const currentController = toPosix(workspace.asRelativePath(currentUri)).replace(/app\/(?:controllers|views)\//, '');
 
     const rootPath = workspace.getWorkspaceFolder(currentUri)?.uri.fsPath || '';
     const itemsWithScore: { item: CompletionItem; score: number }[] = [];

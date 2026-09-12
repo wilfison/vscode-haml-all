@@ -1,6 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { toPosix } from '../utils/file';
+
 /**
  * A single file discovered under an asset directory. All the fields consumers
  * need are precomputed once at scan time so that hot paths (a CodeLens that
@@ -10,7 +12,7 @@ import * as path from 'node:path';
 export interface AssetFile {
   /** Absolute path on disk. */
   fullPath: string;
-  /** Path relative to the scanned asset root (native separator). */
+  /** Path relative to the scanned asset root, always with `/` separators. */
   relativePath: string;
   /** File name including extension. */
   name: string;
@@ -79,7 +81,7 @@ function walk(root: string, current: string, out: AssetFile[]): void {
 
       out.push({
         fullPath,
-        relativePath: path.relative(root, fullPath),
+        relativePath: toPosix(path.relative(root, fullPath)),
         name: entry.name,
         nameWithoutExt: path.basename(entry.name, rawExt),
         ext: rawExt.toLowerCase(),

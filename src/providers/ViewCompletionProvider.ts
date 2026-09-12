@@ -1,4 +1,3 @@
-import * as path from 'path';
 import {
   CompletionItemProvider,
   TextDocument,
@@ -11,22 +10,21 @@ import {
 } from 'vscode';
 
 import { CompletionItemWithScore } from '../types';
+import { toPosix } from '../utils/file';
 
 const RENDER_REGEXP = /[^\w.]render(?:\s+|\()['"]([\w\d_\/]*)$/;
 
-const matchScore = (path1: string, path2: string): number => {
-  const parts1 = path1.split(path.sep).slice(0, -1);
-  const parts2 = path2.split(path.sep).slice(0, -1);
+export const matchScore = (path1: string, path2: string): number => {
+  const parts1 = path1.split('/').slice(0, -1);
+  const parts2 = path2.split('/').slice(0, -1);
 
   return parts1.reduce((score, part, index) => {
     return part === parts2[index] ? score + 1 : score;
   }, 0);
 };
 
-const viewPathForRelativePath = (partialPath: Uri): string => {
-  const search = path.join('app', 'views') + path.sep;
-
-  return workspace.asRelativePath(partialPath).replace(search, '');
+export const viewPathForRelativePath = (partialPath: Uri): string => {
+  return toPosix(workspace.asRelativePath(partialPath)).replace('app/views/', '');
 };
 
 export default class ViewCompletionProvider implements CompletionItemProvider {
@@ -67,16 +65,16 @@ export default class ViewCompletionProvider implements CompletionItemProvider {
     return itemsWithScore.map(({ item }) => item);
   }
 
-  private buildCompletionItem(viewPath: string, currentViewPath: string): CompletionItem {
-    let parts = viewPath.split(path.sep);
+  public buildCompletionItem(viewPath: string, currentViewPath: string): CompletionItem {
+    let parts = viewPath.split('/');
     const fileName = parts.pop();
     const baseName = fileName?.split('.', 2)[0].slice(1) || '';
 
-    if (currentViewPath.startsWith(parts.join(path.sep))) {
-      parts = parts.slice(currentViewPath.split(path.sep).length - 1);
+    if (currentViewPath.startsWith(parts.join('/'))) {
+      parts = parts.slice(currentViewPath.split('/').length - 1);
     }
 
-    const partialPath = [...parts, baseName].join(path.sep);
+    const partialPath = [...parts, baseName].join('/');
 
     const item = new CompletionItem(partialPath, CompletionItemKind.File);
     item.detail = viewPath;
