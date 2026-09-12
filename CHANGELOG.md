@@ -15,6 +15,8 @@
 - Quick fixes are offered again: the lightbulb now appears for haml-lint **and** RuboCop offenses, at any severity. Previously almost none of them ever showed up.
 - "Disable ... for this entire file" on a RuboCop offense now inserts a directive haml-lint understands (`-# haml-lint:disable RuboCop`).
 - "Go to Definition" and the partial signature help no longer break on a line that merely contains the word "render" (e.g. `@rendered_count`, `render_to_string`).
+- An offense reported on the line past the end of the file (`FinalNewline`, `TrailingEmptyLines`) no longer discards every diagnostic in that file.
+- A RuboCop offense whose message carries no cop name is now labelled `RuboCop` instead of `undefined`.
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09

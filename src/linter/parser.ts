@@ -14,14 +14,17 @@ function rubocopCopUrl(copName: string): Uri {
 function parseHamllintAttributes(offense: LinterOffense) {
   const code = offense.linter_name;
   const rubocopLint = offense.linter_name === 'RuboCop';
-  const copName = rubocopLint ? String(offense.message.match(RUBOCOP_COP_NAME_REGEX)?.at(1)) : code;
+  // A RuboCop message normally starts with `Cop/Name:`. When it does not, fall
+  // back to the linter name instead of stringifying undefined.
+  const matchedCop = rubocopLint ? offense.message.match(RUBOCOP_COP_NAME_REGEX)?.at(1) : undefined;
+  const copName = matchedCop || code;
 
-  let targetUri: Uri | undefined = Uri.parse(hamlCopUrl(code));
+  let targetUri: Uri = Uri.parse(hamlCopUrl(code));
   let message = offense.message;
 
-  if (rubocopLint) {
-    targetUri = rubocopCopUrl(copName);
-  } else {
+  if (rubocopLint && matchedCop) {
+    targetUri = rubocopCopUrl(matchedCop);
+  } else if (!rubocopLint) {
     message = `${code}: ${message}`;
   }
 
@@ -52,7 +55,9 @@ export class DiagnosticFull extends Diagnostic {
 }
 
 export function parseLintOffence(document: TextDocument, offense: LinterOffense): DiagnosticFull {
-  const line = Math.max(offense.location.line - 1, 0);
+  // FinalNewline/TrailingEmptyLines report the line *after* the last one when the
+  // file ends without a newline, and lineAt() throws outside the document.
+  const line = Math.min(Math.max(offense.location.line - 1, 0), document.lineCount - 1);
   const lineText = document.lineAt(line);
   const lineTextRange = lineText.range;
 
