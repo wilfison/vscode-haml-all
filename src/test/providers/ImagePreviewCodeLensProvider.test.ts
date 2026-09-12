@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import ImagePreviewCodeLensProvider from '../../providers/ImagePreviewCodeLensProvider';
+import ImagePreviewCodeLensProvider, { escapeHtml, renderWebviewTemplate } from '../../providers/ImagePreviewCodeLensProvider';
 
 suite('ImagePreviewCodeLensProvider Tests', () => {
   let provider: ImagePreviewCodeLensProvider;
@@ -118,6 +118,28 @@ suite('ImagePreviewCodeLensProvider Tests', () => {
     const codeLenses = provider.provideCodeLenses(document, {} as any);
 
     assert.ok(Array.isArray(codeLenses));
+  });
+
+  test('escapes interpolated values so a crafted file name cannot inject markup', () => {
+    const html = renderWebviewTemplate('<h2>{{imageName}}</h2><img src="{{imageUri}}" />', {
+      imageName: '<img src=x onerror=alert(1)>',
+      imageUri: 'https://example.com/a.png?a=1&b=2',
+    });
+
+    assert.ok(html.includes('&lt;img'), 'the injected tag should be escaped');
+    assert.ok(!html.includes('<img src=x'), 'no raw tag should survive');
+    assert.ok(!html.includes('onerror=alert(1)>'), 'no raw handler should survive');
+    assert.ok(html.includes('a=1&amp;b=2'), 'ampersands should be escaped');
+  });
+
+  test('escapeHtml escapes every HTML-significant character', () => {
+    assert.strictEqual(escapeHtml(`&<>"'`), '&amp;&lt;&gt;&quot;&#39;');
+  });
+
+  test('renderWebviewTemplate does not treat $& in a value as a replacement pattern', () => {
+    const html = renderWebviewTemplate('<p>{{imagePath}}</p>', { imagePath: 'app/assets/$&.png' });
+
+    assert.strictEqual(html, '<p>app/assets/$&amp;.png</p>');
   });
 
   test('should provide code lens for remote imagens', () => {

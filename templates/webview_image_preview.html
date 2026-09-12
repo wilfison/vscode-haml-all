@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src {{cspSource}} https:; style-src 'unsafe-inline';"
+    />
     <title>Image Preview</title>
     <style>
       body {
@@ -58,12 +62,6 @@
       .image-container img:hover {
         transform: scale(1.02);
       }
-
-      .error {
-        color: var(--vscode-errorForeground);
-        text-align: center;
-        padding: 20px;
-      }
     </style>
   </head>
   <body>
@@ -82,42 +80,11 @@
           <strong>Size: </strong>
           <span id="size">{{imageSize}}</span>
         </p>
-        <p>
-          <strong>Dimensions: </strong>
-          <span id="dimensions">Loading...</span>
-        </p>
       </div>
 
       <div class="image-container">
-        <img
-          src="{{imageUri}}"
-          alt="{{imageName}}"
-          onload="onImageLoad(this)"
-          onerror="onImageError(this)"
-        />
-
-        <div id="error" class="error" style="display: none">
-          ❌ Unable to load image
-        </div>
+        <img src="{{imageUri}}" alt="{{imageName}}" />
       </div>
     </div>
-
-    <script>
-      function onImageLoad(img) {
-        img.style.display = "block";
-
-        const dimensionsElement = document.getElementById("dimensions");
-
-        if (dimensionsElement) {
-          dimensionsElement.textContent =
-            img.naturalWidth + " x " + img.naturalHeight + " pixels";
-        }
-      }
-
-      function onImageError(img) {
-        img.style.display = "none";
-        document.getElementById("error").style.display = "block";
-      }
-    </script>
   </body>
 </html>

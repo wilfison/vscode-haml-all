@@ -11,6 +11,35 @@ import { getExtensionRoot } from '../utils/extensionRoot';
 const IMAGE_WITH_EXT_REGEX = /['"]([\w\-\.\/\\:]+\.(png|jpg|jpeg|gif|svg|webp|ico|bmp|avif))['"]/gi;
 const IMAGE_WITHOUT_EXT_REGEX = /['"]([\w\-\.\/\\:]+)['"]/gi;
 
+const HTML_ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+
+export function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]);
+}
+
+/**
+ * Fills `{{placeholder}}` slots in the webview template, escaping every value.
+ * The values come from the repository (file names, paths), so they are
+ * untrusted input: interpolating them raw would make a crafted file name run
+ * as markup inside the webview.
+ *
+ * The replacement is a function so that `$&` and friends in an escaped value
+ * are never treated as replacement patterns.
+ */
+export function renderWebviewTemplate(template: string, values: Record<string, string>): string {
+  return Object.entries(values).reduce((html, [key, value]) => {
+    const escaped = escapeHtml(value);
+
+    return html.replace(new RegExp(`{{${key}}}`, 'g'), () => escaped);
+  }, template);
+}
+
 export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
@@ -106,9 +135,15 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
   }
 
   private findImagePath(imageName: string): string | null {
-    if (imageName.startsWith('http://') || imageName.startsWith('https://')) {
-      // Skip remote URLs
+    if (imageName.startsWith('https://')) {
+      // Remote URLs are handed to the webview as-is.
       return imageName;
+    }
+
+    // Plain http is refused: the webview CSP allows https: only, and loading it
+    // would leak the user's IP to the image host over an unauthenticated link.
+    if (imageName.startsWith('http://')) {
+      return null;
     }
 
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -195,7 +230,14 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     const isRemoteImage = imagePath.startsWith('http');
     const imageFileUri = isRemoteImage ? vscode.Uri.parse(imagePath) : vscode.Uri.file(imagePath);
 
-    const imageStats = isRemoteImage ? { size: 0 } : fs.statSync(imagePath);
+    // The file can disappear between the code lens being drawn and the click.
+    const imageStats = isRemoteImage ? { size: 0 } : fs.statSync(imagePath, { throwIfNoEntry: false });
+
+    if (!imageStats) {
+      vscode.window.showErrorMessage(`Image not found: ${imagePath}`);
+      return;
+    }
+
     const imageSizeKB = imageStats.size > 0 ? `${Math.round(imageStats.size / 1024)} KB` : 'Unknown';
     const imageExt = path.extname(imagePath).toLowerCase();
     const workspaceFolder = isRemoteImage ? undefined : vscode.workspace.workspaceFolders?.[0];
@@ -203,32 +245,45 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
     const title = isRemoteImage ? `📷 (Remote) ${imageFileUri.authority}` : `📷 ${imageName}`;
 
     const panel = vscode.window.createWebviewPanel('imagePreview', title, vscode.ViewColumn.Beside, {
-      enableScripts: true,
+      // The panel only displays an image; scripts would buy nothing and would
+      // widen the blast radius of any escaping mistake.
+      enableScripts: false,
       localResourceRoots: isRemoteImage ? undefined : [vscode.Uri.file(path.dirname(imagePath))],
     });
 
     const imageUri = panel.webview.asWebviewUri(imageFileUri);
-    panel.webview.html = ImagePreviewCodeLensProvider.getWebviewContent(imageUri, imageName, relativePath, imageSizeKB, imageExt);
+
+    panel.webview.html = ImagePreviewCodeLensProvider.getWebviewContent(
+      imageUri,
+      imageName,
+      relativePath,
+      imageSizeKB,
+      imageExt,
+      panel.webview.cspSource
+    );
 
     panel.onDidDispose(() => {
       // Clean up resources when panel is closed
     });
   }
 
-  private static getWebviewContent(
+  public static getWebviewContent(
     imageUri: vscode.Uri,
     imageName: string,
     imagePath: string,
     imageSize: string,
-    imageExt: string
+    imageExt: string,
+    cspSource: string
   ): string {
     const template = fs.readFileSync(path.join(getExtensionRoot(), 'templates', 'webview_image_preview.html'), 'utf8');
 
-    return template
-      .replace(/{{imageUri}}/g, imageUri.toString())
-      .replace(/{{imageName}}/g, imageName)
-      .replace(/{{imagePath}}/g, imagePath)
-      .replace(/{{imageSize}}/g, imageSize)
-      .replace(/{{imageExt}}/g, imageExt.toUpperCase().substring(1));
+    return renderWebviewTemplate(template, {
+      cspSource,
+      imageUri: imageUri.toString(),
+      imageName,
+      imagePath,
+      imageSize,
+      imageExt: imageExt.toUpperCase().substring(1),
+    });
   }
 }
