@@ -53,6 +53,25 @@ export function listAssetFiles(directory: string): AssetFile[] {
   return files;
 }
 
+// Build output lives under public/ and churns constantly (assets:precompile, a
+// webpack/vite watcher), and a fingerprinted bundle is never what a completion
+// offers — so those trees must not invalidate the index on every write.
+const PUBLIC_BUILD_DIRS = ['assets', 'packs', 'packs-test', 'builds', 'vite'];
+
+/**
+ * Whether a created or deleted file should drop the cached asset listing.
+ * Takes a workspace-relative path with `/` separators.
+ */
+export function assetPathInvalidatesIndex(relativePath: string): boolean {
+  const [first, second] = relativePath.split('/');
+
+  if (first !== 'public') {
+    return true;
+  }
+
+  return !PUBLIC_BUILD_DIRS.includes(second);
+}
+
 /**
  * Drops all cached listings. Called when an asset file is created or deleted so
  * the next lookup rebuilds from disk.

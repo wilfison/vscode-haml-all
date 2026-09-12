@@ -8,13 +8,14 @@ import {
   OutputChannel,
   window,
   ProgressLocation,
-  FileSystemWatcher,
+  RelativePattern,
 } from 'vscode';
 
 import Linter from './linter';
 import FixActionsProvider from './providers/FixActionsProvider';
 import { loadWithProgress } from './rails/utils';
-import { invalidateAssetIndex } from './rails/assetIndex';
+import { assetPathInvalidatesIndex, invalidateAssetIndex } from './rails/assetIndex';
+import { toPosix } from './utils/file';
 import Routes from './rails/routes';
 import LintServer from './server';
 
@@ -145,7 +146,7 @@ class EventSubscriber {
   }
 
   private subscribeHamlWatchers() {
-    const watchFiles = ['**/.haml-lint.yml'];
+    const watchFiles = ['.haml-lint.yml'];
 
     watchFiles.forEach((pattern) =>
       this.subscribeFileWatcher(pattern, () => {
@@ -155,7 +156,7 @@ class EventSubscriber {
   }
 
   private subscribeRailsWatchers() {
-    const watchRouteFiles = ['**/config/routes.rb', '**/config/routes/**/*.rb'];
+    const watchRouteFiles = ['config/routes.rb', 'config/routes/**/*.rb'];
 
     watchRouteFiles.forEach((pattern) =>
       this.subscribeFileWatcher(pattern, () => {
@@ -168,26 +169,29 @@ class EventSubscriber {
   // asset directory. A content edit is ignored on purpose: the index only holds
   // paths, so only create/delete changes the file set.
   private subscribeAssetWatchers() {
-    const assetPatterns = [
-      '**/app/assets/**',
-      '**/app/javascript/**',
-      '**/app/frontend/**',
-      '**/public/**',
-      '**/vendor/assets/**',
-    ];
+    const assetPatterns = ['app/assets/**', 'app/javascript/**', 'app/frontend/**', 'public/**', 'vendor/assets/**'];
+
+    const invalidate = (uri: Uri) => {
+      if (assetPathInvalidatesIndex(toPosix(workspace.asRelativePath(uri)))) {
+        invalidateAssetIndex();
+      }
+    };
 
     assetPatterns.forEach((pattern) => {
-      const watcher = workspace.createFileSystemWatcher(pattern, false, true, false);
+      const watcher = workspace.createFileSystemWatcher(new RelativePattern(this.rootPath, pattern), false, true, false);
 
-      watcher.onDidCreate(() => invalidateAssetIndex());
-      watcher.onDidDelete(() => invalidateAssetIndex());
+      watcher.onDidCreate(invalidate);
+      watcher.onDidDelete(invalidate);
 
       this.context.subscriptions.push(watcher);
     });
   }
 
+  // Patterns are anchored on the workspace folder: a global `**/config/routes.rb`
+  // also matches inside node_modules and vendor/bundle, and reloading routes for
+  // an engine's copy costs seconds.
   private subscribeFileWatcher(pattern: string, callback: (e: Uri) => void): void {
-    const watcher = workspace.createFileSystemWatcher(pattern);
+    const watcher = workspace.createFileSystemWatcher(new RelativePattern(this.rootPath, pattern));
 
     watcher.onDidChange(callback);
     watcher.onDidCreate(callback);

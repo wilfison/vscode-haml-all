@@ -86,10 +86,12 @@ Expensive operations use time-based + mtime caching. Reference: `Routes.load()` 
 
 ### File watchers
 
-Pattern in `EventSubscriber.ts` (`subscribeFileWatcher`). Watched:
+Pattern in `EventSubscriber.ts` (`subscribeFileWatcher`). Every pattern is a
+`RelativePattern` anchored on the workspace folder — a global `**/...` also
+matches inside `node_modules` and `vendor/bundle`. Watched:
 
-- `**/.haml-lint.yml` → reload linter config
-- `**/config/routes.rb`, `**/config/routes/**/*.rb` → reload routes
+- `.haml-lint.yml` → reload linter config
+- `config/routes.rb`, `config/routes/**/*.rb` → reload routes
 
 ### Diagnostics & code actions
 
