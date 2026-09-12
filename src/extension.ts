@@ -1,20 +1,16 @@
 import * as vscode from 'vscode';
 
-import { hamlLintPresent } from './Helpers';
-import { getWorkspaceRoot } from './utils/file';
 import { setExtensionRoot } from './utils/extensionRoot';
 import { ExtensionActivator } from './ExtensionActivator';
-import LintServer from './server';
 
-let lintServer: LintServer | undefined;
 let activator: ExtensionActivator | undefined;
 
 let outputChanel = vscode.window.createOutputChannel('Haml');
 
 /**
  * Activates the HAML All-in-One extension.
- * Initializes the linting server, checks for haml-lint installation,
- * and sets up all extension features.
+ * Registers the editor-only features, and — once the workspace is trusted —
+ * the linting server and the rest of the Ruby-backed features.
  * @param context - The VS Code extension context
  */
 export async function activate(context: vscode.ExtensionContext) {
@@ -22,19 +18,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // resolve against it instead of __dirname. See utils/extensionRoot.
   setExtensionRoot(context.extensionPath);
 
-  const config = vscode.workspace.getConfiguration('hamlAll');
-
-  lintServer = new LintServer(getWorkspaceRoot(), config.useBundler, outputChanel);
-
-  // Probe for haml-lint in the background so a slow Ruby boot never delays
-  // activation; surface the error only if the gem is genuinely missing.
-  hamlLintPresent().then((present) => {
-    if (!present) {
-      vscode.window.showErrorMessage('haml-lint not found. Please install haml-lint gem to use this extension.');
-    }
-  });
-
-  activator = new ExtensionActivator(context, outputChanel, lintServer);
+  activator = new ExtensionActivator(context, outputChanel);
   await activator.activate();
 }
 
@@ -43,10 +27,6 @@ export async function activate(context: vscode.ExtensionContext) {
  * Stops the linting server and cleans up all resources.
  */
 export function deactivate() {
-  if (lintServer) {
-    lintServer.stop();
-  }
-
   if (activator) {
     activator.dispose();
   }

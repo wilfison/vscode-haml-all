@@ -47,6 +47,13 @@ export async function html2Haml(): Promise<void> {
     return;
   }
 
+  // Converting shells out to the project's html2haml (and, with useBundler, to
+  // the repository's Gemfile), so it stays off until the workspace is trusted.
+  if (!workspace.isTrusted) {
+    window.showWarningMessage('Trust the workspace to run html2haml.');
+    return;
+  }
+
   const config = workspace.getConfiguration('hamlAll');
 
   if (!html2HamlAvailable(config.useBundler)) {
