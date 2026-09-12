@@ -1,8 +1,36 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
-import { CancellationToken, CodeLens, TextDocument, CodeLensProvider as VSCodeLensProvider } from 'vscode';
+import { CancellationToken, CodeLens, TextDocument, workspace, CodeLensProvider as VSCodeLensProvider } from 'vscode';
 
 import * as fileHelper from '../utils/file';
+
+const VIEWS_PREFIX = 'app/views/';
+
+/**
+ * Maps a view file to the controller that renders it, both as absolute paths.
+ *
+ * The lookup is anchored on the workspace root instead of searching the absolute
+ * path for "/app/": a project living under a directory called `app`
+ * (`/home/x/app/project`) would otherwise match that one first and build a
+ * controller path outside the project. Returns '' when the document is not a
+ * view under app/views.
+ */
+export function resolveControllerPath(workspaceRoot: string, documentPath: string): string {
+  const relativePath = fileHelper.toPosix(path.relative(workspaceRoot, documentPath));
+
+  if (!relativePath.startsWith(VIEWS_PREFIX)) {
+    return '';
+  }
+
+  const viewPath = relativePath.slice(VIEWS_PREFIX.length).split('/').slice(0, -1).join('/');
+
+  if (!viewPath) {
+    return '';
+  }
+
+  return path.join(workspaceRoot, 'app', 'controllers', `${viewPath}_controller.rb`);
+}
 
 // Caches each controller's split lines keyed by mtime, so the CodeLens — which
 // re-runs on every edit of the view — reads and splits the controller file only
@@ -49,18 +77,16 @@ class CodeLensProvider implements VSCodeLensProvider {
   }
 
   private getControllerFilePath(document: TextDocument): (string | number)[] {
-    const viewsPath = document.uri.path.split('/app/views/')[1];
+    const workspaceFolder = workspace.getWorkspaceFolder(document.uri);
 
-    // Check if the document is in the views directory
-    if (!viewsPath) {
+    // A loose file with no folder open has no controller to jump to.
+    if (!workspaceFolder) {
       return ['', 0];
     }
 
-    const workspaceRoot = document.uri.path.split('/app/')[0];
-    const viewPath = viewsPath.split('/').slice(0, -1).join('/');
-    const controllerPath = `${workspaceRoot}/app/controllers/${viewPath}_controller.rb`;
+    const controllerPath = resolveControllerPath(workspaceFolder.uri.fsPath, document.uri.fsPath);
 
-    if (!fs.existsSync(controllerPath)) {
+    if (!controllerPath || !fs.existsSync(controllerPath)) {
       return ['', 0];
     }
 
@@ -70,7 +96,7 @@ class CodeLensProvider implements VSCodeLensProvider {
   }
 
   private controllerActionLine(document: TextDocument, controllerPath: string): number {
-    const action = document.fileName.split('/').pop()?.split('.')[0];
+    const action = fileHelper.toPosix(document.fileName).split('/').pop()?.split('.')[0];
     if (!action) {
       return 0;
     }
