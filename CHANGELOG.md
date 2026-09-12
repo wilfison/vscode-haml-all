@@ -12,6 +12,8 @@
 
 ### Fixes
 
+- Quick fixes are offered again: the lightbulb now appears for haml-lint **and** RuboCop offenses, at any severity. Previously almost none of them ever showed up.
+- "Disable ... for this entire file" on a RuboCop offense now inserts a directive haml-lint understands (`-# haml-lint:disable RuboCop`).
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09

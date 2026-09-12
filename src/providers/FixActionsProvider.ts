@@ -3,7 +3,6 @@ import {
   TextDocument,
   CodeActionContext,
   CodeAction,
-  DiagnosticSeverity,
   Diagnostic,
   CodeActionKind,
   WorkspaceEdit,
@@ -17,6 +16,12 @@ import { hamlLintFixes, rubocopFix } from '../quick_fixes';
 import { fixAllStringLiterals } from '../quick_fixes/stringLiterals';
 import { DiagnosticFull } from '../linter/parser';
 
+const RUBOCOP_SOURCE = 'RuboCop';
+
+// Sources this provider knows how to act on. RuboCop offenses arrive through
+// haml-lint but carry their own source (see linter/parser.ts).
+const LINTER_SOURCES = [SOURCE, RUBOCOP_SOURCE];
+
 export default class FixActionsProvider implements CodeActionProvider {
   private codeActions: CodeAction[];
 
@@ -26,7 +31,7 @@ export default class FixActionsProvider implements CodeActionProvider {
 
   provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, token: any): CodeAction[] {
     this.codeActions = [];
-    const diagnostics = this.filterWarnings(context);
+    const diagnostics = this.filterDiagnostics(context);
 
     this.createGlobalRubocopActions(document, diagnostics);
     this.createSwitchQuotesAction(document, range);
@@ -38,24 +43,26 @@ export default class FixActionsProvider implements CodeActionProvider {
     return this.codeActions;
   }
 
-  private filterWarnings(diagnostics: CodeActionContext): DiagnosticFull[] {
-    const filtred = diagnostics.diagnostics.filter(
-      (diagnostic) => diagnostic.source === SOURCE && diagnostic.severity === DiagnosticSeverity.Warning
-    ) as DiagnosticFull[];
-
-    return filtred;
+  // Severity is not a filter: haml-lint reports some cops as errors, and those
+  // have the same fixes available as the warnings.
+  private filterDiagnostics(context: CodeActionContext): DiagnosticFull[] {
+    return context.diagnostics.filter((diagnostic) => LINTER_SOURCES.includes(diagnostic.source || '')) as DiagnosticFull[];
   }
 
   private createLintAction(document: TextDocument, diagnostic: DiagnosticFull, linter: string) {
     const rule = diagnostic.code.value;
-    const fix = linter === 'haml-lint' ? hamlLintFixes(rule, document, diagnostic) : rubocopFix(rule, document, diagnostic);
+    const fix = linter === SOURCE ? hamlLintFixes(rule, document, diagnostic) : rubocopFix(rule, document, diagnostic);
 
     if (fix) {
       this.codeActions.push(fix);
     }
 
-    const disableFix = new CodeAction(`Disable \`${diagnostic.code.value}\` for this entire file`, CodeActionKind.QuickFix);
-    disableFix.edit = this.createWorkspaceEdit(document, rule, `${linter}:disable`);
+    // haml-lint has no directive for a single RuboCop cop — disabling one means
+    // disabling the whole RuboCop linter for the file.
+    const disableRule = linter === SOURCE ? rule : RUBOCOP_SOURCE;
+
+    const disableFix = new CodeAction(`Disable \`${disableRule}\` for this entire file`, CodeActionKind.QuickFix);
+    disableFix.edit = this.createWorkspaceEdit(document, disableRule, `${SOURCE}:disable`);
 
     this.codeActions.push(disableFix);
   }
@@ -79,14 +86,14 @@ export default class FixActionsProvider implements CodeActionProvider {
   }
 
   private createGlobalRubocopActions(document: TextDocument, diagnostics: Diagnostic[]) {
-    const rubocopDiagnostics = diagnostics.filter((diagnostic) => diagnostic.code === 'RuboCop');
+    const rubocopDiagnostics = diagnostics.filter((diagnostic) => diagnostic.source === RUBOCOP_SOURCE);
 
     if (rubocopDiagnostics.length === 0) {
       return;
     }
 
     let actions = [];
-    actions.push(fixAllStringLiterals(document, diagnostics));
+    actions.push(fixAllStringLiterals(document, rubocopDiagnostics));
 
     actions = actions.filter((action) => action !== null);
 
