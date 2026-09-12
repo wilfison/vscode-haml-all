@@ -90,7 +90,17 @@ export default class Routes {
     }
 
     this.outputChannel?.appendLine('Loading routes from Rails...');
-    const output = await this.execCmd();
+
+    let output: string;
+
+    try {
+      output = await this.execCmd();
+    } catch (error) {
+      // Keep the routes already loaded: an empty map would silently disable route
+      // completions and definitions until the next successful load.
+      this.outputChannel?.appendLine(`Could not load routes: ${error instanceof Error ? error.message : error}`);
+      return;
+    }
 
     if (!output) {
       return;
@@ -122,7 +132,7 @@ export default class Routes {
     return this.routes.get(controller);
   }
 
-  private async execCmd() {
+  private async execCmd(): Promise<string> {
     if (this.process) {
       this.process.kill();
       this.process = null;
@@ -131,25 +141,58 @@ export default class Routes {
     const command = 'bin/rails';
     const args = ['routes', '-E'];
     const options = { cwd: this.rootPath };
+    const label = `${command} ${args.join(' ')}`;
 
     return new Promise<string>((resolve, reject) => {
-      this.process = spawn(command, args, options);
+      const child = spawn(command, args, options);
+      this.process = child;
 
       let output = '';
+      let errorOutput = '';
 
-      this.process.stdout.on('data', (data) => {
+      child.stdout.on('data', (data) => {
         output += data.toString();
       });
 
-      this.process.stderr.on('data', (data) => {
-        this.outputChannel?.appendLine(`Error: ${data}`);
-        reject(data.toString());
+      // Rails writes deprecation warnings and initializer noise to stderr on a
+      // perfectly successful run, so stderr is a log, never a failure signal.
+      child.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+        this.outputChannel?.appendLine(`rails routes stderr: ${data}`);
       });
 
-      this.process.on('close', () => {
-        this.process = null;
+      // Without this handler a failing spawn (command missing, not executable)
+      // emits an unhandled 'error' event and takes the extension host down.
+      child.on('error', (error) => {
+        this.clearProcess(child);
+        reject(new Error(`Failed to run \`${label}\`: ${error.message}`));
+      });
+
+      child.on('close', (code) => {
+        this.clearProcess(child);
+
+        if (child.killed) {
+          reject(new Error(`\`${label}\` was cancelled by a newer run`));
+          return;
+        }
+
+        if (code !== 0) {
+          reject(new Error(`\`${label}\` exited with code ${code}. ${errorOutput.trim().slice(-500)}`));
+          return;
+        }
+
         resolve(output);
       });
     });
+  }
+
+  /**
+   * Only the process that a given run spawned may clear the shared reference —
+   * an older process closing after a newer one started would otherwise erase it.
+   */
+  private clearProcess(child: ChildProcessWithoutNullStreams) {
+    if (this.process === child) {
+      this.process = null;
+    }
   }
 }

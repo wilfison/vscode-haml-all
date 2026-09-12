@@ -17,6 +17,9 @@
 - "Go to Definition" and the partial signature help no longer break on a line that merely contains the word "render" (e.g. `@rendered_count`, `render_to_string`).
 - An offense reported on the line past the end of the file (`FinalNewline`, `TrailingEmptyLines`) no longer discards every diagnostic in that file.
 - A RuboCop offense whose message carries no cop name is now labelled `RuboCop` instead of `undefined`.
+- Rails routes load even when the app prints warnings to stderr, and a failure to run the routes command no longer crashes the window or wipes the routes already loaded.
+- Reloading routes twice in a row no longer lets the cancelled run discard the newer one's output.
+- A mounted engine (`mount Sidekiq::Web`) or extra output before the first route no longer breaks route parsing.
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09

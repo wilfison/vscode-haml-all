@@ -22,11 +22,19 @@ export type Route = {
   controller: string;
 };
 
-function parseRawBlock(block: string, lastRoute: BaseRoute): BaseRoute {
-  const [prefix, verb, uriLine, controllerLine, source] = block
+function parseRawBlock(block: string, lastRoute?: BaseRoute): BaseRoute | null {
+  const lines = block
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
+
+  // Prefix / Verb / URI / Controller#Action are the minimum a route block carries.
+  // Anything shorter is stdout noise (boot warnings, a trailing banner), not a route.
+  if (lines.length < 4) {
+    return null;
+  }
+
+  const [prefix, verb, uriLine, controllerLine, source] = lines;
 
   const [controller, action] = controllerLine.replace(RAW_LINE_REMOVE, '').split('#');
 
@@ -34,7 +42,7 @@ function parseRawBlock(block: string, lastRoute: BaseRoute): BaseRoute {
   const uri_params = uri.split('/').filter((part) => part.match(PARAM_REGEXP));
 
   return {
-    prefix: prefix.replace(RAW_LINE_REMOVE, '') || lastRoute.prefix,
+    prefix: prefix.replace(RAW_LINE_REMOVE, '') || lastRoute?.prefix || '',
     verb: verb.replace(RAW_LINE_REMOVE, ''),
     uri,
     uri_params,
@@ -48,10 +56,12 @@ function formatObjectRoutes(output: string): BaseRoute[] {
   const routeBlocks = output.split(/--\[\sRoute\s\d+\s]-+\n/).filter(Boolean);
   const routes: BaseRoute[] = [];
 
-  routeBlocks.forEach((block, index) => {
-    const route = parseRawBlock(block, routes[index - 1] || {});
+  routeBlocks.forEach((block) => {
+    const route = parseRawBlock(block, routes[routes.length - 1]);
 
-    routes.push(route);
+    if (route) {
+      routes.push(route);
+    }
   });
 
   return routes;
