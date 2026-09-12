@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Security
+
+- Restricted Mode is now enforced: linting, formatting, Rails routes and HTML/ERB conversion stay off until you trust the folder, so opening a `.haml` file no longer runs `bin/rails`, the project's `Gemfile` or a `require:` from `.haml-lint.yml`. Trusting the folder enables them right away, with no window reload.
+- `hamlAll.useBundler` can no longer be set by a workspace's `.vscode/settings.json` in Restricted Mode.
+- The linting server no longer installs the `haml_lint` gem on its own; it reports how to install it instead.
+- The linting server refuses to start without its session token, so a manual run does not leave an open endpoint behind.
+- The image preview no longer runs scripts and escapes file names, under a strict Content-Security-Policy. Remote previews are limited to `https:`.
+
 ### Fixes
 
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
