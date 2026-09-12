@@ -28,6 +28,7 @@ class EventSubscriber {
   private outputChanel: OutputChannel;
   private rootPath: Uri;
 
+  private lintServer: LintServer;
   private changeDebounce?: NodeJS.Timeout;
   private readonly CHANGE_DEBOUNCE_MS = 300;
 
@@ -39,6 +40,7 @@ class EventSubscriber {
 
     this.isARailsProject = isARailsProject;
 
+    this.lintServer = lintServer;
     this.linter = new Linter(this.outputChanel, lintServer);
     this.routes = new Routes(this.rootPath.fsPath, this.outputChanel, isARailsProject);
   }
@@ -66,6 +68,37 @@ class EventSubscriber {
   public cancelPendingLint(): void {
     this.clearChangeDebounce();
   }
+
+  // Backs the per-offense lightbulb fix: the same server call as formatting,
+  // restricted to the offense's linter. Unlike format/fix-all (safe only), a
+  // click on a specific offense is an explicit ask, so unsafe corrections are
+  // applied too.
+  private autocorrectLinters = async (document: TextDocument, linters: string[]): Promise<string | null> => {
+    if (!this.linter.isEnabled()) {
+      this.outputChanel.appendLine('Haml All: autocorrect skipped, hamlAll.lintEnabled is false');
+      return null;
+    }
+
+    this.cancelPendingLint();
+    this.outputChanel.appendLine(`Haml All: autocorrect (unsafe) ${linters.join(', ')} in ${document.fileName}`);
+
+    const text = document.getText();
+    const fixed = await this.lintServer.autocorrect(text, document.fileName, this.linter.configFilePath(document), {
+      linters,
+      unsafe: true,
+    });
+
+    // A failure is already logged by the server client; say why "no change" can
+    // happen, since it is the confusing case.
+    if (fixed === text) {
+      this.outputChanel.appendLine(
+        `Haml All: haml-lint left the file unchanged for ${linters.join(', ')}. ` +
+          'Either the cop is disabled in .haml-lint.yml or its autocorrect could not handle this code.'
+      );
+    }
+
+    return fixed;
+  };
 
   public updateAllDiagnostics(_event: any = null) {
     this.linter.clearAll();
@@ -112,7 +145,7 @@ class EventSubscriber {
     this.context.subscriptions.push(workspace.onDidCloseTextDocument((document) => this.linter.clear(document)));
 
     this.context.subscriptions.push(
-      languages.registerCodeActionsProvider('haml', new FixActionsProvider(), {
+      languages.registerCodeActionsProvider('haml', new FixActionsProvider(this.autocorrectLinters), {
         providedCodeActionKinds: [CodeActionKind.QuickFix],
       })
     );

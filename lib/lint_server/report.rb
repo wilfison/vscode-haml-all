@@ -57,25 +57,40 @@ module LintServer
     # offense.linter`). Call #name unconditionally and a syntax error — exactly
     # when a diagnostic matters most — would raise NoMethodError and be turned
     # into a server error instead. Guard it and fall back to a "Syntax" label.
+    #
+    # `correctable` exists since haml_lint 0.76.0; older versions get nil so the
+    # client simply offers no per-offense autocorrect.
     def self.lint_hash(lint)
       {
         location: { line: lint.line },
         severity: lint.severity,
         message: lint.message,
-        linter_name: lint.linter&.name || "Syntax"
+        linter_name: lint.linter&.name || "Syntax",
+        correctable: correctable_value(lint)
       }
     end
 
-    # @return String the autocorrected source code
+    def self.correctable_value(lint)
+      lint.respond_to?(:correctable) ? lint.correctable : nil
+    end
+
+    # @return String the autocorrected source code. An optional `linters` array
+    #   (haml-lint linter class names, e.g. "SpaceBeforeScript" or "RuboCop")
+    #   restricts the run to those linters; empty means all of them. `unsafe:
+    #   true` also applies corrections haml-lint/RuboCop mark as unsafe
+    #   (`--autocorrect-all`); the default is safe only.
     def self.autocorrect(request = {})
       options = options_from_request(request)
+      linters = Array(request["linters"]).grep(String)
 
       runner = LintServer::Runner.new
       runner.run_autocorrect(
         options[:template],
         options[:file_path],
         config_file: options[:config_file],
-        reporter: options[:reporter]
+        reporter: options[:reporter],
+        included_linters: linters,
+        autocorrect: request["unsafe"] == true ? :all : :safe
       )
     end
 

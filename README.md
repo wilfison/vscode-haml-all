@@ -105,6 +105,25 @@ Works with all HAML attribute syntaxes:
 
 Simply start typing `data-` in any attribute context and get intelligent suggestions with descriptions.
 
+### Formatting and auto-correction
+
+`Format Document` (and `editor.formatOnSave`) runs haml-lint's safe autocorrect over the whole file. The same correction is also exposed as a `source.fixAll` action, so it can run on save without `editor.formatOnSave`, or from the `Source Action...` menu:
+
+```json
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.hamlLint": "explicit"
+  }
+}
+```
+
+Notes:
+
+- With `editor.formatOnSave` also on, the autocorrect runs twice per save (the second pass changes nothing, but costs one round-trip to the lint server). Pick one.
+- Large files with heavy RuboCop cops may need a higher `editor.codeActionsOnSaveTimeout` (VS Code's default is 750 ms); on timeout the file is saved unchanged.
+
+The lightbulb on an offense haml-lint reports as auto-correctable offers "Fix all `TrailingWhitespace` offenses in this file (haml-lint autocorrect)". haml-lint corrects per linter, not per line, so the whole file is corrected for that linter (for a RuboCop offense, for every RuboCop cop). Unlike `Format Document` and `source.fixAll.hamlLint`, which only apply safe corrections, this action is an explicit ask and also applies the corrections haml-lint and RuboCop mark as unsafe. This relies on the `correctable` flag haml-lint reports since `haml_lint` 0.76.0; with an older version the lightbulb keeps working as before, without these actions.
+
 ### Convert HTML/ERB to HAML
 
 Convert existing HTML or ERB files to HAML using `html2haml`.

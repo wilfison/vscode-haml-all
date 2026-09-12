@@ -7,7 +7,7 @@ import RoutesCompletionProvider from './providers/RoutesCompletionProvider';
 import RoutesDefinitionProvider from './providers/RoutesDefinitionProvider';
 import PartialSignatureHelpProvider from './providers/PartialSignatureHelpProvider';
 import CodeLensProvider from './providers/CodeLensProvider';
-import FormattingEditProvider from './providers/FormattingEditProvider';
+import FormattingEditProvider, { FIX_ALL_KIND } from './providers/FormattingEditProvider';
 import { ViewCodeActionProvider, createPartialFromSelection, wrapContentInBlock } from './providers/ViewCodeActionProvider';
 import DataAttributeCompletionProvider from './providers/DataAttributeCompletionProvider';
 import AssetsCompletionProvider from './providers/AssetsCompletionProvider';
@@ -108,13 +108,16 @@ export class ExtensionActivator {
 
     eventSubscriber.subscribe();
 
+    const formattingProvider = new FormattingEditProvider(eventSubscriber.linter, this.outputChannel, this.lintServer, () =>
+      eventSubscriber.cancelPendingLint()
+    );
+
     this.context.subscriptions.push(
-      vscode.languages.registerDocumentFormattingEditProvider(
-        this.HAML_SELECTOR,
-        new FormattingEditProvider(eventSubscriber.linter, this.outputChannel, this.lintServer, () =>
-          eventSubscriber.cancelPendingLint()
-        )
-      )
+      vscode.languages.registerDocumentFormattingEditProvider(this.HAML_SELECTOR, formattingProvider),
+      // `editor.codeActionsOnSave: { "source.fixAll.hamlLint": "explicit" }`
+      vscode.languages.registerCodeActionsProvider(this.HAML_SELECTOR, formattingProvider, {
+        providedCodeActionKinds: [FIX_ALL_KIND],
+      })
     );
 
     if (this.isARailsProject) {

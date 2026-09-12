@@ -35,7 +35,9 @@ class LintServerReportTest < Minitest::Test
     assert_nil(options[:config_file])
   end
 
-  Lint = Struct.new(:line, :severity, :message, :linter)
+  Lint = Struct.new(:line, :severity, :message, :linter, :correctable)
+  # A lint from haml_lint < 0.76, which has no #correctable at all.
+  LegacyLint = Struct.new(:line, :severity, :message, :linter)
   Linter = Struct.new(:name)
 
   def test_lint_hash_uses_the_linter_name_when_present
@@ -53,5 +55,18 @@ class LintServerReportTest < Minitest::Test
 
     assert_equal("Syntax", hash[:linter_name])
     assert_equal(1, hash[:location][:line])
+  end
+
+  def test_lint_hash_propagates_correctable
+    linter = Linter.new("TrailingWhitespace")
+
+    assert(LintServer::Report.lint_hash(Lint.new(1, :warning, "x", linter, true))[:correctable])
+    refute(LintServer::Report.lint_hash(Lint.new(1, :warning, "x", linter, false))[:correctable])
+  end
+
+  def test_lint_hash_correctable_is_nil_when_haml_lint_does_not_expose_it
+    lint = LegacyLint.new(1, :warning, "x", Linter.new("TrailingWhitespace"))
+
+    assert_nil(LintServer::Report.lint_hash(lint)[:correctable])
   end
 end

@@ -12,6 +12,8 @@
 
 ### Added
 
+- `source.fixAll.hamlLint` code action: set `"editor.codeActionsOnSave": { "source.fixAll.hamlLint": "explicit" }` to apply haml-lint's safe autocorrect on save without `editor.formatOnSave`, or run "Fix all auto-correctable haml-lint offenses" from the `Source Action...` menu.
+- The lightbulb on an offense haml-lint reports as auto-correctable now offers to fix every offense of that linter in the file through haml-lint's own autocorrect, unsafe corrections included (for a RuboCop offense: every RuboCop cop). Formatting and fix-all stay safe-only. Needs the `correctable` flag reported by `haml_lint` 0.76.0 or newer; with an older version the lightbulb behaves as before.
 - New command `HAML: Restart lint server`, for when the lint server needs a kick.
 - `hamlAll.rubyCommand` lets you point at the Ruby interpreter that runs the lint server — useful when rbenv/asdf/mise shims are missing from the PATH of a VS Code launched from the dock. When it cannot be spawned, the error now names the command and the setting.
 - `hamlAll.railsCommand` replaces `railsRoutes.railsCommand`, and it is now actually used to load routes — `bin/rails` used to be hardcoded. It accepts arguments, so `bundle exec rails` works. The old setting is deprecated but still read when the new one is unset.

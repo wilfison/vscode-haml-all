@@ -9,6 +9,7 @@ import {
   Position,
   Range,
   Selection,
+  window,
 } from 'vscode';
 
 import { SOURCE } from '../linter';
@@ -22,11 +23,62 @@ const RUBOCOP_SOURCE = 'RuboCop';
 // haml-lint but carry their own source (see linter/parser.ts).
 const LINTER_SOURCES = [SOURCE, RUBOCOP_SOURCE];
 
+/** Runs haml-lint's safe autocorrect restricted to `linters`; null on failure. */
+export type AutocorrectFn = (document: TextDocument, linters: string[]) => Promise<string | null>;
+
+// haml-lint cannot fix a single line: the smallest unit is a linter, and for
+// RuboCop the whole RuboCop linter (no `--only` pass-through). Resolved lazily,
+// so listing the lightbulb costs no server round-trip.
+class AutocorrectAction extends CodeAction {
+  constructor(
+    public readonly document: TextDocument,
+    public readonly rule: string,
+    public readonly linters: string[],
+    diagnostic: DiagnosticFull
+  ) {
+    const scope = linters[0] === RUBOCOP_SOURCE ? 'RuboCop' : `\`${rule}\``;
+    super(`Fix all ${scope} offenses in this file (haml-lint autocorrect)`, CodeActionKind.QuickFix);
+    this.diagnostics = [diagnostic];
+  }
+}
+
 export default class FixActionsProvider implements CodeActionProvider {
   private codeActions: CodeAction[];
+  private autocorrect: AutocorrectFn;
 
-  constructor() {
+  constructor(autocorrect: AutocorrectFn = async () => null) {
     this.codeActions = [];
+    this.autocorrect = autocorrect;
+  }
+
+  async resolveCodeAction(action: CodeAction): Promise<CodeAction> {
+    if (!(action instanceof AutocorrectAction)) {
+      return action;
+    }
+
+    const text = action.document.getText();
+    const fixed = await this.autocorrect(action.document, action.linters);
+
+    if (fixed === null) {
+      // The autocorrect path already logged/warned about the failure.
+      return action;
+    }
+
+    if (fixed === text) {
+      // `correctable` only says the cop has an autocorrect, not that it applies
+      // to this code (or that the cop is enabled in .haml-lint.yml).
+      window.showInformationMessage(`haml-lint could not autocorrect ${action.rule}. See the "Haml" output for details.`);
+      return action;
+    }
+
+    action.edit = new WorkspaceEdit();
+    action.edit.replace(
+      action.document.uri,
+      new Range(action.document.positionAt(0), action.document.positionAt(text.length)),
+      fixed
+    );
+
+    return action;
   }
 
   provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, token: any): CodeAction[] {
@@ -55,6 +107,10 @@ export default class FixActionsProvider implements CodeActionProvider {
 
     if (fix) {
       this.codeActions.push(fix);
+    } else if (diagnostic.correctable) {
+      // A local fix is instant and per-line, so it wins when there is one.
+      const linters = linter === SOURCE ? [rule] : [RUBOCOP_SOURCE];
+      this.codeActions.push(new AutocorrectAction(document, rule, linters, diagnostic));
     }
 
     // haml-lint has no directive for a single RuboCop cop — disabling one means

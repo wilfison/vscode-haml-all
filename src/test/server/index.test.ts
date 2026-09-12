@@ -180,6 +180,19 @@ suite('LintServer', () => {
 
       assert.strictEqual(result, null);
     });
+
+    test('sends linters and unsafe only when asked for', async () => {
+      await connectTo(() => JSON.stringify({ status: 'success', result: 'x' }));
+
+      await lintServer.autocorrect('original', '/a/b.haml', '/a/.haml-lint.yml');
+      await lintServer.autocorrect('original', '/a/b.haml', '/a/.haml-lint.yml', { linters: ['SpaceBeforeScript'], unsafe: true });
+
+      const plain = JSON.parse(fakeServer!.requests[0]);
+      assert.ok(!('linters' in plain) && !('unsafe' in plain), 'no linters/unsafe keys by default');
+      const restricted = JSON.parse(fakeServer!.requests[1]);
+      assert.deepStrictEqual(restricted.linters, ['SpaceBeforeScript']);
+      assert.strictEqual(restricted.unsafe, true);
+    });
   });
 
   suite('stop', () => {

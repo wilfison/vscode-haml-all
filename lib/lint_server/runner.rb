@@ -24,8 +24,10 @@ module LintServer
       report(options)
     end
 
+    # options[:autocorrect] may be :all to include unsafe corrections; :safe
+    # by default.
     def run_autocorrect(template, file_path, options = {})
-      run(template, file_path, options.merge(autocorrect: :safe, autocorrect_only: true))
+      run(template, file_path, { autocorrect: :safe }.merge(options, autocorrect_only: true))
 
       # calls private #unstrip_frontmatter from document
       document.send(:unstrip_frontmatter, document.source)

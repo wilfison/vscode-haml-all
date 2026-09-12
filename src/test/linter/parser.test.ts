@@ -4,12 +4,13 @@ import * as vscode from 'vscode';
 import { parseLintOffence } from '../../linter/parser';
 import { LinterOffense } from '../../types';
 
-function offense(linterName: string, message: string, line: number): LinterOffense {
+function offense(linterName: string, message: string, line: number, correctable?: boolean | null): LinterOffense {
   return {
     linter_name: linterName,
     location: { line },
     message,
     severity: 'warning',
+    ...(correctable === undefined ? {} : { correctable }),
   };
 }
 
@@ -44,5 +45,17 @@ suite('linter/parser Tests', () => {
     assert.strictEqual(diagnostic.code.value, 'RuboCop');
     assert.ok(!diagnostic.code.value.includes('undefined'));
     assert.ok(!diagnostic.code.target.toString().includes('undefined'));
+  });
+
+  test('marks the diagnostic correctable only when the server says true', async () => {
+    const document = await hamlDocument('%p  ');
+    const parse = (correctable?: boolean | null) =>
+      parseLintOffence(document, offense('TrailingWhitespace', 'trailing', 1, correctable)).correctable;
+
+    assert.strictEqual(parse(true), true);
+    assert.strictEqual(parse(false), false);
+    // haml_lint < 0.76: the server sends null, or the key is missing entirely.
+    assert.strictEqual(parse(null), false);
+    assert.strictEqual(parse(undefined), false);
   });
 });

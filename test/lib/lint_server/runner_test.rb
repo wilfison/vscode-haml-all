@@ -48,4 +48,30 @@ class LintServerRunnerTest < Minitest::Test
     # after autocorrect, which is benign for the corrected output.
     assert_equal(expected_result, result.chomp)
   end
+
+  def test_run_autocorrect_restricted_to_included_linters
+    template = [
+      "=foo",
+      "%meta{:foo => 'bar'}"
+    ].join("\n")
+
+    options = @default_options.merge(included_linters: ["SpaceBeforeScript"])
+    result = @runner.run_autocorrect(template, @file_base, options)
+
+    # Only SpaceBeforeScript ran: the RuboCop hash-syntax offense is left as is.
+    assert_equal("= foo\n%meta{:foo => 'bar'}", result.chomp)
+  end
+
+  def test_run_autocorrect_is_safe_only_by_default
+    # UnnecessaryStringOutput declares autocorrect_safe(false).
+    result = @runner.run_autocorrect("= \"foo\"\n", @file_base, @default_options)
+
+    assert_equal("= \"foo\"", result.chomp)
+  end
+
+  def test_run_autocorrect_all_applies_unsafe_corrections
+    result = @runner.run_autocorrect("= \"foo\"\n", @file_base, @default_options.merge(autocorrect: :all))
+
+    assert_equal("foo", result.chomp)
+  end
 end

@@ -9,9 +9,17 @@ function diagnostic(
   rule: string,
   message: string,
   severity = vscode.DiagnosticSeverity.Warning,
-  range = new vscode.Range(0, 0, 0, 20)
+  range = new vscode.Range(0, 0, 0, 20),
+  correctable = false
 ): DiagnosticFull {
-  return new DiagnosticFull(range, message, { value: rule, target: vscode.Uri.parse('https://example.test') }, source, severity);
+  return new DiagnosticFull(
+    range,
+    message,
+    { value: rule, target: vscode.Uri.parse('https://example.test') },
+    source,
+    severity,
+    correctable
+  );
 }
 
 function context(diagnostics: vscode.Diagnostic[]): vscode.CodeActionContext {
@@ -129,6 +137,103 @@ suite('FixActionsProvider Tests', () => {
       assert.deepStrictEqual(await quoteActionTitles("'it\\'s'"), []);
       assert.deepStrictEqual(await quoteActionTitles('no quotes here'), []);
       assert.deepStrictEqual(await quoteActionTitles('"'), []);
+    });
+  });
+
+  suite('haml-lint autocorrect action', () => {
+    const range = new vscode.Range(0, 0, 0, 4);
+    const trailing = (correctable: boolean) =>
+      diagnostic('haml-lint', 'TrailingWhitespace', 'TrailingWhitespace: trailing', undefined, range, correctable);
+
+    // Records the linters it was asked for and answers with the queued text.
+    function fakeAutocorrect(result: string | null) {
+      const calls: string[][] = [];
+      const fn = async (_document: vscode.TextDocument, linters: string[]) => {
+        calls.push(linters);
+        return result;
+      };
+      return { fn, calls };
+    }
+
+    test('is offered before the disable action for a correctable offense', async () => {
+      const document = await hamlDocument('%p a ');
+
+      const actions = provider.provideCodeActions(document, range, context([trailing(true)]), null);
+
+      assert.deepStrictEqual(titles(actions), [
+        'Fix all `TrailingWhitespace` offenses in this file (haml-lint autocorrect)',
+        'Disable `TrailingWhitespace` for this entire file',
+      ]);
+      assert.strictEqual(actions[0].edit, undefined);
+      assert.deepStrictEqual(actions[0].diagnostics, [trailing(true)]);
+    });
+
+    test('is not offered when the offense is not correctable', async () => {
+      const document = await hamlDocument('%p a ');
+
+      const actions = provider.provideCodeActions(document, range, context([trailing(false)]), null);
+
+      assert.deepStrictEqual(titles(actions), ['Disable `TrailingWhitespace` for this entire file']);
+    });
+
+    test('a local fix takes precedence over it', async () => {
+      const document = await hamlDocument('=foo');
+      const diagnostics = [diagnostic('haml-lint', 'SpaceBeforeScript', 'SpaceBeforeScript: x', undefined, range, true)];
+
+      const actions = provider.provideCodeActions(document, range, context(diagnostics), null);
+
+      assert.deepStrictEqual(titles(actions), ['Fix SpaceBeforeScript', 'Disable `SpaceBeforeScript` for this entire file']);
+    });
+
+    test('a RuboCop offense fixes the whole RuboCop linter', async () => {
+      const document = await hamlDocument('%p a ');
+      const autocorrect = fakeAutocorrect('%p a');
+      const provider = new FixActionsProvider(autocorrect.fn);
+      const diagnostics = [diagnostic('RuboCop', 'Layout/TrailingWhitespace', 'Layout/TrailingWhitespace: x', undefined, range, true)];
+
+      const actions = provider.provideCodeActions(document, range, context(diagnostics), null);
+      const action = actions.find((a) => a.title === 'Fix all RuboCop offenses in this file (haml-lint autocorrect)');
+      assert.ok(action, titles(actions).join(' | '));
+
+      await provider.resolveCodeAction(action!);
+
+      assert.deepStrictEqual(autocorrect.calls, [['RuboCop']]);
+    });
+
+    test('resolves to a full-document replace with the corrected text', async () => {
+      const document = await hamlDocument('%p a ');
+      const autocorrect = fakeAutocorrect('%p a');
+      const provider = new FixActionsProvider(autocorrect.fn);
+
+      const [action] = provider.provideCodeActions(document, range, context([trailing(true)]), null);
+      const resolved = await provider.resolveCodeAction(action);
+
+      assert.deepStrictEqual(autocorrect.calls, [['TrailingWhitespace']]);
+      const edits = resolved.edit?.get(document.uri) || [];
+      assert.strictEqual(edits.length, 1);
+      assert.strictEqual(edits[0].newText, '%p a');
+      assert.ok(edits[0].range.isEqual(new vscode.Range(0, 0, 0, 5)));
+    });
+
+    test('resolves without an edit when the text does not change', async () => {
+      const document = await hamlDocument('%p a ');
+      const provider = new FixActionsProvider(fakeAutocorrect('%p a ').fn);
+      const original = vscode.window.showInformationMessage;
+      let messages: string[] = [];
+      (vscode.window as any).showInformationMessage = (message: string) => {
+        messages.push(message);
+        return Promise.resolve(undefined);
+      };
+
+      try {
+        const [action] = provider.provideCodeActions(document, range, context([trailing(true)]), null);
+        const resolved = await provider.resolveCodeAction(action);
+
+        assert.strictEqual(resolved.edit, undefined);
+        assert.deepStrictEqual(messages, ['haml-lint could not autocorrect TrailingWhitespace. See the "Haml" output for details.']);
+      } finally {
+        (vscode.window as any).showInformationMessage = original;
+      }
     });
   });
 });

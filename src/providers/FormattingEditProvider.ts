@@ -1,10 +1,40 @@
-import { DocumentFormattingEditProvider, FormattingOptions, OutputChannel, Range, TextDocument, TextEdit, window } from 'vscode';
+import {
+  CancellationToken,
+  CodeAction,
+  CodeActionContext,
+  CodeActionKind,
+  CodeActionProvider,
+  DocumentFormattingEditProvider,
+  FormattingOptions,
+  OutputChannel,
+  Range,
+  Selection,
+  TextDocument,
+  TextEdit,
+  window,
+  WorkspaceEdit,
+} from 'vscode';
 
 import Linter from '../linter';
 import autoCorrectAll from '../formatter';
 import LintServer from '../server';
 
-export default class FormattingEditProvider implements DocumentFormattingEditProvider {
+// `editor.codeActionsOnSave: { "source.fixAll.hamlLint": "explicit" }` and the
+// `Source Action...` menu. Kept on the formatting provider so "fix all" and
+// "format" are literally the same code path (timeout, pending-lint cancel,
+// legacy fallback and the once-per-session warning).
+export const FIX_ALL_KIND = CodeActionKind.SourceFixAll.append('hamlLint');
+const FIX_ALL_TITLE = 'Fix all auto-correctable haml-lint offenses';
+
+// Carries the document so resolveCodeAction does not have to guess it from the
+// active editor (wrong for "Save All" and for background saves).
+export class FixAllAction extends CodeAction {
+  constructor(public readonly document: TextDocument) {
+    super(FIX_ALL_TITLE, FIX_ALL_KIND);
+  }
+}
+
+export default class FormattingEditProvider implements DocumentFormattingEditProvider, CodeActionProvider {
   private linter: Linter;
   private outputChanel: OutputChannel;
   private lintServer: LintServer;
@@ -22,7 +52,40 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
     this.cancelPendingLint = cancelPendingLint;
   }
 
-  public async provideDocumentFormattingEdits(document: TextDocument, _options: FormattingOptions, _token: any) {
+  public async provideDocumentFormattingEdits(
+    document: TextDocument,
+    _options: FormattingOptions,
+    token: CancellationToken | null
+  ) {
+    return this.computeEdits(document, token);
+  }
+
+  // Source actions are never shown in the lightbulb; VS Code only asks for them
+  // with `only` set (Source Action... menu, codeActionsOnSave).
+  public provideCodeActions(document: TextDocument, _range: Range | Selection, context: CodeActionContext): CodeAction[] {
+    if (!this.linter.isEnabled() || !context.only || !context.only.intersects(CodeActionKind.SourceFixAll)) {
+      return [];
+    }
+
+    // No `edit` yet: computed lazily in resolveCodeAction, so listing the menu
+    // costs no server round-trip.
+    return [new FixAllAction(document)];
+  }
+
+  public async resolveCodeAction(action: FixAllAction, token: CancellationToken): Promise<CodeAction> {
+    const edits = await this.computeEdits(action.document, token);
+
+    if (edits.length === 0) {
+      return action;
+    }
+
+    action.edit = new WorkspaceEdit();
+    action.edit.set(action.document.uri, edits);
+
+    return action;
+  }
+
+  private async computeEdits(document: TextDocument, token: CancellationToken | null): Promise<TextEdit[]> {
     // Formatting runs through haml-lint, so honour the same switch as linting
     // instead of starting a server request the user asked us not to make.
     if (!this.linter.isEnabled()) {
@@ -37,6 +100,12 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
 
     const text = document.getText();
     const corrected = await this.autocorrect(document, text);
+
+    // VS Code cancels on `editor.codeActionsOnSaveTimeout`; that is not a
+    // failure, so no warning and no stale edit.
+    if (token?.isCancellationRequested) {
+      return [];
+    }
 
     if (corrected === null) {
       this.warnFormattingFailed();

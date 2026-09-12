@@ -27,4 +27,23 @@ class LintServerDispatcherTest < Minitest::Test
     assert_equal("error", response[:status])
     assert_kind_of(String, response[:result])
   end
+
+  def test_dispatch_autocorrect_with_unknown_linter_returns_error
+    request = lint_request.merge("action" => "autocorrect", "linters" => ["NaoExiste"])
+
+    response = LintServer::Dispatcher.dispatch(request)
+
+    assert_equal("error", response[:status])
+    assert_includes(response[:result], "NaoExiste")
+  end
+
+  def test_dispatch_autocorrect_unsafe_flag_enables_unsafe_corrections
+    request = lint_request(template: "= \"foo\"\n").merge("action" => "autocorrect")
+
+    safe = LintServer::Dispatcher.dispatch(request)
+    unsafe = LintServer::Dispatcher.dispatch(request.merge("unsafe" => true))
+
+    assert_equal("= \"foo\"", safe[:result].chomp)
+    assert_equal("foo", unsafe[:result].chomp)
+  end
 end

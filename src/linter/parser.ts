@@ -46,11 +46,21 @@ type DiagnosticCode = {
 export class DiagnosticFull extends Diagnostic {
   code: DiagnosticCode;
   source: string;
+  // True only when the server said so: haml_lint < 0.76 sends null.
+  correctable: boolean;
 
-  constructor(range: Range, message: string, code: DiagnosticCode, source: string, severity?: DiagnosticSeverity) {
+  constructor(
+    range: Range,
+    message: string,
+    code: DiagnosticCode,
+    source: string,
+    severity?: DiagnosticSeverity,
+    correctable = false
+  ) {
     super(range, message, severity);
     this.code = code;
     this.source = source;
+    this.correctable = correctable;
   }
 }
 
@@ -66,7 +76,7 @@ export function parseLintOffence(document: TextDocument, offense: LinterOffense)
   const severity = offense.severity === 'warning' ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error;
   const { message, source, code } = parseHamllintAttributes(offense);
 
-  const diagnostic = new DiagnosticFull(range, message, code, source, severity);
+  const diagnostic = new DiagnosticFull(range, message, code, source, severity, offense.correctable === true);
 
   return diagnostic;
 }

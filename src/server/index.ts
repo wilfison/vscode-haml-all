@@ -132,16 +132,27 @@ class LintServer {
    * @param template - The HAML template content to correct
    * @param filePath - The file path of the template
    * @param configPath - Path to the haml-lint configuration file
+   * @param options.linters - haml-lint linter names to restrict the run to (e.g.
+   *   `['SpaceBeforeScript']`, `['RuboCop']`); empty runs every linter
+   * @param options.unsafe - also apply corrections haml-lint/RuboCop mark as
+   *   unsafe; the default is safe only
    * @returns The corrected template, or null when the request failed or timed out
    *   (callers must be able to tell that apart from "nothing to correct")
    */
-  async autocorrect(template: string, filePath: string, configPath: string): Promise<string | null> {
+  async autocorrect(
+    template: string,
+    filePath: string,
+    configPath: string,
+    options: { linters?: string[]; unsafe?: boolean } = {}
+  ): Promise<string | null> {
     const params = {
       action: ACTIONS.autocorrect,
       file_path: filePath,
       template: template,
       config_file: configPath,
       workspace: this.workingDirectory,
+      ...(options.linters?.length ? { linters: options.linters } : {}),
+      ...(options.unsafe ? { unsafe: true } : {}),
     };
 
     try {

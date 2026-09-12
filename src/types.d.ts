@@ -13,6 +13,8 @@ type LinterOffense = {
   };
   message: string;
   severity: string;
+  /** Whether haml-lint can autocorrect it. null/absent with haml_lint < 0.76. */
+  correctable?: boolean | null;
 };
 
 type LinterOutputFile = {
