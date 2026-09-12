@@ -43,6 +43,7 @@
 - The Ruby server now exits when the extension host does, instead of surviving a crashed host and holding its port.
 - "Create a partial from selection" accepts a path (`shared/foo` creates `app/views/shared/_foo.html.haml`), refuses `..` and absolute paths, and says so instead of silently doing nothing when the partial already exists.
 - The extracted partial's `locals` no longer include an email address's domain (`foo@bar.com`) or a class variable, and replacing `@user` no longer corrupts `@user_id`.
+- "Change to single/double quotes" is only offered when the selection is one string literal, so selecting `"a" + "b"` no longer produces `'a" + "b'`.
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09

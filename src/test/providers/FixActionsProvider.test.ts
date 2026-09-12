@@ -107,4 +107,28 @@ suite('FixActionsProvider Tests', () => {
 
     assert.deepStrictEqual(actions, []);
   });
+
+  suite('Change quotes action', () => {
+    async function quoteActionTitles(content: string): Promise<string[]> {
+      const document = await hamlDocument(content);
+      const range = new vscode.Range(0, 0, 0, content.length);
+      const provider = new FixActionsProvider();
+
+      const actions = provider.provideCodeActions(document, range, context([]), null);
+
+      return titles(actions).filter((title) => title.startsWith('Change to'));
+    }
+
+    test('is offered for a single string literal', async () => {
+      assert.deepStrictEqual(await quoteActionTitles('"abc"'), ['Change to single quotes']);
+      assert.deepStrictEqual(await quoteActionTitles("'abc'"), ['Change to double quotes']);
+    });
+
+    test('is not offered for a selection that is more than one literal', async () => {
+      assert.deepStrictEqual(await quoteActionTitles('"a" + "b"'), []);
+      assert.deepStrictEqual(await quoteActionTitles("'it\\'s'"), []);
+      assert.deepStrictEqual(await quoteActionTitles('no quotes here'), []);
+      assert.deepStrictEqual(await quoteActionTitles('"'), []);
+    });
+  });
 });

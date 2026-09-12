@@ -102,9 +102,16 @@ export default class FixActionsProvider implements CodeActionProvider {
 
   private createSwitchQuotesAction(document: TextDocument, range: Range | Selection) {
     const text = document.getText(range);
-    const quote = text[0] === text.slice(-1) ? text[0] : '';
+    const quote = text[0];
 
-    if (['"', "'"].includes(quote) === false) {
+    // Offer this only for a single string literal: same quote at both ends and
+    // not in between. Comparing just the ends turns `"a" + "b"` into
+    // `'a" + "b'`.
+    if (['"', "'"].includes(quote) === false || text.length < 2 || text.at(-1) !== quote) {
+      return;
+    }
+
+    if (text.slice(1, -1).includes(quote)) {
       return;
     }
 
