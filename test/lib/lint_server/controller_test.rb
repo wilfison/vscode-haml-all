@@ -67,7 +67,7 @@ class LintServerControllerTest < Minitest::Test
 
   def test_handle_rejects_request_without_matching_token_when_configured
     with_env("HAML_LINT_SERVER_TOKEN", "s3cret") do
-      client = FakeClient.new("#{lint_request.to_json}\n") # no token field
+      client = FakeClient.new("#{lint_request.to_json}\n") # carries the suite token, not this one
 
       LintServer::Controller.handle(client)
 
@@ -75,6 +75,31 @@ class LintServerControllerTest < Minitest::Test
       assert_equal("Unauthorized", client.response["result"])
       assert(client.closed)
     end
+  end
+
+  def test_handle_rejects_request_when_no_token_is_configured
+    with_env("HAML_LINT_SERVER_TOKEN", "") do
+      client = FakeClient.new("#{lint_request.to_json}\n")
+
+      LintServer::Controller.handle(client)
+
+      assert_equal("error", client.response["status"])
+      assert_equal("Unauthorized", client.response["result"])
+    end
+  end
+
+  def test_handle_accepts_any_request_when_started_with_no_auth
+    LintServer::Controller.allow_unauthenticated = true
+
+    with_env("HAML_LINT_SERVER_TOKEN", "") do
+      client = FakeClient.new("#{lint_request.to_json}\n")
+
+      LintServer::Controller.handle(client)
+
+      assert_equal("success", client.response["status"])
+    end
+  ensure
+    LintServer::Controller.allow_unauthenticated = false
   end
 
   def test_handle_accepts_request_with_matching_token

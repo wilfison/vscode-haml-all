@@ -14,6 +14,12 @@ HAML_LINT_CONFIG_PATH = File.expand_path("support/.haml-lint.yml", __dir__)
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
+# The server rejects requests without a matching token, so the suite runs with a
+# fixed one; lint_request echoes it. Tests that need a different token wrap the
+# call in with_env.
+TEST_SERVER_TOKEN = "test-token"
+ENV["HAML_LINT_SERVER_TOKEN"] = TEST_SERVER_TOKEN
+
 # Load the server components (mirrors lib/server.rb without the bootstrap that
 # picks a port and starts the accept loop).
 require "lint_server/transport"
@@ -64,7 +70,13 @@ module LintServerTestHelpers
   # wire). `lint` is the lightest real action for round-trip tests now that the
   # dependency-free `compile` action has been removed.
   def lint_request(template: "%p Hello")
-    { "action" => "lint", "template" => template, "file_path" => "x.haml", "config_file" => HAML_LINT_CONFIG_PATH }
+    {
+      "action" => "lint",
+      "template" => template,
+      "file_path" => "x.haml",
+      "config_file" => HAML_LINT_CONFIG_PATH,
+      "token" => TEST_SERVER_TOKEN
+    }
   end
 
   # Sets an env var for the duration of the block, restoring the prior value.

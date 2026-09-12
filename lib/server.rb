@@ -85,4 +85,19 @@ module LintServer
   end
 end
 
-LintServer::Server.new.start if ARGV.include?("start")
+# Refuse to expose an endpoint that can run arbitrary Ruby (through a lint or
+# autocorrect config) to every process on the host. The extension always passes
+# a per-session token; a manual run has to opt out on purpose.
+def boot_server
+  LintServer::Controller.allow_unauthenticated = ARGV.include?("--no-auth")
+
+  if ENV["HAML_LINT_SERVER_TOKEN"].to_s.empty? && !LintServer::Controller.allow_unauthenticated
+    warn "Refusing to start without HAML_LINT_SERVER_TOKEN. " \
+         "Pass --no-auth to run unauthenticated (local development only)."
+    exit 1
+  end
+
+  LintServer::Server.new.start
+end
+
+boot_server if ARGV.include?("start")

@@ -6,6 +6,14 @@ module LintServer
   # Dispatcher and framing lives in Transport, both of which are unit-testable
   # without a real socket.
   module Controller
+    # Set to true only by lib/server.rb when it is started with --no-auth, for
+    # local development runs without a token. The extension always launches the
+    # server with a token, so this stays false there.
+    class << self
+      attr_accessor :allow_unauthenticated
+    end
+    self.allow_unauthenticated = false
+
     module_function
 
     # Accepts one pending connection from +server+ and handles it. The read
@@ -45,11 +53,12 @@ module LintServer
     # HAML_LINT_SERVER_TOKEN env var and echoes it in every request. Requests
     # without a matching token are rejected, so another local process — or
     # another user sharing 127.0.0.1 on a multi-user host — cannot drive the
-    # server (it can run arbitrary Ruby via lint/autocorrect configs). When no
-    # token is configured (manual runs, tests) auth is skipped.
+    # server (it can run arbitrary Ruby via lint/autocorrect configs). With no
+    # token configured the server fails closed, unless it was explicitly started
+    # with --no-auth.
     def authorized?(request)
       expected = ENV["HAML_LINT_SERVER_TOKEN"].to_s
-      return true if expected.empty?
+      return Controller.allow_unauthenticated if expected.empty?
       return false unless request.is_a?(Hash)
 
       tokens_match?(expected, request["token"].to_s)
