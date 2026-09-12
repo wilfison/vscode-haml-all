@@ -38,7 +38,10 @@ export function extractPartialNameFromLine(lineText: string): string {
   }
 
   const cleanedLineText = lineText.split(' ').filter(Boolean).join(' ');
-  const afterRender = cleanedLineText.split(/render\(|render\ |render\: /)[1];
+
+  // The line only *contains* "render": it may be `@rendered_count`,
+  // `render_to_string(x)` or a comment, none of which produce a second part.
+  const afterRender = cleanedLineText.split(/render\(|render\ |render\: /)[1] || '';
   const partialMatch = afterRender.match(PARTIAL_EXPLICIT_REGEX) || afterRender.match(PARTIAL_IMPLICIT_REGEX);
 
   if (!partialMatch) {
