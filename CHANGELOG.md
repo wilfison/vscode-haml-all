@@ -35,6 +35,7 @@
 - With `hamlAll.lintEnabled` off, formatting no longer calls the lint server.
 - Windows: partial completions, extracted partial names and asset paths no longer mix `\` and `/`, so the name inserted into the HAML is the right one.
 - "Jump to controller Action" works for projects whose path contains a directory called `app` (e.g. `~/app/projeto`).
+- The partial signature help now highlights the parameter you are actually typing instead of always the second one.
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09
