@@ -1,5 +1,11 @@
 # Change Log
 
+## [Unreleased]
+
+### Fixes
+
+- Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
+
 ## [3.1.0] - 2026-07-09
 
 ### Performance

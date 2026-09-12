@@ -130,7 +130,7 @@
           "name": "meta.selector.css"
         },
         {
-          "begin": "(?<!\\#)\\{(?=.*(,|(do)|\\{|\\}|\\||(\\#.*)|\\R)\\s*)",
+          "begin": "(?<!\\#)\\{(?=.*(,|(\\bdo\\b)|\\{|\\}|\\||(\\#.*)|\\R)\\s*)",
           "end": "\\s*\\}(?!\\s*\\,)(?!\\s*\\|)(?!\\#\\{.*\\})",
           "name": "meta.section.attributes.haml",
           "patterns": [
@@ -488,7 +488,7 @@
     "rubyline": {
       "begin": "(&amp|!)?(=|-|~)",
       "contentName": "source.ruby.embedded.haml",
-      "end": "((do|\\{)( \\|[.*]+\\|)?)$|[^,]$|^(?!.*\\|\\s*)$\\n?",
+      "end": "((\\bdo|\\{)( \\|[.*]+\\|)?)$|[^,]$|^(?!.*\\|\\s*)$\\n?",
       "endCaptures": {
         "1": {
           "name": "source.ruby.embedded.html"
@@ -536,7 +536,7 @@
           "match": "\\s+(use\\s*)((?=\\())"
         },
         {
-          "match": "(\\||,|<|do|\\{)\\s*(\\#.*)?$\\n*",
+          "match": "(\\||,|<|\\bdo|\\{)\\s*(\\#.*)?$\\n*",
           "name": "source.ruby",
           "patterns": [
             {
