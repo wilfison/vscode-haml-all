@@ -24,8 +24,12 @@ export const ACTIONS = {
 
 /** Time budgets (ms) for server interactions. */
 export const TIMEOUTS = {
-  /** Autocorrect must be fast enough to run on format; bail out otherwise. */
-  autocorrectMs: 1000,
+  /**
+   * Budget for a format request. It covers queueing too: the Ruby server is
+   * single-threaded, so an in-flight lint (RuboCop on a large file easily passes
+   * a second) is charged to the autocorrect waiting behind it.
+   */
+  autocorrectMs: 10000,
   /** How long to wait for the Ruby server's start-up line before giving up. */
   startupMs: 10000,
   /** Ceiling for lint/list_cops requests so a stuck server can never hang the client. */

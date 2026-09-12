@@ -132,20 +132,22 @@ suite('LintServer', () => {
       assert.strictEqual(result, 'fixed content');
     });
 
-    test('returns the original template on error status', async () => {
+    // null (not the original template) is what tells the formatter the request
+    // failed rather than finding nothing to correct.
+    test('returns null on error status', async () => {
       await connectTo(() => JSON.stringify({ status: 'error', result: 'boom' }));
 
       const result = await lintServer.autocorrect('original', '/a/b.haml', '/a/.haml-lint.yml');
 
-      assert.strictEqual(result, 'original');
+      assert.strictEqual(result, null);
     });
 
-    test('returns the original template when the response cannot be parsed', async () => {
+    test('returns null when the response cannot be parsed', async () => {
       await connectTo(() => null);
 
       const result = await lintServer.autocorrect('original', '/a/b.haml', '/a/.haml-lint.yml');
 
-      assert.strictEqual(result, 'original');
+      assert.strictEqual(result, null);
     });
   });
 

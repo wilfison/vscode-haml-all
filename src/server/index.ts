@@ -96,9 +96,10 @@ class LintServer {
    * @param template - The HAML template content to correct
    * @param filePath - The file path of the template
    * @param configPath - Path to the haml-lint configuration file
-   * @returns The corrected template content, or original template if correction fails
+   * @returns The corrected template, or null when the request failed or timed out
+   *   (callers must be able to tell that apart from "nothing to correct")
    */
-  async autocorrect(template: string, filePath: string, configPath: string): Promise<string> {
+  async autocorrect(template: string, filePath: string, configPath: string): Promise<string | null> {
     const params = {
       action: ACTIONS.autocorrect,
       file_path: filePath,
@@ -114,13 +115,13 @@ class LintServer {
 
       if (data.status !== 'success') {
         this.printOutput(`autocorrect error: ${data.result}`);
-        return template;
+        return null;
       }
 
       return data.result;
     } catch (error) {
       this.printOutput(`Error while autocorrecting: ${error}`);
-      return template;
+      return null;
     }
   }
 

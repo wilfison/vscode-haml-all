@@ -30,6 +30,9 @@
 - Pressing Enter only indents where HAML actually nests — after a Ruby block, a `do`, a tag with no inline content or a filter. `= render "foo"`, `%p Hello world` and `= link_to "x", path` no longer indent the next line.
 - Typing `- else`, `- elsif`, `- when`, `- rescue`, `- ensure` or `- end` now outdents.
 - Removed the invalid block-comment definition (HAML has no delimited block comment); `-#` line comments are unaffected.
+- Formatting a large file works again: the autocorrect budget went from 1s to 10s and the pending lint is dropped first, so it no longer loses its whole budget queued behind a RuboCop run.
+- A formatting run that fails or times out now says so (once per session, rearmed after the next success) instead of silently leaving the file unchanged. Every failure is logged to the "Haml" output.
+- With `hamlAll.lintEnabled` off, formatting no longer calls the lint server.
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09

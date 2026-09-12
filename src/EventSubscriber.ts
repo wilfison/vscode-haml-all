@@ -64,6 +64,12 @@ class EventSubscriber {
     this.context.subscriptions.forEach((subscription) => subscription.dispose());
   }
 
+  // The Ruby server is single-threaded, so formatting asks for the queued lint to
+  // be dropped rather than wait behind it.
+  public cancelPendingLint(): void {
+    this.clearChangeDebounce();
+  }
+
   public updateAllDiagnostics(_event: any = null) {
     this.linter.clearAll();
 

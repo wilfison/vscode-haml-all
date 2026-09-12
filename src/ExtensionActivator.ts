@@ -101,7 +101,9 @@ export class ExtensionActivator {
     this.context.subscriptions.push(
       vscode.languages.registerDocumentFormattingEditProvider(
         this.HAML_SELECTOR,
-        new FormattingEditProvider(eventSubscriber.linter, this.outputChannel, this.lintServer)
+        new FormattingEditProvider(eventSubscriber.linter, this.outputChannel, this.lintServer, () =>
+          eventSubscriber.cancelPendingLint()
+        )
       )
     );
 
