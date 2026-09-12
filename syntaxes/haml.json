@@ -19,16 +19,6 @@
       ]
     },
     {
-      "begin": "^(\\s*):ruby",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "source.ruby.embedded.filter.haml",
-      "patterns": [
-        {
-          "include": "source.ruby"
-        }
-      ]
-    },
-    {
       "captures": {
         "1": {
           "name": "punctuation.definition.prolog.haml"
@@ -36,36 +26,6 @@
       },
       "match": "^(!!!)($|\\s.*)",
       "name": "meta.prolog.haml"
-    },
-    {
-      "begin": "^(\\s*):javascript",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "js.haml",
-      "patterns": [
-        {
-          "include": "source.js"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*)%script",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "js.inline.haml",
-      "patterns": [
-        {
-          "include": "source.js"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*):ruby$",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "source.ruby.embedded.filter.haml",
-      "patterns": [
-        {
-          "include": "source.ruby"
-        }
-      ]
     },
     {
       "captures": {
@@ -87,6 +47,229 @@
       "name": "comment.block.haml"
     },
     {
+      "begin": "^(\\s*)(:(?:ruby|opal))\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "source.ruby.embedded.filter.haml",
+      "patterns": [
+        {
+          "include": "source.ruby"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(:javascript)\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "js.haml",
+      "patterns": [
+        {
+          "include": "source.js"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(:coffee(?:script)?)\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "source.coffee.embedded.filter.haml",
+      "patterns": [
+        {
+          "include": "source.coffee"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(:(?:css|styles?))\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.css",
+      "patterns": [
+        {
+          "include": "source.css"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(:sass)\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.sass",
+      "patterns": [
+        {
+          "include": "source.sass"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(:scss)\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.scss",
+      "patterns": [
+        {
+          "include": "source.scss"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(:less)\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.less",
+      "patterns": [
+        {
+          "include": "source.css.less"
+        },
+        {
+          "include": "source.css"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(:erb)\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.erb",
+      "patterns": [
+        {
+          "include": "text.html.erb"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(:php)\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.php",
+      "patterns": [
+        {
+          "include": "text.html.php#language"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(:markdown)\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "meta.embedded.markdown",
+      "patterns": [
+        {
+          "include": "text.html.markdown"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(:plain)\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "text.plain.embedded.filter.haml",
+      "patterns": [
+        {
+          "include": "text.plain"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(:(?:preserve|escaped|cdata))\\s*$",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.filter.haml"
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "name": "string.unquoted.haml",
+      "patterns": []
+    },
+    {
+      "begin": "^(\\s*)(%script)\\b([^\\n]*)$",
+      "beginCaptures": {
+        "2": {
+          "name": "entity.name.tag.haml"
+        },
+        "3": {
+          "patterns": [
+            {
+              "include": "#tag_content"
+            }
+          ]
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "contentName": "js.inline.haml",
+      "patterns": [
+        {
+          "include": "source.js"
+        }
+      ]
+    },
+    {
+      "begin": "^(\\s*)(%style)\\b([^\\n]*)$",
+      "beginCaptures": {
+        "2": {
+          "name": "entity.name.tag.haml"
+        },
+        "3": {
+          "patterns": [
+            {
+              "include": "#tag_content"
+            }
+          ]
+        }
+      },
+      "end": "^(?!\\1\\s+|$\\n*)",
+      "contentName": "css.inline.haml",
+      "patterns": [
+        {
+          "include": "source.css"
+        }
+      ]
+    },
+    {
       "begin": "^\\s*(?:((%)([-\\w:]+))|(?=\\.|#))",
       "captures": {
         "1": {
@@ -102,209 +285,7 @@
       "end": "$|(?!\\.|#|\\{|\\(|\\[|&amp;|=|-|~|!=|&=|/)",
       "patterns": [
         {
-          "begin": "==",
-          "contentName": "string.quoted.double.ruby",
-          "end": "$\\n?",
-          "patterns": [
-            {
-              "include": "#interpolated_ruby"
-            }
-          ]
-        },
-        {
-          "captures": {
-            "1": {
-              "name": "entity.other.attribute-name.class"
-            }
-          },
-          "match": "(\\.[\\w\\-\\:]+)",
-          "name": "meta.selector.css"
-        },
-        {
-          "captures": {
-            "1": {
-              "name": "entity.other.attribute-name.id"
-            }
-          },
-          "match": "(#[\\w-]+)",
-          "name": "meta.selector.css"
-        },
-        {
-          "begin": "(?<!\\#)\\{(?=.*(,|(\\bdo\\b)|\\{|\\}|\\||(\\#.*)|\\R)\\s*)",
-          "end": "\\s*\\}(?!\\s*\\,)(?!\\s*\\|)(?!\\#\\{.*\\})",
-          "name": "meta.section.attributes.haml",
-          "patterns": [
-            {
-              "include": "source.ruby"
-            },
-            {
-              "include": "#continuation"
-            },
-            {
-              "include": "#rubyline"
-            }
-          ]
-        },
-        {
-          "begin": "\\(",
-          "end": "\\)",
-          "name": "meta.section.attributes.plain.haml",
-          "patterns": [
-            {
-              "match": "([\\w-]+)",
-              "name": "constant.other.symbol.ruby"
-            },
-            {
-              "match": "\\=",
-              "name": "punctuation"
-            },
-            {
-              "include": "#variables"
-            },
-            {
-              "begin": "\"",
-              "end": "\"",
-              "name": "string.quoted.double.ruby",
-              "patterns": [
-                {
-                  "match": "\\\\(x\\h{2}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)",
-                  "name": "constant.character.escape.ruby"
-                },
-                {
-                  "include": "#interpolated_ruby"
-                }
-              ]
-            },
-            {
-              "include": "#interpolated_ruby"
-            }
-          ]
-        },
-        {
-          "begin": "\\[(?=.+(,|\\[|\\]|\\||(\\#.*))\\s*)",
-          "end": "\\s*\\](?!.*(?!\\#\\[)\\])",
-          "name": "meta.section.object.haml",
-          "patterns": [
-            {
-              "include": "source.ruby"
-            },
-            {
-              "include": "#continuation"
-            },
-            {
-              "include": "#rubyline"
-            }
-          ]
-        },
-        {
-          "include": "#interpolated_ruby_line"
-        },
-        {
-          "include": "#rubyline"
-        },
-        {
-          "match": "/",
-          "name": "punctuation.terminator.tag.haml"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*):(ruby|opal)$",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "source.ruby.embedded.filter.haml",
-      "patterns": [
-        {
-          "include": "source.ruby"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*):ruby$",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "source.ruby.embedded.filter.haml",
-      "patterns": [
-        {
-          "include": "source.ruby"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*):(style|sass)$",
-      "end": "^(?=\\1\\s+|$\\n*)",
-      "name": "source.sass.embedded.filter.haml",
-      "patterns": [
-        {
-          "include": "source.sass"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*):coffee(script)?",
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "source.coffee.embedded.filter.haml",
-      "patterns": [
-        {
-          "include": "source.coffee"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*):plain$",
-      "end": "^(?=\\1\\s+|$\\n*)",
-      "name": "text.plain.embedded.filter.haml",
-      "patterns": [
-        {
-          "include": "text.plain"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*)(:ruby)",
-      "beginCaptures": {
-        "2": {
-          "name": "keyword.control.filter.haml"
-        }
-      },
-      "end": "(?m:(?<=\\n)(?!\\1\\s+|$\\n*))",
-      "name": "source.ruby.embedded.filter.haml",
-      "patterns": [
-        {
-          "include": "source.ruby"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*)(:sass)",
-      "beginCaptures": {
-        "2": {
-          "name": "keyword.control.filter.haml"
-        }
-      },
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "source.embedded.filter.sass",
-      "patterns": [
-        {
-          "include": "source.sass"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*):(styles|sass)$",
-      "end": "^(?=\\1\\s+|$\\n*)",
-      "name": "source.sass.embedded.filter.haml",
-      "patterns": [
-        {
-          "include": "source.sass"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*):plain$",
-      "end": "^(?=\\1\\s+|$\\n*)",
-      "name": "text.plain.embedded.filter.haml",
-      "patterns": [
-        {
-          "include": "text.plain"
+          "include": "#tag_content"
         }
       ]
     },
@@ -325,81 +306,6 @@
         },
         {
           "include": "#rubyline"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*)(:php)",
-      "captures": {
-        "2": {
-          "name": "entity.name.tag.haml"
-        }
-      },
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "meta.embedded.php",
-      "patterns": [
-        {
-          "include": "text.html.php#language"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*)(:markdown)",
-      "captures": {
-        "2": {
-          "name": "entity.name.tag.haml"
-        }
-      },
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "meta.embedded.markdown",
-      "patterns": [
-        {
-          "include": "text.html.markdown"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*)(:(css|styles?))$",
-      "captures": {
-        "2": {
-          "name": "entity.name.tag.haml"
-        }
-      },
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "meta.embedded.css",
-      "patterns": [
-        {
-          "include": "source.css"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*)(:sass)$",
-      "captures": {
-        "2": {
-          "name": "entity.name.tag.haml"
-        }
-      },
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "meta.embedded.sass",
-      "patterns": [
-        {
-          "include": "source.sass"
-        }
-      ]
-    },
-    {
-      "begin": "^(\\s*)(:scss)$",
-      "captures": {
-        "2": {
-          "name": "entity.name.tag.haml"
-        }
-      },
-      "end": "^(?!\\1\\s+|$\\n*)",
-      "name": "meta.embedded.scss",
-      "patterns": [
-        {
-          "include": "source.scss"
         }
       ]
     }
@@ -585,6 +491,115 @@
           },
           "match": "(#\\$)[a-zA-Z_]\\w*",
           "name": "variable.other.readwrite.global.ruby"
+        }
+      ]
+    },
+    "tag_content": {
+      "patterns": [
+        {
+          "begin": "==",
+          "contentName": "string.quoted.double.ruby",
+          "end": "$\\n?",
+          "patterns": [
+            {
+              "include": "#interpolated_ruby"
+            }
+          ]
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "entity.other.attribute-name.class"
+            }
+          },
+          "match": "(\\.[\\w\\-\\:]+)",
+          "name": "meta.selector.css"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "entity.other.attribute-name.id"
+            }
+          },
+          "match": "(#[\\w-]+)",
+          "name": "meta.selector.css"
+        },
+        {
+          "begin": "(?<!\\#)\\{(?=.*(,|(\\bdo\\b)|\\{|\\}|\\||(\\#.*)|\\R)\\s*)",
+          "end": "\\s*\\}(?!\\s*\\,)(?!\\s*\\|)(?!\\#\\{.*\\})",
+          "name": "meta.section.attributes.haml",
+          "patterns": [
+            {
+              "include": "source.ruby"
+            },
+            {
+              "include": "#continuation"
+            },
+            {
+              "include": "#rubyline"
+            }
+          ]
+        },
+        {
+          "begin": "\\(",
+          "end": "\\)",
+          "name": "meta.section.attributes.plain.haml",
+          "patterns": [
+            {
+              "match": "([\\w-]+)",
+              "name": "constant.other.symbol.ruby"
+            },
+            {
+              "match": "\\=",
+              "name": "punctuation"
+            },
+            {
+              "include": "#variables"
+            },
+            {
+              "begin": "\"",
+              "end": "\"",
+              "name": "string.quoted.double.ruby",
+              "patterns": [
+                {
+                  "match": "\\\\(x\\h{2}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)",
+                  "name": "constant.character.escape.ruby"
+                },
+                {
+                  "include": "#interpolated_ruby"
+                }
+              ]
+            },
+            {
+              "include": "#interpolated_ruby"
+            }
+          ]
+        },
+        {
+          "begin": "\\[(?=.+(,|\\[|\\]|\\||(\\#.*))\\s*)",
+          "end": "\\s*\\](?!.*(?!\\#\\[)\\])",
+          "name": "meta.section.object.haml",
+          "patterns": [
+            {
+              "include": "source.ruby"
+            },
+            {
+              "include": "#continuation"
+            },
+            {
+              "include": "#rubyline"
+            }
+          ]
+        },
+        {
+          "include": "#interpolated_ruby_line"
+        },
+        {
+          "include": "#rubyline"
+        },
+        {
+          "match": "/",
+          "name": "punctuation.terminator.tag.haml"
         }
       ]
     }

@@ -46,6 +46,8 @@
 - "Change to single/double quotes" is only offered when the selection is one string literal, so selecting `"a" + "b"` no longer produces `'a" + "b'`.
 - Routes and lint config are no longer reloaded because of a `config/routes.rb` or `.haml-lint.yml` inside `node_modules`/`vendor/bundle`.
 - `assets:precompile` and webpack/vite watchers no longer invalidate the asset index on every file they write.
+- Syntax highlighting: added the `:erb`, `:preserve`, `:escaped`, `:cdata` and `:less` filters, and `%script{src: "x.js"}` keeps its attributes highlighted as HAML instead of being swallowed by the JavaScript context.
+- Removed duplicated grammar rules (`:ruby` appeared five times, `:plain` twice).
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09
