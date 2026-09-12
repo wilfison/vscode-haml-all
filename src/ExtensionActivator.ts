@@ -84,7 +84,7 @@ export class ExtensionActivator {
     this.trustedActivated = true;
 
     const config = vscode.workspace.getConfiguration('hamlAll');
-    this.lintServer = new LintServer(getWorkspaceRoot(), config.useBundler, this.outputChannel);
+    this.lintServer = new LintServer(getWorkspaceRoot(), config.useBundler, this.outputChannel, helpers.rubyCommand());
 
     // Probe for haml-lint in the background so a slow Ruby boot never delays
     // activation; surface the error only if the gem is genuinely missing.

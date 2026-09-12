@@ -4,6 +4,7 @@ import * as path from 'node:path';
 import { OutputChannel, workspace } from 'vscode';
 
 import { SOURCE } from './linter';
+import { isPathCommand, splitCommand } from './utils/command';
 import { getWorkspaceRoot } from './utils/file';
 
 // Probes an executable by running `<executable> --version`.
@@ -40,23 +41,6 @@ export function resolveRailsCommand(hamlAllValue?: string, deprecatedValue?: str
   return hamlAllValue?.trim() || deprecatedValue?.trim() || DEFAULT_RAILS_COMMAND;
 }
 
-/**
- * Splits a configured command into argv form ("bundle exec rails" ->
- * ["bundle", "exec", "rails"]). The value comes from settings, so it is never
- * handed to a shell.
- */
-export function splitCommand(command: string): string[] {
-  return command.trim().split(/\s+/).filter(Boolean);
-}
-
-/**
- * Whether a command token is a path (and therefore resolvable against the
- * workspace root) rather than a bare name looked up in PATH.
- */
-export function isPathCommand(executable: string): boolean {
-  return path.isAbsolute(executable) || /[\\/]/.test(executable);
-}
-
 // Value explicitly set by the user, ignoring the package.json default — that is
 // what tells us whether to fall back to the deprecated setting.
 function explicitValue(section: string, key: string): string | undefined {
@@ -71,6 +55,11 @@ function explicitValue(section: string, key: string): string | undefined {
  */
 export function railsCommand(): string {
   return resolveRailsCommand(explicitValue('hamlAll', 'railsCommand'), explicitValue('railsRoutes', 'railsCommand'));
+}
+
+/** Ruby interpreter used to run the lint server (`hamlAll.rubyCommand`). */
+export function rubyCommand(): string {
+  return workspace.getConfiguration('hamlAll').get<string>('rubyCommand')?.trim() || 'ruby';
 }
 
 // Detects a Rails project by checking whether the rails command exists on disk,

@@ -69,7 +69,13 @@
           "type": "string",
           "default": "haml-lint",
           "scope": "machine",
-          "description": "Path to haml-lint executable. Machine-scoped for security: it cannot be set by a workspace's .vscode/settings.json, only in your user settings."
+          "description": "Path to the haml-lint executable, used *only* to check that haml-lint is available. Linting and formatting themselves run through `hamlAll.rubyCommand`. Machine-scoped for security: it cannot be set by a workspace's .vscode/settings.json, only in your user settings."
+        },
+        "hamlAll.rubyCommand": {
+          "type": "string",
+          "default": "ruby",
+          "scope": "machine",
+          "description": "Ruby interpreter used to run the lint server. Set it to an absolute path when a version manager's shims (rbenv, asdf, mise) are not on the PATH of a GUI-launched VS Code. May include arguments. Machine-scoped for security: it cannot be set by a workspace's .vscode/settings.json, only in your user settings."
         },
         "hamlAll.useBundler": {
           "type": "boolean",

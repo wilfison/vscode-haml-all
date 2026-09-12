@@ -4,7 +4,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 
-import { hamlLintPresent, isARailsProject, resolveRailsCommand, splitCommand } from '../Helpers';
+import { hamlLintPresent, isARailsProject, resolveRailsCommand } from '../Helpers';
+import { splitCommand } from '../utils/command';
 
 // Overrides workspace.getConfiguration so that a given config section returns
 // `values`, supporting both the property access and the inspect() call that

@@ -12,6 +12,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import path from 'node:path';
 
 import { Logger, TIMEOUTS } from './protocol';
+import { splitCommand } from '../utils/command';
 import { getExtensionRoot } from '../utils/extensionRoot';
 
 /** Where the extension ships the Ruby server (`lib/` under the extension root). */
@@ -28,6 +29,8 @@ export interface RubyServerConfig {
   token: string;
   /** Override the bundled `lib/` location (defaults to the packaged path). */
   libPath?: string;
+  /** Ruby interpreter to run (`hamlAll.rubyCommand`); may carry arguments. */
+  rubyCommand?: string;
 }
 
 export interface RubyServerDeps {
@@ -59,7 +62,13 @@ export function startRubyServer(config: RubyServerConfig, deps: RubyServerDeps =
   const startupTimeoutMs = deps.startupTimeoutMs ?? TIMEOUTS.startupMs;
 
   const libPath = config.libPath ?? defaultLibPath();
-  const args = [`${libPath}/server.rb`, 'start'];
+
+  // The interpreter is configurable (rbenv/asdf/mise shims are invisible to a
+  // GUI-launched VS Code) and may carry arguments, which go to spawn's argv —
+  // never through a shell, since the value comes from settings.
+  const [executable, ...interpreterArgs] = splitCommand(config.rubyCommand || 'ruby');
+
+  const args = [...interpreterArgs, `${libPath}/server.rb`, 'start'];
   if (config.useBundler) {
     args.push('--use-bundler');
   }
@@ -67,7 +76,7 @@ export function startRubyServer(config: RubyServerConfig, deps: RubyServerDeps =
   return new Promise<StartedRubyServer>((resolve, reject) => {
     log(`Starting Ruby server with args: ${args.join(' ')}`);
 
-    const rubyProcess = spawnFn('ruby', args, {
+    const rubyProcess = spawnFn(executable, args, {
       cwd: config.workingDirectory,
       env: { ...process.env, HAML_LINT_SERVER_TOKEN: config.token },
     });
@@ -109,7 +118,12 @@ export function startRubyServer(config: RubyServerConfig, deps: RubyServerDeps =
     // A spawn failure (e.g. `ruby` not on PATH -> ENOENT) is delivered as an
     // event; without this listener Node rethrows it and crashes the host.
     rubyProcess.on('error', (error) => {
-      finish(() => reject(new Error(`Failed to spawn Ruby server: ${error.message}`)));
+      const notFound = (error as NodeJS.ErrnoException).code === 'ENOENT';
+      const message = notFound
+        ? `Failed to spawn "${executable}": not found. Set hamlAll.rubyCommand to your Ruby path.`
+        : `Failed to spawn Ruby server: ${error.message}`;
+
+      finish(() => reject(new Error(message)));
     });
 
     rubyProcess.on('close', (code) => {

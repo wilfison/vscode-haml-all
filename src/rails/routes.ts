@@ -5,7 +5,8 @@ import * as path from 'node:path';
 import { Route, parseRoutes } from './router_parser';
 import { OutputChannel } from 'vscode';
 
-import { isPathCommand, railsCommand, splitCommand } from '../Helpers';
+import { railsCommand } from '../Helpers';
+import { isPathCommand, splitCommand } from '../utils/command';
 
 /**
  * Manages Rails routes loading and caching.

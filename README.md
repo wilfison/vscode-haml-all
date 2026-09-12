@@ -136,8 +136,13 @@ You can customize this extension by creating a `.vscode/settings.json` file in y
   // (If true, the 'linterExecutablePath' setting is ignored.)
   "hamlAll.useBundler": false,
 
-  // Specify the path to the haml-lint executable.
+  // Path to the haml-lint executable. Used only to check that haml-lint is
+  // available; linting itself runs through "hamlAll.rubyCommand".
   "hamlAll.linterExecutablePath": "haml-lint",
+
+  // Ruby interpreter used to run the lint server. Set an absolute path when
+  // rbenv/asdf/mise shims are not on the PATH of a GUI-launched VS Code.
+  "hamlAll.rubyCommand": "ruby",
 
   // Command used to run Rails (project detection and `rails routes`).
   // May include arguments, e.g. "bundle exec rails".
@@ -145,7 +150,7 @@ You can customize this extension by creating a `.vscode/settings.json` file in y
 }
 ```
 
-`hamlAll.linterExecutablePath` and `hamlAll.railsCommand` are machine-scoped: they can only be set in your user settings, never by a repository's `.vscode/settings.json`.
+`hamlAll.linterExecutablePath`, `hamlAll.rubyCommand` and `hamlAll.railsCommand` are machine-scoped: they can only be set in your user settings, never by a repository's `.vscode/settings.json`.
 
 > `railsRoutes.railsCommand` is deprecated in favour of `hamlAll.railsCommand`. It is still read when the new setting is not set.
 

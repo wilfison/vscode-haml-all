@@ -12,6 +12,7 @@
 
 ### Added
 
+- `hamlAll.rubyCommand` lets you point at the Ruby interpreter that runs the lint server — useful when rbenv/asdf/mise shims are missing from the PATH of a VS Code launched from the dock. When it cannot be spawned, the error now names the command and the setting.
 - `hamlAll.railsCommand` replaces `railsRoutes.railsCommand`, and it is now actually used to load routes — `bin/rails` used to be hardcoded. It accepts arguments, so `bundle exec rails` works. The old setting is deprecated but still read when the new one is unset.
 
 ### Fixes
@@ -24,6 +25,7 @@
 - Rails routes load even when the app prints warnings to stderr, and a failure to run the routes command no longer crashes the window or wipes the routes already loaded.
 - Reloading routes twice in a row no longer lets the cancelled run discard the newer one's output.
 - A mounted engine (`mount Sidekiq::Web`) or extra output before the first route no longer breaks route parsing.
+- `hamlAll.linterExecutablePath` no longer claims to control linting: it is only used to check that haml-lint is available (documented in the setting and the README).
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09

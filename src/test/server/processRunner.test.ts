@@ -166,6 +166,30 @@ suite('startRubyServer', () => {
     assert.strictEqual(call.options.env.HAML_LINT_SERVER_TOKEN, 'secret-token');
   });
 
+  test('spawns the configured ruby command, splitting its arguments', async () => {
+    const proc = makeFakeProcess();
+    const spawnFn = fakeSpawnReturning(proc);
+
+    const promise = startRubyServer({ ...baseConfig, rubyCommand: '/opt/rubies/3.3/bin/ruby -W0' }, { spawn: spawnFn });
+    proc.stdout.emit('data', Buffer.from('{"port":7654}\n'));
+    await promise;
+
+    const call = spawnFn.calls[0];
+    assert.strictEqual(call.command, '/opt/rubies/3.3/bin/ruby');
+    assert.deepStrictEqual(call.args, ['-W0', '/fake/lib/server.rb', 'start']);
+  });
+
+  test('points at hamlAll.rubyCommand when the interpreter is not found', async () => {
+    const proc = makeFakeProcess();
+    const promise = startRubyServer({ ...baseConfig, rubyCommand: 'ruby3' }, { spawn: fakeSpawnReturning(proc) });
+
+    const error: any = new Error('spawn ruby3 ENOENT');
+    error.code = 'ENOENT';
+    proc.emit('error', error);
+
+    await assert.rejects(() => promise, /Failed to spawn "ruby3": not found\. Set hamlAll\.rubyCommand to your Ruby path\./);
+  });
+
   test('appends --use-bundler when useBundler is true', async () => {
     const proc = makeFakeProcess();
     const spawnFn = fakeSpawnReturning(proc);

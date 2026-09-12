@@ -19,6 +19,7 @@ class LintServer {
   private readonly workingDirectory: string;
   private readonly useBundler: Boolean;
   private readonly outputChannel: OutputChannel | null = null;
+  private readonly rubyCommand: string;
 
   // Per-session secret shared only with the server process we spawn. Every
   // request carries it so another local process cannot drive our server over
@@ -30,11 +31,18 @@ class LintServer {
    * @param workingDirectory - The workspace root directory
    * @param useBundler - Whether to use Bundler for gem management
    * @param outputChannel - Optional output channel for logging (defaults to null)
+   * @param rubyCommand - Ruby interpreter used to run the server (defaults to `ruby`)
    */
-  constructor(workingDirectory: string, useBundler: Boolean, outputChannel: OutputChannel | null = null) {
+  constructor(
+    workingDirectory: string,
+    useBundler: Boolean,
+    outputChannel: OutputChannel | null = null,
+    rubyCommand: string = 'ruby'
+  ) {
     this.workingDirectory = workingDirectory;
     this.useBundler = useBundler;
     this.outputChannel = outputChannel;
+    this.rubyCommand = rubyCommand;
   }
 
   /**
@@ -158,6 +166,7 @@ class LintServer {
         workingDirectory: this.workingDirectory,
         useBundler: this.useBundler,
         token: this.token,
+        rubyCommand: this.rubyCommand,
       },
       { log: (message) => this.printOutput(message) }
     );
