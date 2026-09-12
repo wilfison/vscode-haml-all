@@ -26,6 +26,15 @@ function commandAvailable(executable: string): Promise<boolean> {
 
 export function hamlLintPresent(): Promise<boolean> {
   const config = workspace.getConfiguration('hamlAll');
+
+  // With `useBundler` the gem lives inside the bundle, where a global
+  // `haml-lint --version` proves nothing — probing it would only produce a
+  // bogus "not installed" error on every activation. A genuine failure still
+  // surfaces through the server start-up error, which carries its stderr tail.
+  if (config.useBundler) {
+    return Promise.resolve(true);
+  }
+
   const executable = config.linterExecutablePath || SOURCE;
 
   return commandAvailable(executable);

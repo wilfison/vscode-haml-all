@@ -26,6 +26,7 @@
 - Reloading routes twice in a row no longer lets the cancelled run discard the newer one's output.
 - A mounted engine (`mount Sidekiq::Web`) or extra output before the first route no longer breaks route parsing.
 - `hamlAll.linterExecutablePath` no longer claims to control linting: it is only used to check that haml-lint is available (documented in the setting and the README).
+- With `hamlAll.useBundler` on, activation no longer claims "haml-lint not found" when the gem is only inside the bundle.
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09

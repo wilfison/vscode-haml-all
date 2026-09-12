@@ -59,6 +59,32 @@ suite('Helpers Tests', () => {
       }
     });
 
+    test('skips the global probe when useBundler is on', async () => {
+      const restore = stubConfiguration('hamlAll', {
+        useBundler: true,
+        linterExecutablePath: '/nonexistent/definitely-not-haml-lint',
+      });
+
+      try {
+        assert.strictEqual(await hamlLintPresent(), true);
+      } finally {
+        restore();
+      }
+    });
+
+    test('still probes the executable when useBundler is off', async () => {
+      const restore = stubConfiguration('hamlAll', {
+        useBundler: false,
+        linterExecutablePath: '/nonexistent/definitely-not-haml-lint',
+      });
+
+      try {
+        assert.strictEqual(await hamlLintPresent(), false);
+      } finally {
+        restore();
+      }
+    });
+
     test('does not run shell metacharacters from the executable path (no command injection)', async () => {
       const marker = path.join(os.tmpdir(), 'haml-all-injection-marker-lint.txt');
 
