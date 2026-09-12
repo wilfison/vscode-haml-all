@@ -141,6 +141,17 @@ You can customize this extension by creating a `.vscode/settings.json` file in y
 }
 ```
 
+### Workspace Trust
+
+In a workspace you have not trusted, the extension keeps syntax highlighting, snippets, completions, and go-to-definition working, and disables everything that runs the project's Ruby tooling:
+
+- Linting and diagnostics (haml-lint / RuboCop)
+- Formatting and quick fixes
+- Rails routes completion and go-to-definition
+- `HAML: Convert HTML/ERB to HAML`
+
+This is deliberate: `bin/rails`, the `Gemfile`, and a `require:` directive in `.haml-lint.yml` are code from the repository. Trusting the workspace enables them immediately, with no window reload. For the same reason `hamlAll.useBundler` is ignored when it comes from a workspace's `.vscode/settings.json` in Restricted Mode.
+
 ---
 
 ## Recommended Extensions

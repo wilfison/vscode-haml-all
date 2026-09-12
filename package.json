@@ -49,7 +49,10 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "Runs the project's Ruby tooling (haml-lint, RuboCop, Rails), which can execute code from project files (e.g. a `require:` directive in .haml-lint.yml). Trust the workspace before relying on linting or formatting."
+      "description": "Linting, formatting, Rails routes and HTML-to-HAML conversion stay disabled until you trust the workspace, because they run the project's Ruby tooling (haml-lint, RuboCop, Rails), which executes code from project files (e.g. a `require:` directive in .haml-lint.yml, the Gemfile, bin/rails). Syntax highlighting, snippets and completions work either way.",
+      "restrictedConfigurations": [
+        "hamlAll.useBundler"
+      ]
     }
   },
   "contributes": {
