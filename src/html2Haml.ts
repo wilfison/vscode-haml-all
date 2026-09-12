@@ -1,45 +1,91 @@
-import { exec, execSync } from 'node:child_process';
-import { Position, Uri, window, workspace, WorkspaceEdit } from 'vscode';
+import { spawn } from 'node:child_process';
+import { OutputChannel, Position, Uri, window, workspace, WorkspaceEdit } from 'vscode';
 
-function html2HamlAvailable(useBundler: boolean): boolean {
-  const command = useBundler ? 'bundle exec html2haml --version' : 'html2haml --version';
+import { getWorkspaceRoot } from './utils/file';
 
-  try {
-    exec(command);
-    return true;
-  } catch (error) {
-    window.showErrorMessage(
-      `html2haml not found. Please install html2haml gem to use this extension.\nFail on execute command: ${command}`
-    );
-    return false;
-  }
-}
+const CONVERSION_TIMEOUT_MS = 30000;
 
-function runHtml2haml(html: string, useBundler: boolean, erb: boolean): string {
-  let command = useBundler ? 'bundle exec html2haml' : 'html2haml';
-  let args = ['--ruby19-attributes --stdin'];
+/**
+ * Runs html2haml with the HTML on stdin.
+ *
+ * Asynchronous on purpose: the old execSync blocked the extension host for as
+ * long as Ruby took to boot. argv form with no shell, and cwd at the workspace
+ * root so `bundle exec` finds the project's Gemfile.
+ */
+function runHtml2haml(html: string, useBundler: boolean, erb: boolean): Promise<string> {
+  const args = ['--ruby19-attributes', '--stdin'];
 
   if (erb) {
     args.push('--erb');
   }
 
-  const result = execSync(`${command} ${args.join(' ')}`, { input: html });
+  const command = useBundler ? 'bundle' : 'html2haml';
+  const commandArgs = useBundler ? ['exec', 'html2haml', ...args] : args;
 
-  return result.toString();
+  return new Promise<string>((resolve, reject) => {
+    const child = spawn(command, commandArgs, { cwd: getWorkspaceRoot() || undefined });
+
+    let stdout = '';
+    let stderr = '';
+
+    const timeout = setTimeout(() => {
+      child.kill();
+      reject(new Error(`no answer after ${CONVERSION_TIMEOUT_MS / 1000}s`));
+    }, CONVERSION_TIMEOUT_MS);
+
+    child.stdout.on('data', (data) => (stdout += data.toString()));
+    child.stderr.on('data', (data) => (stderr += data.toString()));
+
+    child.on('error', (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+
+    child.on('close', (code) => {
+      clearTimeout(timeout);
+
+      if (code === 0) {
+        resolve(stdout);
+        return;
+      }
+
+      reject(new Error(`exited with code ${code}${stderr.trim() ? `: ${stderr.trim()}` : ''}`));
+    });
+
+    child.stdin.end(html);
+  });
 }
 
-function newFilePath(filePath: string): Uri {
-  const erb = filePath.endsWith('.erb');
-  const regexp = erb ? /\.erb$/ : /\.html$/;
-
-  return Uri.file(filePath.replace(regexp, '.haml'));
+/** Target file for a converted document: `.html.erb`, `.erb`, `.html` and `.htm` all become `.haml`. */
+export function newFilePath(filePath: string): Uri {
+  return Uri.file(filePath.replace(/\.(erb|html?)$/, '.haml'));
 }
 
 function notAllowedLanguageId(languageId: string | undefined): boolean {
   return ['html', 'erb', 'haml'].includes(String(languageId)) === false;
 }
 
-export async function html2Haml(): Promise<void> {
+// One message that says what was run and how to fix it; the full detail goes to
+// the output channel.
+function reportFailure(error: unknown, useBundler: boolean, outputChannel?: OutputChannel): void {
+  const label = useBundler ? 'bundle exec html2haml' : 'html2haml';
+  const detail = error instanceof Error ? error.message : String(error);
+  const install = useBundler
+    ? "add `gem 'html2haml'` to your Gemfile and run `bundle install`"
+    : 'install it with `gem install html2haml`';
+
+  outputChannel?.appendLine(`html2haml failed (${label}): ${detail}`);
+
+  window
+    .showErrorMessage(`\`${label}\` failed: ${detail}. To convert HTML to HAML, ${install}.`, 'Show Output')
+    .then((selection) => {
+      if (selection === 'Show Output') {
+        outputChannel?.show();
+      }
+    });
+}
+
+export async function html2Haml(outputChannel?: OutputChannel): Promise<void> {
   const editor = window.activeTextEditor;
   const languageId = editor?.document.languageId;
 
@@ -55,17 +101,17 @@ export async function html2Haml(): Promise<void> {
   }
 
   const config = workspace.getConfiguration('hamlAll');
+  const hasSelection = !editor.selection.isEmpty;
+  const html = editor.document.getText(hasSelection ? editor.selection : undefined);
 
-  if (!html2HamlAvailable(config.useBundler)) {
-    window.showErrorMessage('html2haml not found. Please install html2haml gem to use this feature.');
+  let haml: string;
 
+  try {
+    haml = await runHtml2haml(html, config.useBundler, languageId === 'erb');
+  } catch (error) {
+    reportFailure(error, config.useBundler, outputChannel);
     return;
   }
-
-  const hasSelection = !editor.selection.isEmpty;
-
-  const html = editor.document.getText(hasSelection ? editor.selection : undefined);
-  const haml = runHtml2haml(html, config.useBundler, languageId === 'erb');
 
   const uri: Uri = hasSelection ? editor.document.uri : newFilePath(editor.document.fileName);
   const edit = new WorkspaceEdit();

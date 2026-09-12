@@ -171,7 +171,7 @@ export class ExtensionActivator {
         wrapContentInBlock('- (1..5).each do |item|');
       }),
 
-      vscode.commands.registerCommand('hamlAll.html2Haml', html2Haml),
+      vscode.commands.registerCommand('hamlAll.html2Haml', () => html2Haml(this.outputChannel)),
 
       vscode.commands.registerCommand('hamlAll.openFile', (path, lineNumber) => {
         this.outputChannel.appendLine(`Opening file: ${path}:${lineNumber}`);

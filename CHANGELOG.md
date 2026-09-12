@@ -36,6 +36,8 @@
 - Windows: partial completions, extracted partial names and asset paths no longer mix `\` and `/`, so the name inserted into the HAML is the right one.
 - "Jump to controller Action" works for projects whose path contains a directory called `app` (e.g. `~/app/projeto`).
 - The partial signature help now highlights the parameter you are actually typing instead of always the second one.
+- `HAML: Convert HTML to HAML` no longer freezes the editor while Ruby boots, runs in the workspace root (so `bundle exec` finds the Gemfile), and reports a missing `html2haml` gem with the command it tried and how to install it.
+- Converting a `.htm` file now produces a `.haml` file instead of leaving the extension untouched.
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09
