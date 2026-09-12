@@ -87,28 +87,6 @@ suite('Haml-Lint Cops', () => {
     });
   });
 
-  suite('TrailingEmptyLines', () => {
-    test('should remove trailing empty lines', () => {
-      const config = { ...HAML_LINT_DEFAULT_COPS, TrailingEmptyLines: { enabled: true } };
-
-      const text = '%div\n\n\n';
-      const expected = '%div\n\n';
-      const result = hamlFixes.fixTrailingEmptyLines(text, config);
-
-      assert.strictEqual(result, expected);
-    });
-
-    test('should not remove trailing empty lines when disabled', () => {
-      const config = HAML_LINT_DEFAULT_COPS;
-
-      const text = '%div\n\n\n';
-      const expected = text;
-      const result = hamlFixes.fixTrailingEmptyLines(text, config);
-
-      assert.strictEqual(result, expected);
-    });
-  });
-
   suite('SpaceBeforeScript', () => {
     test('should add a space before Ruby script indicators (-/=)', () => {
       const config = { ...HAML_LINT_DEFAULT_COPS, SpaceBeforeScript: { enabled: true } };

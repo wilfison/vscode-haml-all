@@ -10,14 +10,6 @@ function fixTrailingWhitespace(text: string, config: LinterConfig): string {
   return text.trimEnd();
 }
 
-function fixTrailingEmptyLines(text: string, config: LinterConfig): string {
-  if (!config.TrailingEmptyLines.enabled) {
-    return text;
-  }
-
-  return text.replace(/\n{2,}$/gm, '\n\n');
-}
-
 function fixFinalNewline(text: string, config: LinterConfig | null): string {
   if (!config?.FinalNewline.enabled) {
     return text;
@@ -116,7 +108,6 @@ export type HamlLintFixer = (text: string, config: LinterConfig) => string;
 
 export const linter_cops: [keyof LinterConfig, HamlLintFixer][] = [
   ['TrailingWhitespace', fixTrailingWhitespace],
-  ['TrailingEmptyLines', fixTrailingEmptyLines],
   ['ClassesBeforeIds', fixClassBeforeId],
   // ['SpaceBeforeScript', fixSpaceBeforeScript],
   ['LeadingCommentSpace', fixLeadingCommentSpace],
@@ -126,7 +117,6 @@ export const linter_cops: [keyof LinterConfig, HamlLintFixer][] = [
 
 export default {
   fixTrailingWhitespace,
-  fixTrailingEmptyLines,
   fixStrictLocals,
   fixHtmlAttributes,
   fixClassBeforeId,
