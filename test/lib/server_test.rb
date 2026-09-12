@@ -63,7 +63,30 @@ class ServerTest < Minitest::Test
     thread&.kill
   end
 
+  def test_stdin_watchdog_is_not_armed_when_stdin_is_not_a_pipe
+    server = LintServer::Server.new(watch_stdin: true)
+
+    with_stdin(File.open(File::NULL)) do
+      assert_nil(server.send(:start_stdin_watchdog))
+    end
+  end
+
+  def test_stdin_watchdog_is_not_armed_unless_requested
+    server = LintServer::Server.new
+
+    assert_nil(server.send(:start_stdin_watchdog))
+  end
+
   private
+
+  def with_stdin(io)
+    original = $stdin
+    $stdin = io
+    yield
+  ensure
+    $stdin = original
+    io.close
+  end
 
   def start_server_in_thread(port)
     Thread.new { silence_stdout { LintServer::Server.new(port: port).start } }

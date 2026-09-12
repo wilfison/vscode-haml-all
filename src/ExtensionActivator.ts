@@ -96,6 +96,16 @@ export class ExtensionActivator {
 
     const eventSubscriber = new EventSubscriber(this.context, this.outputChannel, this.lintServer, this.isARailsProject);
 
+    // A server that died (OOM, `kill`, a `bundle install` mid-session) comes back
+    // on its own; the diagnostics and the cop list have to be rebuilt with it.
+    this.lintServer.setRestartHandlers({
+      onRestarted: async () => {
+        await eventSubscriber.linter.loadConfigs();
+        eventSubscriber.updateAllDiagnostics();
+      },
+      onGaveUp: () => this.reportLintServerGaveUp(),
+    });
+
     eventSubscriber.subscribe();
 
     this.context.subscriptions.push(
@@ -180,8 +190,48 @@ export class ExtensionActivator {
 
       vscode.commands.registerCommand('hamlAll.previewImage', (imagePath: string, imageName: string) => {
         ImagePreviewCodeLensProvider.showImagePreview(imagePath, imageName);
-      })
+      }),
+
+      vscode.commands.registerCommand('hamlAll.restartLintServer', () => this.restartLintServer())
     );
+  }
+
+  /**
+   * Restarts the Ruby lint server on demand. Also the only way to reset the
+   * automatic-restart counter once it has been exhausted.
+   */
+  private async restartLintServer(): Promise<void> {
+    // Same policy as html2Haml: running the project's Ruby tooling needs trust.
+    if (!vscode.workspace.isTrusted) {
+      vscode.window.showWarningMessage('Trust the workspace to run the HAML lint server.');
+      return;
+    }
+
+    if (!this.lintServer) {
+      return;
+    }
+
+    this.outputChannel.appendLine('Restarting Haml Lint server (requested by the user)...');
+
+    try {
+      await this.lintServer.restart();
+      this.outputChannel.appendLine('Haml Lint server restarted.');
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.showWithOutput(`Failed to restart the HAML lint server. ${reason}`);
+    }
+  }
+
+  private reportLintServerGaveUp(): void {
+    this.showWithOutput('The HAML lint server stopped and could not be restarted. Run "HAML: Restart lint server" to try again.');
+  }
+
+  private showWithOutput(message: string): void {
+    vscode.window.showErrorMessage(message, 'Show Output').then((selection) => {
+      if (selection === 'Show Output') {
+        this.outputChannel.show();
+      }
+    });
   }
 
   /**

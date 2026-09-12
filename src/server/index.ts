@@ -1,4 +1,4 @@
-import { ChildProcessWithoutNullStreams } from 'node:child_process';
+import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 
 import { LinterOffense } from '../types';
@@ -7,6 +7,23 @@ import { OutputChannel } from 'vscode';
 import { ACTIONS, CallbackFunc, ServerResponse, TIMEOUTS } from './protocol';
 import { sendRequest } from './transport';
 import { startRubyServer } from './processRunner';
+
+/** Backoff before each automatic restart attempt; its length is the attempt cap. */
+const RESTART_DELAYS_MS = [1000, 4000, 16000];
+
+export interface LintServerDeps {
+  /** Injectable spawn, forwarded to startRubyServer. Tests pass a fake. */
+  spawn?: typeof spawn;
+  /** Overrides {@link RESTART_DELAYS_MS} so tests do not wait seconds. */
+  restartDelaysMs?: number[];
+}
+
+export interface RestartHandlers {
+  /** Called after the server is back up, automatically or on demand. */
+  onRestarted?: () => void;
+  /** Called once the automatic attempts are exhausted. */
+  onGaveUp?: () => void;
+}
 
 /**
  * Manages the Ruby-based HAML linting server.
@@ -20,6 +37,12 @@ class LintServer {
   private readonly useBundler: Boolean;
   private readonly outputChannel: OutputChannel | null = null;
   private readonly rubyCommand: string;
+  private readonly deps: LintServerDeps;
+  private readonly restartDelaysMs: number[];
+
+  private restartAttempts = 0;
+  private restartTimer?: NodeJS.Timeout;
+  private handlers: RestartHandlers = {};
 
   // Per-session secret shared only with the server process we spawn. Every
   // request carries it so another local process cannot drive our server over
@@ -32,17 +55,30 @@ class LintServer {
    * @param useBundler - Whether to use Bundler for gem management
    * @param outputChannel - Optional output channel for logging (defaults to null)
    * @param rubyCommand - Ruby interpreter used to run the server (defaults to `ruby`)
+   * @param deps - Injection points for tests (spawn, restart backoff)
    */
   constructor(
     workingDirectory: string,
     useBundler: Boolean,
     outputChannel: OutputChannel | null = null,
-    rubyCommand: string = 'ruby'
+    rubyCommand: string = 'ruby',
+    deps: LintServerDeps = {}
   ) {
     this.workingDirectory = workingDirectory;
     this.useBundler = useBundler;
     this.outputChannel = outputChannel;
     this.rubyCommand = rubyCommand;
+    this.deps = deps;
+    this.restartDelaysMs = deps.restartDelaysMs ?? RESTART_DELAYS_MS;
+  }
+
+  /**
+   * Registers what to do when the server comes back (reload configs, recompute
+   * diagnostics) and when the automatic attempts run out (tell the user about the
+   * restart command). Kept as callbacks so this class stays UI-free.
+   */
+  public setRestartHandlers(handlers: RestartHandlers): void {
+    this.handlers = handlers;
   }
 
   /**
@@ -169,32 +205,98 @@ class LintServer {
         token: this.token,
         rubyCommand: this.rubyCommand,
       },
-      { log: (message) => this.printOutput(message) }
+      { log: (message) => this.printOutput(message), spawn: this.deps.spawn }
     );
 
     this.serverPort = port;
     this.rubyServerProcess = rubyProcess;
 
     // Once the server dies, drop our handle so callers stop sending requests
-    // (see src/linter/index.ts, which gates linting on rubyServerProcess).
-    const clearHandle = () => {
+    // (see src/linter/index.ts, which gates linting on rubyServerProcess) and try
+    // to bring it back. A process we already let go of (stop/restart cleared the
+    // handle) is none of our business: no restart for a death we caused.
+    const onExit = () => {
+      if (this.rubyServerProcess !== rubyProcess) {
+        return;
+      }
+
       this.rubyServerProcess = null;
+      this.scheduleRestart();
     };
-    rubyProcess.on('close', clearHandle);
-    rubyProcess.on('error', clearHandle);
+    rubyProcess.on('close', onExit);
+    rubyProcess.on('error', onExit);
+
+    return rubyProcess;
+  }
+
+  /**
+   * Restarts the server on demand (the `hamlAll.restartLintServer` command).
+   * This is the only thing that resets the automatic-restart counter.
+   */
+  async restart(): Promise<ChildProcessWithoutNullStreams | null> {
+    this.stop();
+    this.restartAttempts = 0;
+
+    const rubyProcess = await this.start();
+    this.handlers.onRestarted?.();
 
     return rubyProcess;
   }
 
   /**
    * Stops the Ruby server process.
-   * Kills the server process and cleans up resources.
+   * Kills the server process and cleans up resources. Clearing the handle first
+   * marks the shutdown as intentional, so the exit does not trigger a restart.
    */
   stop(): void {
+    this.cancelRestart();
+
     if (this.rubyServerProcess) {
-      this.rubyServerProcess.kill();
+      const rubyProcess = this.rubyServerProcess;
       this.rubyServerProcess = null;
+      rubyProcess.kill();
     }
+  }
+
+  private cancelRestart(): void {
+    if (this.restartTimer) {
+      clearTimeout(this.restartTimer);
+      this.restartTimer = undefined;
+    }
+  }
+
+  // Backs off between attempts: a server dying because `bundle install` is still
+  // running should be retried a few seconds later, not hammered.
+  private scheduleRestart(): void {
+    const delay = this.restartDelaysMs[this.restartAttempts];
+
+    if (delay === undefined) {
+      this.printOutput(
+        `Haml Lint server died and did not come back after ${this.restartDelaysMs.length} attempts. ` +
+          'Run "HAML: Restart lint server" to try again.'
+      );
+      this.handlers.onGaveUp?.();
+      return;
+    }
+
+    this.restartAttempts += 1;
+    this.printOutput(
+      `Haml Lint server died; restarting in ${delay}ms (attempt ${this.restartAttempts}/${this.restartDelaysMs.length}).`
+    );
+
+    this.restartTimer = setTimeout(() => {
+      this.restartTimer = undefined;
+
+      this.start()
+        .then(() => {
+          this.printOutput('Haml Lint server restarted.');
+          this.handlers.onRestarted?.();
+        })
+        .catch((error) => {
+          this.printOutput(`Haml Lint server restart failed: ${error}`);
+          this.scheduleRestart();
+        });
+    }, delay);
   }
 
   /**

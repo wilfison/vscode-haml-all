@@ -1,7 +1,38 @@
 import * as assert from 'node:assert';
+import { EventEmitter } from 'node:events';
 
 import LintServer from '../../server';
 import { FakeServer, Responder, startFakeServer } from './fakeServer';
+
+// Minimal stand-in for a spawned Ruby server: stdout/stderr emitters plus the
+// 'close'/'error' events LintServer listens to.
+function makeFakeProcess(): any {
+  const proc: any = new EventEmitter();
+  proc.stdout = new EventEmitter();
+  proc.stderr = new EventEmitter();
+  proc.kill = () => true;
+  return proc;
+}
+
+function waitFor(predicate: () => boolean, timeoutMs = 2000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const started = Date.now();
+
+    const check = () => {
+      if (predicate()) {
+        resolve();
+        return;
+      }
+      if (Date.now() - started > timeoutMs) {
+        reject(new Error('condition never became true'));
+        return;
+      }
+      setTimeout(check, 5);
+    };
+
+    check();
+  });
+}
 
 suite('LintServer', () => {
   const workspace = '/tmp/haml-test-workspace';
@@ -180,6 +211,94 @@ suite('LintServer', () => {
 
       assert.strictEqual(result, existing);
       assert.strictEqual(lintServer.rubyServerProcess, existing);
+    });
+  });
+
+  suite('automatic restart', () => {
+    // Each spawn immediately announces a port, so start() resolves; the test then
+    // drives the lifecycle by emitting 'close' on the process it got.
+    function restartingServer(attempts: number) {
+      const processes: any[] = [];
+
+      const spawnFn: any = () => {
+        const proc = makeFakeProcess();
+        processes.push(proc);
+        setImmediate(() => proc.stdout.emit('data', Buffer.from('{"port":7654}\n')));
+        return proc;
+      };
+
+      const server = new LintServer('/ws', false, null, 'ruby', {
+        spawn: spawnFn,
+        restartDelaysMs: new Array(attempts).fill(1),
+      });
+
+      return { server, processes };
+    }
+
+    test('spawns a replacement when the process dies unexpectedly', async () => {
+      const { server, processes } = restartingServer(3);
+
+      await server.start();
+      assert.strictEqual(processes.length, 1);
+
+      processes[0].emit('close', 1);
+
+      await waitFor(() => processes.length === 2);
+      assert.strictEqual(server.rubyServerProcess, processes[1]);
+    });
+
+    test('does not respawn after stop()', async () => {
+      const { server, processes } = restartingServer(3);
+
+      await server.start();
+      server.stop();
+      processes[0].emit('close', 0);
+
+      await new Promise((resolve) => setTimeout(resolve, 40));
+
+      assert.strictEqual(processes.length, 1);
+      assert.strictEqual(server.rubyServerProcess, null);
+    });
+
+    test('stops respawning once the attempts are exhausted', async () => {
+      const { server, processes } = restartingServer(2);
+      let gaveUp = 0;
+
+      server.setRestartHandlers({ onGaveUp: () => (gaveUp += 1) });
+
+      await server.start();
+
+      // Kill every replacement as soon as it appears: 1 initial + 2 attempts.
+      for (let i = 0; i < 4; i += 1) {
+        await waitFor(() => processes.length === Math.min(i + 1, 3));
+        processes[processes.length - 1].emit('close', 1);
+      }
+
+      await waitFor(() => gaveUp === 1);
+
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      assert.strictEqual(processes.length, 3);
+    });
+
+    test('restart() re-arms the attempt counter', async () => {
+      const { server, processes } = restartingServer(1);
+      let restarted = 0;
+
+      server.setRestartHandlers({ onRestarted: () => (restarted += 1) });
+
+      await server.start();
+
+      processes[0].emit('close', 1);
+      await waitFor(() => processes.length === 2);
+
+      // The single automatic attempt is spent; a manual restart gets it back.
+      await server.restart();
+      assert.strictEqual(processes.length, 3);
+
+      processes[2].emit('close', 1);
+      await waitFor(() => processes.length === 4);
+
+      assert.strictEqual(restarted, 3);
     });
   });
 });

@@ -117,6 +117,10 @@
         "command": "hamlAll.wrapInBlock",
         "title": "HAML: Wrap in a ruby block",
         "enablement": "editorLangId == haml"
+      },
+      {
+        "command": "hamlAll.restartLintServer",
+        "title": "HAML: Restart lint server"
       }
     ],
     "languages": [

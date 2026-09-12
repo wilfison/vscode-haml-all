@@ -36,13 +36,16 @@ module LintServer
 
     attr_reader :port
 
-    def initialize(port: DEFAULT_PORT)
+    def initialize(port: DEFAULT_PORT, watch_stdin: false)
       @requested_port = port
+      @watch_stdin = watch_stdin
     end
 
     def start
       $stdout.sync = true
       @tcp_server = listen
+
+      start_stdin_watchdog
 
       notify(status: "success", message: "Server started on port #{port}.", port: port, pid: Process.pid)
 
@@ -50,6 +53,27 @@ module LintServer
     end
 
     private
+
+    # The extension host owns this process. If it dies without calling deactivate
+    # (a crash, `kill -9`), nothing would ever stop us and the port would stay
+    # taken for the rest of the session. Our stdin pipe closing is that signal.
+    #
+    # Only armed for a pipe: on a terminal, stdin never reaches EOF, and the
+    # Minitest suite starts the server without asking for the watchdog at all.
+    def start_stdin_watchdog
+      return nil unless @watch_stdin && stdin_pipe?
+
+      Thread.new do
+        $stdin.read
+        exit!(0)
+      end
+    end
+
+    def stdin_pipe?
+      $stdin.stat.pipe?
+    rescue SystemCallError, IOError
+      false
+    end
 
     # Binds to the first free port at or above the requested one. Binding and
     # rescuing EADDRINUSE avoids shelling out to `lsof` (absent on Windows) and
@@ -97,7 +121,8 @@ def boot_server
     exit 1
   end
 
-  LintServer::Server.new.start
+  # Spawned by the extension, so stdin is a pipe whose EOF means the host is gone.
+  LintServer::Server.new(watch_stdin: true).start
 end
 
 boot_server if ARGV.include?("start")

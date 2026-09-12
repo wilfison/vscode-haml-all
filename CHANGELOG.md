@@ -12,6 +12,7 @@
 
 ### Added
 
+- New command `HAML: Restart lint server`, for when the lint server needs a kick.
 - `hamlAll.rubyCommand` lets you point at the Ruby interpreter that runs the lint server — useful when rbenv/asdf/mise shims are missing from the PATH of a VS Code launched from the dock. When it cannot be spawned, the error now names the command and the setting.
 - `hamlAll.railsCommand` replaces `railsRoutes.railsCommand`, and it is now actually used to load routes — `bin/rails` used to be hardcoded. It accepts arguments, so `bundle exec rails` works. The old setting is deprecated but still read when the new one is unset.
 
@@ -38,6 +39,8 @@
 - The partial signature help now highlights the parameter you are actually typing instead of always the second one.
 - `HAML: Convert HTML to HAML` no longer freezes the editor while Ruby boots, runs in the workspace root (so `bundle exec` finds the Gemfile), and reports a missing `html2haml` gem with the command it tried and how to install it.
 - Converting a `.htm` file now produces a `.haml` file instead of leaving the extension untouched.
+- A lint server that dies (out of memory, `kill`, a `bundle install` mid-session) is restarted automatically — up to 3 attempts with backoff — and the diagnostics come back with it. Linting used to go quiet until the window was reloaded.
+- The Ruby server now exits when the extension host does, instead of surviving a crashed host and holding its port.
 - Syntax highlighting no longer treats a word ending in "do" (e.g. `- unless herdado`) as the start of a Ruby block.
 
 ## [3.1.0] - 2026-07-09
