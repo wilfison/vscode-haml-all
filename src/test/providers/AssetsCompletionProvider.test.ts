@@ -94,4 +94,78 @@ suite('AssetsCompletionProvider Tests', () => {
 
     assert.strictEqual(completions, null);
   });
+
+  // The directory table replaced ~30 hand-written path.join calls; this pins the
+  // per-helper lookup so a table edit cannot silently drop a location.
+  suite('getAssetDirectories', () => {
+    const dirs = (helper: string) =>
+      (provider as any).getAssetDirectories(helper, '/w').map((d: string) => d.replace(/\\/g, '/').replace('/w/', ''));
+
+    const IMAGES = ['app/assets/images', 'app/javascript/images', 'public/images', 'public/assets', 'vendor/assets/images'];
+    const JAVASCRIPTS = [
+      'app/assets/builds',
+      'app/assets/javascripts',
+      'app/javascript',
+      'app/javascript/packs',
+      'app/javascript/src',
+      'app/frontend',
+      'app/frontend/javascript',
+      'public/javascripts',
+      'public/assets',
+      'vendor/assets/javascripts',
+    ];
+    // Without the directories the JavaScript kind already lists.
+    const STYLESHEETS_ONLY = [
+      'app/assets/stylesheets',
+      'app/javascript/stylesheets',
+      'app/javascript/styles',
+      'app/frontend/stylesheets',
+      'public/stylesheets',
+      'vendor/assets/stylesheets',
+    ];
+    const AUDIOS = ['app/assets/audios', 'public/audios'];
+    const VIDEOS = ['app/assets/videos', 'public/videos'];
+
+    test('image helpers', () => {
+      for (const helper of ['image_tag', 'image_path', 'image_url']) {
+        assert.deepStrictEqual(dirs(helper), IMAGES, helper);
+      }
+    });
+
+    test('javascript_include_tag', () => {
+      assert.deepStrictEqual(dirs('javascript_include_tag'), JAVASCRIPTS);
+    });
+
+    test('stylesheet_link_tag', () => {
+      assert.deepStrictEqual(dirs('stylesheet_link_tag'), [
+        'app/assets/builds',
+        'app/assets/stylesheets',
+        'app/javascript/stylesheets',
+        'app/javascript/styles',
+        'app/frontend',
+        'app/frontend/stylesheets',
+        'public/stylesheets',
+        'public/assets',
+        'vendor/assets/stylesheets',
+      ]);
+    });
+
+    test('pack and vite helpers cover javascript and stylesheets, each directory once', () => {
+      for (const helper of ['javascript_pack_tag', 'stylesheet_pack_tag', 'vite_javascript_tag', 'vite_stylesheet_tag', 'vite_asset_path']) {
+        assert.deepStrictEqual(dirs(helper), [...JAVASCRIPTS, ...STYLESHEETS_ONLY], helper);
+      }
+    });
+
+    test('audio and video helpers', () => {
+      assert.deepStrictEqual(dirs('audio_tag'), [...AUDIOS, 'public/assets']);
+      assert.deepStrictEqual(dirs('video_tag'), [...VIDEOS, 'public/assets']);
+    });
+
+    test('asset_path covers every kind, each directory once', () => {
+      assert.deepStrictEqual(
+        dirs('asset_path'),
+        Array.from(new Set([...IMAGES, ...JAVASCRIPTS, ...STYLESHEETS_ONLY, ...AUDIOS, ...VIDEOS]))
+      );
+    });
+  });
 });

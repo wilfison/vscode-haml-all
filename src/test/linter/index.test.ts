@@ -18,12 +18,12 @@ function fakeDocument(uri: vscode.Uri, content = '%div'): vscode.TextDocument {
   } as any;
 }
 
-function offense(message: string): LinterOffense {
+function offense(message: string, linterName = 'LineLength'): LinterOffense {
   return {
     location: { line: 1 },
     severity: 'warning',
     message,
-    linter_name: 'LineLength',
+    linter_name: linterName,
   } as any;
 }
 
@@ -121,6 +121,29 @@ suite('Linter', () => {
         assert.strictEqual(server.pending.length, 1, 'a lint request should be sent when enabled');
       } finally {
         restore();
+        linter.dispose();
+      }
+    });
+  });
+
+  suite('deduplication', () => {
+    test('keeps one diagnostic per line, linter and message', () => {
+      const server = fakeServer();
+      const linter = new Linter(channel, server as any);
+      (linter as any).configFilePath = () => '/tmp/haml-linter-test/.haml-lint.yml';
+      const uri = vscode.Uri.file('/tmp/haml-linter-test/dedup.haml');
+
+      try {
+        linter.run(fakeDocument(uri));
+        server.pending[0]([
+          offense('Avoid this', 'LineLength'),
+          offense('Avoid this', 'LineLength'),
+          offense('Avoid this', 'ClassesBeforeIds'),
+        ]);
+
+        const messages = vscode.languages.getDiagnostics(uri).map((d) => d.message);
+        assert.deepStrictEqual(messages, ['LineLength: Avoid this', 'ClassesBeforeIds: Avoid this']);
+      } finally {
         linter.dispose();
       }
     });

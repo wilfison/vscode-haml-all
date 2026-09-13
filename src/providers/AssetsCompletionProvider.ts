@@ -7,6 +7,53 @@ import { AssetFile, listAssetFiles } from '../rails/assetIndex';
 // once instead of per helper on every completion trigger.
 const BRACE_STRING_PATTERN = /\{\s*['"](.*?)$/;
 
+// Where each kind of asset lives, relative to the workspace root (POSIX form;
+// joined with the native separator when used). A helper may match several
+// kinds: the pack/vite helpers serve both JavaScript and stylesheets.
+const ASSET_DIRECTORIES: { matches: (helper: string) => boolean; dirs: string[] }[] = [
+  {
+    matches: (helper) => helper.includes('image') || helper === 'asset_path',
+    dirs: ['app/assets/images', 'app/javascript/images', 'public/images', 'public/assets', 'vendor/assets/images'],
+  },
+  {
+    matches: (helper) => /javascript|pack|vite/.test(helper) || helper === 'asset_path',
+    dirs: [
+      'app/assets/builds',
+      'app/assets/javascripts',
+      'app/javascript',
+      'app/javascript/packs',
+      'app/javascript/src',
+      'app/frontend',
+      'app/frontend/javascript',
+      'public/javascripts',
+      'public/assets',
+      'vendor/assets/javascripts',
+    ],
+  },
+  {
+    matches: (helper) => /stylesheet|pack|vite/.test(helper) || helper === 'asset_path',
+    dirs: [
+      'app/assets/builds',
+      'app/assets/stylesheets',
+      'app/javascript/stylesheets',
+      'app/javascript/styles',
+      'app/frontend',
+      'app/frontend/stylesheets',
+      'public/stylesheets',
+      'public/assets',
+      'vendor/assets/stylesheets',
+    ],
+  },
+  {
+    matches: (helper) => helper.includes('audio') || helper === 'asset_path',
+    dirs: ['app/assets/audios', 'public/audios', 'public/assets'],
+  },
+  {
+    matches: (helper) => helper.includes('video') || helper === 'asset_path',
+    dirs: ['app/assets/videos', 'public/videos', 'public/assets'],
+  },
+];
+
 export default class AssetsCompletionProvider implements vscode.CompletionItemProvider {
   private assetHelpers = [
     'asset_path',
@@ -131,64 +178,9 @@ export default class AssetsCompletionProvider implements vscode.CompletionItemPr
   }
 
   private getAssetDirectories(helper: string, workspacePath: string): string[] {
-    const directories: string[] = [];
+    const directories = ASSET_DIRECTORIES.filter(({ matches }) => matches(helper)).flatMap(({ dirs }) => dirs);
 
-    if (helper.includes('image') || helper === 'asset_path') {
-      directories.push(
-        path.join(workspacePath, 'app', 'assets', 'images'),
-        path.join(workspacePath, 'app', 'javascript', 'images'),
-        path.join(workspacePath, 'public', 'images'),
-        path.join(workspacePath, 'public', 'assets'),
-        path.join(workspacePath, 'vendor', 'assets', 'images')
-      );
-    }
-
-    if (helper.includes('javascript') || helper.includes('pack') || helper.includes('vite') || helper === 'asset_path') {
-      directories.push(
-        path.join(workspacePath, 'app', 'assets', 'builds'),
-        path.join(workspacePath, 'app', 'assets', 'javascripts'),
-        path.join(workspacePath, 'app', 'javascript'),
-        path.join(workspacePath, 'app', 'javascript', 'packs'),
-        path.join(workspacePath, 'app', 'javascript', 'src'),
-        path.join(workspacePath, 'app', 'frontend'),
-        path.join(workspacePath, 'app', 'frontend', 'javascript'),
-        path.join(workspacePath, 'public', 'javascripts'),
-        path.join(workspacePath, 'public', 'assets'),
-        path.join(workspacePath, 'vendor', 'assets', 'javascripts')
-      );
-    }
-
-    if (helper.includes('stylesheet') || helper.includes('pack') || helper.includes('vite') || helper === 'asset_path') {
-      directories.push(
-        path.join(workspacePath, 'app', 'assets', 'builds'),
-        path.join(workspacePath, 'app', 'assets', 'stylesheets'),
-        path.join(workspacePath, 'app', 'javascript', 'stylesheets'),
-        path.join(workspacePath, 'app', 'javascript', 'styles'),
-        path.join(workspacePath, 'app', 'frontend'),
-        path.join(workspacePath, 'app', 'frontend', 'stylesheets'),
-        path.join(workspacePath, 'public', 'stylesheets'),
-        path.join(workspacePath, 'public', 'assets'),
-        path.join(workspacePath, 'vendor', 'assets', 'stylesheets')
-      );
-    }
-
-    if (helper.includes('audio') || helper === 'asset_path') {
-      directories.push(
-        path.join(workspacePath, 'app', 'assets', 'audios'),
-        path.join(workspacePath, 'public', 'audios'),
-        path.join(workspacePath, 'public', 'assets')
-      );
-    }
-
-    if (helper.includes('video') || helper === 'asset_path') {
-      directories.push(
-        path.join(workspacePath, 'app', 'assets', 'videos'),
-        path.join(workspacePath, 'public', 'videos'),
-        path.join(workspacePath, 'public', 'assets')
-      );
-    }
-
-    return directories;
+    return Array.from(new Set(directories), (dir) => path.join(workspacePath, ...dir.split('/')));
   }
 
   private getAssetExtensions(helper: string): string[] {

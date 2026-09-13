@@ -26,6 +26,12 @@ const RAILS_HELPER_CONTEXT_REGEX = new RegExp(
 const RAILS_HELPER_HASH_REGEX = new RegExp(`(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS_ALTERNATION})\\b.*?\\{\\s*([^,}]*)$`);
 const RAILS_HELPER_PRESENCE_REGEX = new RegExp(`(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS_ALTERNATION})\\b`);
 
+// A key the user is typing that could still become a data attribute: `data`,
+// `data-*`, `data_*` (Ruby symbol form) or nothing typed yet.
+function looksLikeData(prefix: string): boolean {
+  return prefix === '' || prefix === 'data' || prefix.startsWith('data-') || prefix.startsWith('data_');
+}
+
 export default class DataAttributeCompletionProvider implements CompletionItemProvider {
   private allDataAttributes = [
     ...HTML_DATA_ATTRIBUTES,
@@ -97,12 +103,7 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
     const braceMatch = cleanedCursor.match(/[%#.]?\w*\s*\{[^}]*?(?:,\s*)?(?:["']?)([^"',}:\s]*)\s*$/);
     if (braceMatch) {
       const potentialAttr = braceMatch[1];
-      if (
-        potentialAttr.startsWith('data-') ||
-        potentialAttr.startsWith('data_') ||
-        potentialAttr === 'data' ||
-        potentialAttr === ''
-      ) {
+      if (looksLikeData(potentialAttr)) {
         return { isDataAttribute: true, prefix: potentialAttr.replace(/_/g, '-') };
       }
     }
@@ -111,12 +112,7 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
     const parenMatch = cleanedCursor.match(/[%#.]?\w*\s*\([^)]*?(?:,\s*)?(?:["']?)([^"',):\s]*)\s*$/);
     if (parenMatch) {
       const potentialAttr = parenMatch[1];
-      if (
-        potentialAttr.startsWith('data-') ||
-        potentialAttr.startsWith('data_') ||
-        potentialAttr === 'data' ||
-        potentialAttr === ''
-      ) {
+      if (looksLikeData(potentialAttr)) {
         return { isDataAttribute: true, prefix: potentialAttr.replace(/_/g, '-') };
       }
     }
@@ -125,12 +121,7 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
     const symbolMatch = cleanedCursor.match(/:([^,}\)\s:=]*)$/);
     if (symbolMatch) {
       const potentialAttr = symbolMatch[1];
-      if (
-        potentialAttr.startsWith('data-') ||
-        potentialAttr.startsWith('data_') ||
-        potentialAttr === 'data' ||
-        potentialAttr === ''
-      ) {
+      if (looksLikeData(potentialAttr)) {
         return { isDataAttribute: true, prefix: potentialAttr.replace(/_/g, '-') };
       }
     }
@@ -139,12 +130,7 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
     const stringKeyMatch = cleanedCursor.match(/[{\(][^}\)]*["']([^"']*?)$/);
     if (stringKeyMatch) {
       const potentialAttr = stringKeyMatch[1];
-      if (
-        potentialAttr.startsWith('data-') ||
-        potentialAttr.startsWith('data_') ||
-        potentialAttr === 'data' ||
-        potentialAttr === ''
-      ) {
+      if (looksLikeData(potentialAttr)) {
         return { isDataAttribute: true, prefix: potentialAttr.replace(/_/g, '-') };
       }
     }
@@ -164,12 +150,7 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
       const potentialAttr = match[1];
 
       // Check if it looks like a data attribute
-      if (
-        potentialAttr.startsWith('data_') ||
-        potentialAttr.startsWith('data-') ||
-        potentialAttr === 'data' ||
-        potentialAttr === ''
-      ) {
+      if (looksLikeData(potentialAttr)) {
         return { isDataAttribute: true, prefix: potentialAttr.replace(/_/g, '-') };
       }
 
@@ -178,7 +159,7 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
       const hashInHelperMatch = cleanedCursor.match(RAILS_HELPER_HASH_REGEX);
       if (hashInHelperMatch) {
         const hashAttr = hashInHelperMatch[1];
-        if (hashAttr.startsWith('data_') || hashAttr.startsWith('data-') || hashAttr === 'data' || hashAttr === '') {
+        if (looksLikeData(hashAttr)) {
           return { isDataAttribute: true, prefix: hashAttr.replace(/_/g, '-') };
         }
       }

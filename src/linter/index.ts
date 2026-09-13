@@ -163,11 +163,13 @@ export default class Linter {
   }
 
   private parse(lintOffenses: LinterOffense[], document: TextDocument): DiagnosticFull[] {
-    // set unique key for each diagnostic and line
-    const offenses = new Map<string, any>();
+    // One diagnostic per (line, linter, message): the same linter can report the
+    // same message for a line more than once (e.g. per node), but two linters
+    // sharing a message are two findings.
+    const offenses = new Map<string, LinterOffense>();
 
     lintOffenses.forEach((offense) => {
-      const key = `${offense.location.line}:${offense.message}`;
+      const key = `${offense.location.line}:${offense.linter_name}:${offense.message}`;
       offenses.set(key, offense);
     });
 
