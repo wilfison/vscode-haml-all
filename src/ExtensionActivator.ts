@@ -15,6 +15,7 @@ import AssetsDefinitionProvider from './providers/AssetsDefinitionProvider';
 import ImagePreviewCodeLensProvider from './providers/ImagePreviewCodeLensProvider';
 
 import LintServer from './server';
+import { LintServerPool } from './server/pool';
 import { LintStatusBar } from './StatusBar';
 
 import { html2Haml } from './html2Haml';
@@ -37,9 +38,10 @@ export class ExtensionActivator {
   private readonly HAML_SELECTOR = { language: 'haml', scheme: 'file' };
   private readonly RUBY_SELECTOR = { language: 'ruby', scheme: 'file' };
   private isARailsProject: boolean = false;
-  private lintServer: LintServer | undefined;
+  private lintServers: LintServerPool | undefined;
   private statusBar: LintStatusBar | undefined;
   private trustedActivated = false;
+  private eventSubscriber: EventSubscriber | undefined;
 
   /**
    * Creates a new ExtensionActivator instance.
@@ -91,12 +93,20 @@ export class ExtensionActivator {
       rubyCommand: helpers.rubyCommand(),
     });
 
-    this.lintServer = new LintServer(getWorkspaceRoot(), serverOptions, this.outputChannel);
-
     // Created here rather than in activate(): with no trust there is no server,
     // so there is no state to report.
     this.statusBar = new LintStatusBar();
     this.context.subscriptions.push(this.statusBar);
+
+    // One server per workspace folder: each has its own Gemfile, working
+    // directory and .haml-lint.yml. Routes and assets stay on the first folder.
+    this.lintServers = new LintServerPool((folder) => {
+      const server = new LintServer(folder.uri.fsPath, serverOptions, this.outputChannel);
+      server.setRestartHandlers(this.restartHandlers(folder.name));
+
+      return server;
+    });
+    this.context.subscriptions.push(this.lintServers);
 
     // Probe for haml-lint in the background so a slow Ruby boot never delays
     // activation; surface the error only if the gem is genuinely missing.
@@ -107,28 +117,12 @@ export class ExtensionActivator {
       }
     });
 
-    const eventSubscriber = new EventSubscriber(this.context, this.outputChannel, this.lintServer, this.isARailsProject);
-
-    // A server that died (OOM, `kill`, a `bundle install` mid-session) comes back
-    // on its own; the diagnostics and the cop list have to be rebuilt with it.
-    this.lintServer.setRestartHandlers({
-      onRestarted: async () => {
-        await eventSubscriber.linter.loadConfigs();
-        eventSubscriber.updateAllDiagnostics();
-      },
-      onGaveUp: () => {
-        this.statusBar?.warning('haml-lint server stopped and could not be restarted. Run "HAML: Restart lint server".');
-        this.reportLintServerGaveUp();
-      },
-      onStarted: () => this.statusBar?.ok(),
-      onFailed: () => this.statusBar?.warning('haml-lint server failed to start.'),
-      onRestarting: (attempt, attempts) =>
-        this.statusBar?.warning(`haml-lint server died, restarting (attempt ${attempt} of ${attempts})…`),
-    });
+    const eventSubscriber = new EventSubscriber(this.context, this.outputChannel, this.lintServers, this.isARailsProject);
+    this.eventSubscriber = eventSubscriber;
 
     eventSubscriber.subscribe();
 
-    const formattingProvider = new FormattingEditProvider(eventSubscriber.linter, this.outputChannel, this.lintServer, () =>
+    const formattingProvider = new FormattingEditProvider(eventSubscriber.linter, this.outputChannel, this.lintServers, () =>
       eventSubscriber.cancelPendingLint()
     );
 
@@ -241,6 +235,37 @@ export class ExtensionActivator {
   }
 
   /**
+   * What every server reports back. A server that died (OOM, `kill`, a
+   * `bundle install` mid-session) comes back on its own; the diagnostics and the
+   * cop list have to be rebuilt with it.
+   *
+   * The status bar only reads "running" once every folder's server is up, since
+   * one dead server means one folder silently unlinted.
+   */
+  private restartHandlers(folderName: string) {
+    const problem = (message: string) => this.statusBar?.warning(`${message} (folder "${folderName}")`);
+
+    return {
+      onRestarted: async () => {
+        await this.eventSubscriber?.linter.loadConfigs();
+        this.eventSubscriber?.updateAllDiagnostics();
+      },
+      onGaveUp: () => {
+        problem('haml-lint server stopped and could not be restarted. Run "HAML: Restart lint server"');
+        this.reportLintServerGaveUp();
+      },
+      onStarted: () => {
+        if (this.lintServers?.allRunning()) {
+          this.statusBar?.ok();
+        }
+      },
+      onFailed: () => problem('haml-lint server failed to start'),
+      onRestarting: (attempt: number, attempts: number) =>
+        problem(`haml-lint server died, restarting (attempt ${attempt} of ${attempts})`),
+    };
+  }
+
+  /**
    * Restarts the Ruby lint server on demand. Also the only way to reset the
    * automatic-restart counter once it has been exhausted.
    */
@@ -251,7 +276,7 @@ export class ExtensionActivator {
       return;
     }
 
-    if (!this.lintServer) {
+    if (!this.lintServers) {
       return;
     }
 
@@ -259,7 +284,7 @@ export class ExtensionActivator {
     this.statusBar?.starting();
 
     try {
-      await this.lintServer.restart();
+      await this.lintServers.restartAll();
       this.outputChannel.appendLine('Haml Lint server restarted.');
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
@@ -284,6 +309,6 @@ export class ExtensionActivator {
    * Called when the extension is deactivated.
    */
   public dispose(): void {
-    this.lintServer?.stop();
+    this.lintServers?.dispose();
   }
 }

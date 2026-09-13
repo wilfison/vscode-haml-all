@@ -12,6 +12,7 @@
 
 ### Added
 
+- Multi-root workspaces: every folder is now linted by its own server, so each uses its own `.haml-lint.yml`, `Gemfile` and working directory. Previously only the first folder was served, and a `.haml-lint.yml` belonging to any other was refused. Rails routes and asset completion still use the first folder.
 - Partial navigation, completion and signature help now understand `render @user`, `render user` and `collection:`, template variants (`_row.turbo_stream.haml`, `_row+mobile.html.haml`) and partials living under any `app/views` in the workspace, an in-repo engine included.
 - A status bar item showing the lint server state while a HAML file is open: starting, running, or a problem with the reason in the tooltip. Clicking it opens the "Haml" output, also reachable through the new **HAML: Show output** command.
 - `hamlAll.lintOnType` (default `true`): set it to `false` to lint only when a file is opened or saved.

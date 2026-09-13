@@ -27,6 +27,18 @@ function offense(message: string, linterName = 'LineLength'): LinterOffense {
   } as any;
 }
 
+// Wraps a fake server as the pool the Linter talks to: every document belongs
+// to the same folder here.
+function poolOf(server: any): any {
+  return {
+    for: () => server,
+    any: () => server,
+    all: () => [server],
+    allRunning: () => Boolean(server.rubyServerProcess),
+    startAll: async () => {},
+  };
+}
+
 // A LintServer stand-in whose lint() callbacks we fire manually, so we can
 // deliver responses out of order.
 function fakeServer() {
@@ -64,7 +76,7 @@ suite('Linter', () => {
   suite('out-of-order responses', () => {
     test('a stale lint response does not overwrite a newer one', async () => {
       const server = fakeServer();
-      const linter = new Linter(channel, server as any);
+      const linter = new Linter(channel, poolOf(server));
       // Give the document a config path without needing a real workspace folder.
       (linter as any).configFilePath = () => '/tmp/haml-linter-test/.haml-lint.yml';
 
@@ -93,7 +105,7 @@ suite('Linter', () => {
   suite('lintEnabled', () => {
     test('does not lint and clears diagnostics when disabled', () => {
       const server = fakeServer();
-      const linter = new Linter(channel, server as any);
+      const linter = new Linter(channel, poolOf(server));
       (linter as any).configFilePath = () => '/tmp/haml-linter-test/.haml-lint.yml';
 
       const restore = stubHamlAll({ lintEnabled: false });
@@ -110,7 +122,7 @@ suite('Linter', () => {
 
     test('lints when enabled (default)', () => {
       const server = fakeServer();
-      const linter = new Linter(channel, server as any);
+      const linter = new Linter(channel, poolOf(server));
       (linter as any).configFilePath = () => '/tmp/haml-linter-test/.haml-lint.yml';
 
       const restore = stubHamlAll({ lintEnabled: true });
@@ -129,7 +141,7 @@ suite('Linter', () => {
   suite('deduplication', () => {
     test('keeps one diagnostic per line, linter and message', () => {
       const server = fakeServer();
-      const linter = new Linter(channel, server as any);
+      const linter = new Linter(channel, poolOf(server));
       (linter as any).configFilePath = () => '/tmp/haml-linter-test/.haml-lint.yml';
       const uri = vscode.Uri.file('/tmp/haml-linter-test/dedup.haml');
 
@@ -143,6 +155,22 @@ suite('Linter', () => {
 
         const messages = vscode.languages.getDiagnostics(uri).map((d) => d.message);
         assert.deepStrictEqual(messages, ['LineLength: Avoid this', 'ClassesBeforeIds: Avoid this']);
+      } finally {
+        linter.dispose();
+      }
+    });
+  });
+
+  suite('multi-root', () => {
+    test('does not lint a document whose folder has no server', () => {
+      const server = fakeServer();
+      const linter = new Linter(channel, { for: () => undefined, any: () => server, all: () => [server] } as any);
+      (linter as any).configFilePath = () => '/tmp/haml-linter-test/.haml-lint.yml';
+
+      try {
+        linter.run(fakeDocument(vscode.Uri.file('/outside/index.html.haml')));
+
+        assert.strictEqual(server.pending.length, 0);
       } finally {
         linter.dispose();
       }

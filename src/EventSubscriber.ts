@@ -18,7 +18,7 @@ import { assetPathInvalidatesIndex, invalidateAssetIndex } from './rails/assetIn
 import { invalidatePartialIndex, watchPartials } from './rails/partialIndex';
 import { toPosix } from './utils/file';
 import Routes from './rails/routes';
-import LintServer from './server';
+import { LintServerPool } from './server/pool';
 
 /**
  * Whether a text change should schedule a lint. Exported for tests: it is the
@@ -42,11 +42,11 @@ class EventSubscriber {
   private outputChanel: OutputChannel;
   private rootPath: Uri;
 
-  private lintServer: LintServer;
+  private servers: LintServerPool;
   private changeDebounce?: NodeJS.Timeout;
   private readonly CHANGE_DEBOUNCE_MS = 300;
 
-  constructor(context: ExtensionContext, outputChanel: OutputChannel, lintServer: LintServer, isARailsProject: boolean) {
+  constructor(context: ExtensionContext, outputChanel: OutputChannel, servers: LintServerPool, isARailsProject: boolean) {
     this.context = context;
     this.outputChanel = outputChanel;
     const workspaceFolder = workspace.workspaceFolders?.[0];
@@ -54,8 +54,8 @@ class EventSubscriber {
 
     this.isARailsProject = isARailsProject;
 
-    this.lintServer = lintServer;
-    this.linter = new Linter(this.outputChanel, lintServer);
+    this.servers = servers;
+    this.linter = new Linter(this.outputChanel, servers);
     this.routes = new Routes(this.rootPath.fsPath, this.outputChanel, isARailsProject);
   }
 
@@ -110,8 +110,14 @@ class EventSubscriber {
     this.cancelPendingLint();
     this.outputChanel.appendLine(`Haml All: autocorrect (unsafe) ${linters.join(', ')} in ${document.fileName}`);
 
+    const server = this.servers.for(document);
+
+    if (!server) {
+      return null;
+    }
+
     const text = document.getText();
-    const fixed = await this.lintServer.autocorrect(text, document.fileName, this.linter.configFilePath(document), {
+    const fixed = await server.autocorrect(text, document.fileName, this.linter.configFilePath(document), {
       linters,
       unsafe: true,
     });
@@ -208,14 +214,19 @@ class EventSubscriber {
     this.linter.loadConfigs();
   }
 
+  // One config per workspace folder: each folder has its own lint server, so
+  // each has its own .haml-lint.yml.
   private subscribeHamlWatchers() {
-    const watchFiles = ['.haml-lint.yml'];
+    const reload = () => loadWithProgress('Loading lint configs', this.onUpdateLintConfig.bind(this));
 
-    watchFiles.forEach((pattern) =>
-      this.subscribeFileWatcher(pattern, () => {
-        loadWithProgress('Loading lint configs', this.onUpdateLintConfig.bind(this));
-      })
-    );
+    (workspace.workspaceFolders ?? [{ uri: this.rootPath }]).forEach((folder) => {
+      const watcher = workspace.createFileSystemWatcher(new RelativePattern(folder.uri, '.haml-lint.yml'));
+
+      watcher.onDidChange(reload);
+      watcher.onDidCreate(reload);
+
+      this.context.subscriptions.push(watcher);
+    });
   }
 
   private subscribeRailsWatchers() {

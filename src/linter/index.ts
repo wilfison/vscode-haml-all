@@ -3,7 +3,7 @@ import { DiagnosticCollection, languages, TextDocument, workspace, OutputChannel
 
 import { LinterOffense } from '../types';
 import { DiagnosticFull, parseLintOffence } from './parser';
-import LintServer from '../server';
+import { LintServerPool } from '../server/pool';
 
 export const SOURCE = 'haml-lint';
 
@@ -19,7 +19,7 @@ export default class Linter {
   public hamlLintVersion: string | null = null;
 
   private outputChanel: OutputChannel;
-  private lintServer: LintServer;
+  private servers: LintServerPool;
   private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
 
   // Monotonic per-document lint counter. A response is only applied if it is
@@ -27,9 +27,9 @@ export default class Linter {
   // overwrite the diagnostics of a newer one (see lint()).
   private lintVersions = new Map<string, number>();
 
-  constructor(outputChanel: OutputChannel, lintServer: LintServer) {
+  constructor(outputChanel: OutputChannel, servers: LintServerPool) {
     this.outputChanel = outputChanel;
-    this.lintServer = lintServer;
+    this.servers = servers;
   }
 
   public dispose() {
@@ -74,7 +74,9 @@ export default class Linter {
   public async loadConfigs() {
     this.outputChanel.appendLine('Loading haml-lint config...');
 
-    await this.lintServer.listCops((data: any) => {
+    // The gem version is a property of the installation, not of a folder, so one
+    // server's answer stands for the workspace.
+    await this.servers.any()?.listCops((data: any) => {
       this.nativeAutocorrect = data.supports_native_autocorrect === true;
       this.hamlLintVersion = typeof data.version === 'string' ? data.version : null;
     });
@@ -83,7 +85,7 @@ export default class Linter {
   public async startServer() {
     try {
       this.outputChanel.appendLine('Starting Haml Lint server...');
-      await this.lintServer.start();
+      await this.servers.startAll();
       this.outputChanel.appendLine('Haml Lint server started');
 
       return Promise.resolve();
@@ -128,7 +130,11 @@ export default class Linter {
       return;
     }
 
-    if (!this.lintServer.rubyServerProcess) {
+    // Each workspace folder is linted by its own server, with its own cwd,
+    // Gemfile and .haml-lint.yml.
+    const server = this.servers.for(document);
+
+    if (!server?.rubyServerProcess) {
       return;
     }
 
@@ -138,7 +144,7 @@ export default class Linter {
 
     this.outputChanel.appendLine(`Linting ${document.uri.scheme}:${document.uri.path}`);
 
-    await this.lintServer.lint(document.getText(), filePath, configPath, (data: LinterOffense[]) => {
+    await server.lint(document.getText(), filePath, configPath, (data: LinterOffense[]) => {
       // A newer lint (or a clear) has superseded this request — drop the stale
       // result so it cannot clobber fresher diagnostics.
       if (this.lintVersions.get(key) !== version) {

@@ -16,7 +16,7 @@ import {
 } from 'vscode';
 
 import Linter from '../linter';
-import LintServer from '../server';
+import { LintServerPool } from '../server/pool';
 
 // `editor.codeActionsOnSave: { "source.fixAll.hamlLint": "explicit" }` and the
 // `Source Action...` menu. Kept on the formatting provider so "fix all" and
@@ -36,7 +36,7 @@ export class FixAllAction extends CodeAction {
 export default class FormattingEditProvider implements DocumentFormattingEditProvider, CodeActionProvider {
   private linter: Linter;
   private outputChanel: OutputChannel;
-  private lintServer: LintServer;
+  private servers: LintServerPool;
   private cancelPendingLint: () => void;
 
   // At most one "your haml-lint is too old" notice per session.
@@ -47,10 +47,10 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
   // first successful format rearms it, so a later real problem is still shown.
   private timeoutWarned = false;
 
-  constructor(linter: Linter, outputChanel: OutputChannel, lintServer: LintServer, cancelPendingLint: () => void = () => {}) {
+  constructor(linter: Linter, outputChanel: OutputChannel, servers: LintServerPool, cancelPendingLint: () => void = () => {}) {
     this.linter = linter;
     this.outputChanel = outputChanel;
-    this.lintServer = lintServer;
+    this.servers = servers;
     this.cancelPendingLint = cancelPendingLint;
   }
 
@@ -129,7 +129,13 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
 
   private async autocorrect(document: TextDocument, text: string): Promise<string | null> {
     try {
-      return await this.lintServer.autocorrect(text, document.fileName, this.linter.configFilePath(document));
+      const server = this.servers.for(document);
+
+      if (!server) {
+        return null;
+      }
+
+      return await server.autocorrect(text, document.fileName, this.linter.configFilePath(document));
     } catch (error) {
       this.outputChanel.appendLine(`Haml All: autocorrect request failed: ${error}`);
       return null;
