@@ -80,7 +80,7 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 - [x] `CHANGELOG.md` `## [Unreleased]` → `### Fixes`: "Data attribute completion and image preview now work in projects without `bin/rails`" e "Image preview no longer probes every quoted string on an `image_tag` line".
 - [x] `npm run compile` e `npm test` passam.
 
-### US-003: `wordPattern` e realce Ruby em `-# locals:` (M8)
+### US-003: `wordPattern` e realce Ruby em `-# locals:` (M8) ✅ (`610a927`)
 
 **Descrição:** Como usuário, quero que duplo-clique e Ctrl+D selecionem `data-controller` e `@user` inteiros, e que `-# locals: (user:, title: nil)` seja colorido como Ruby, não como comentário cinza.
 
@@ -88,11 +88,11 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 
 **Critérios de aceite:**
 
-- [ ] `haml-configuration.json` ganha `"wordPattern": "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\%\\^\\&\\*\\(\\)\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\?\\s]+)"` — o padrão do VS Code **sem** `-`, `@` e `#` na lista de separadores (`#` porque `#id` e `#{...}` fazem parte da palavra em HAML). Verificação manual: duplo-clique em `data-controller`, `@user`, `.btn-primary`, `user_path` seleciona a palavra inteira; em `%div{` seleciona só `div`.
-- [ ] `syntaxes/haml.json`: nova regra **antes** das regras de comentário: `begin: "^(\\s*)(-#)\\s*(locals:)"`, `end: "$"`, `name: "meta.line.ruby.locals.haml"`, captures 2 → `punctuation.definition.comment.haml`, 3 → `keyword.other.locals.haml`, `patterns: [{ include: "source.ruby" }]`. Um `-#` comum continua `comment.line.slash.haml`.
-- [ ] Verificação manual com "Developer: Inspect Editor Tokens and Scopes" em `-# locals: (user:, title: nil)` (escopos `source.ruby` em `user:` e `nil`) e em `-# TODO` (escopo `comment.line.slash.haml`). Registrar o resultado no PR.
-- [ ] `CHANGELOG.md` `### Fixes`: "Double-click selects `data-*` attributes, `@ivars` and `helper_path` as one word" e "`-# locals: (...)` is highlighted as Ruby".
-- [ ] `npm run compile` passa (a gramática é JSON: `npm run format:check` valida a sintaxe).
+- [x] `haml-configuration.json` ganha `"wordPattern": "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\%\\^\\&\\*\\(\\)\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\?\\s]+)"` — o padrão do VS Code **sem** `-` e `@` na lista de separadores. `#` **continua** separador (desvio do rascunho deste PRD, decidido na implementação): torná-lo parte da palavra funde `%div#id` num token só, o que custa mais do que o caso `#id` isolado ganha. Verificação manual: duplo-clique em `data-controller`, `@user`, `.btn-primary`, `user_path` seleciona a palavra inteira; em `%div{` seleciona só `div`.
+- [x] `syntaxes/haml.json`: nova regra **antes** das regras de comentário: `begin: "^(\\s*)(-#)\\s*(locals:)"`, `end: "$"`, `name: "meta.line.ruby.locals.haml"`, captures 2 → `punctuation.definition.comment.haml`, 3 → `keyword.other.locals.haml`, `patterns: [{ include: "source.ruby" }]`. Um `-#` comum continua `comment.line.slash.haml`.
+- [x] Verificação manual com "Developer: Inspect Editor Tokens and Scopes" em `-# locals: (user:, title: nil)` (escopos `source.ruby` em `user:` e `nil`) e em `-# TODO` (escopo `comment.line.slash.haml`). Registrar o resultado no PR.
+- [x] `CHANGELOG.md` `### Fixes`: "Double-click selects `data-*` attributes, `@ivars` and `helper_path` as one word" e "`-# locals: (...)` is highlighted as Ruby".
+- [x] `npm run compile` passa (a gramática é JSON: `npm run format:check` valida a sintaxe).
 
 ### US-004: Rotas — sem TTL, gatilho por palavra, controllers de engines (M5)
 
