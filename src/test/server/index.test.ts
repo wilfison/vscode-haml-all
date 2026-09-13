@@ -41,7 +41,7 @@ suite('LintServer', () => {
 
   setup(() => {
     // outputChannel omitted → the instance has no vscode runtime dependency.
-    lintServer = new LintServer(workspace, false);
+    lintServer = new LintServer(workspace, () => ({ useBundler: false, rubyCommand: 'ruby' }));
     fakeServer = null;
   });
 
@@ -240,7 +240,7 @@ suite('LintServer', () => {
         return proc;
       };
 
-      const server = new LintServer('/ws', false, null, 'ruby', {
+      const server = new LintServer('/ws', () => ({ useBundler: false, rubyCommand: 'ruby' }), null, {
         spawn: spawnFn,
         restartDelaysMs: new Array(attempts).fill(1),
       });
@@ -312,6 +312,36 @@ suite('LintServer', () => {
       await waitFor(() => processes.length === 4);
 
       assert.strictEqual(restarted, 3);
+    });
+  });
+
+  // useBundler and rubyCommand only apply when the process is spawned, so the
+  // server reads them on every start rather than holding the activation values.
+  suite('settings are read at start time', () => {
+    test('a restart picks up the current useBundler and rubyCommand', async () => {
+      const spawned: { command: string; args: string[] }[] = [];
+      let options = { useBundler: false, rubyCommand: 'ruby' };
+
+      const spawnFn: any = (command: string, args: string[]) => {
+        spawned.push({ command, args });
+        const proc = makeFakeProcess();
+        setImmediate(() => proc.stdout.emit('data', Buffer.from('{"port":7654}\n')));
+        return proc;
+      };
+
+      const server = new LintServer('/ws', () => options, null, { spawn: spawnFn });
+
+      await server.start();
+      assert.strictEqual(spawned[0].command, 'ruby');
+      assert.ok(!spawned[0].args.includes('--use-bundler'));
+
+      options = { useBundler: true, rubyCommand: '/opt/rubies/3.4/bin/ruby' };
+      await server.restart();
+
+      assert.strictEqual(spawned[1].command, '/opt/rubies/3.4/bin/ruby');
+      assert.ok(spawned[1].args.includes('--use-bundler'));
+
+      server.stop();
     });
   });
 });

@@ -11,6 +11,12 @@ import { startRubyServer } from './processRunner';
 /** Backoff before each automatic restart attempt; its length is the attempt cap. */
 const RESTART_DELAYS_MS = [1000, 4000, 16000];
 
+/** Settings the server process is spawned with, read fresh on every start. */
+export interface LintServerOptions {
+  useBundler: boolean;
+  rubyCommand: string;
+}
+
 export interface LintServerDeps {
   /** Injectable spawn, forwarded to startRubyServer. Tests pass a fake. */
   spawn?: typeof spawn;
@@ -34,9 +40,8 @@ class LintServer {
   private serverPort = 7654;
 
   private readonly workingDirectory: string;
-  private readonly useBundler: Boolean;
+  private readonly options: () => LintServerOptions;
   private readonly outputChannel: OutputChannel | null = null;
-  private readonly rubyCommand: string;
   private readonly deps: LintServerDeps;
   private readonly restartDelaysMs: number[];
 
@@ -52,22 +57,21 @@ class LintServer {
   /**
    * Creates a new LintServer instance.
    * @param workingDirectory - The workspace root directory
-   * @param useBundler - Whether to use Bundler for gem management
+   * @param options - Reads `useBundler` and `rubyCommand` at spawn time. A getter
+   *   rather than values, so a restart picks up a settings change without anyone
+   *   having to rebuild this object (four places hold a reference to it)
    * @param outputChannel - Optional output channel for logging (defaults to null)
-   * @param rubyCommand - Ruby interpreter used to run the server (defaults to `ruby`)
    * @param deps - Injection points for tests (spawn, restart backoff)
    */
   constructor(
     workingDirectory: string,
-    useBundler: Boolean,
+    options: () => LintServerOptions,
     outputChannel: OutputChannel | null = null,
-    rubyCommand: string = 'ruby',
     deps: LintServerDeps = {}
   ) {
     this.workingDirectory = workingDirectory;
-    this.useBundler = useBundler;
+    this.options = options;
     this.outputChannel = outputChannel;
-    this.rubyCommand = rubyCommand;
     this.deps = deps;
     this.restartDelaysMs = deps.restartDelaysMs ?? RESTART_DELAYS_MS;
   }
@@ -209,12 +213,14 @@ class LintServer {
       return this.rubyServerProcess;
     }
 
+    const { useBundler, rubyCommand } = this.options();
+
     const { process: rubyProcess, port } = await startRubyServer(
       {
         workingDirectory: this.workingDirectory,
-        useBundler: this.useBundler,
+        useBundler,
         token: this.token,
-        rubyCommand: this.rubyCommand,
+        rubyCommand,
       },
       { log: (message) => this.printOutput(message), spawn: this.deps.spawn }
     );

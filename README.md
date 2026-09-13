@@ -154,6 +154,9 @@ You can customize this extension by creating a `.vscode/settings.json` file in y
 {
   "hamlAll.lintEnabled": true,
 
+  // Lint while typing (debounced). When false, files are linted on open and save only.
+  "hamlAll.lintOnType": true,
+
   // Use 'bundle exec' to run haml-lint.
   // (If true, the 'linterExecutablePath' setting is ignored.)
   "hamlAll.useBundler": false,
@@ -171,6 +174,8 @@ You can customize this extension by creating a `.vscode/settings.json` file in y
   "hamlAll.railsCommand": "bin/rails"
 }
 ```
+
+Changing `hamlAll.useBundler` or `hamlAll.rubyCommand` restarts the lint server on the spot — no window reload.
 
 `hamlAll.linterExecutablePath`, `hamlAll.rubyCommand` and `hamlAll.railsCommand` are machine-scoped: they can only be set in your user settings, never by a repository's `.vscode/settings.json`.
 

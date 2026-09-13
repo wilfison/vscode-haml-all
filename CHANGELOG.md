@@ -12,6 +12,7 @@
 
 ### Added
 
+- `hamlAll.lintOnType` (default `true`): set it to `false` to lint only when a file is opened or saved.
 - Route helper completion also triggers while typing the helper itself: `posts_pa` now offers `posts_path`, outside `link_to` and friends. Accepting it replaces what you typed.
 - `source.fixAll.hamlLint` code action: set `"editor.codeActionsOnSave": { "source.fixAll.hamlLint": "explicit" }` to apply haml-lint's safe autocorrect on save without `editor.formatOnSave`, or run "Fix all auto-correctable haml-lint offenses" from the `Source Action...` menu.
 - The lightbulb on an offense haml-lint reports as auto-correctable now offers to fix every offense of that linter in the file through haml-lint's own autocorrect, unsafe corrections included (for a RuboCop offense: every RuboCop cop). Formatting and fix-all stay safe-only. Needs the `correctable` flag reported by `haml_lint` 0.76.0 or newer; with an older version the lightbulb behaves as before.
@@ -25,6 +26,7 @@
 
 ### Fixes
 
+- Changing `hamlAll.useBundler` or `hamlAll.rubyCommand` now restarts the lint server; both were read once at activation, so the change needed a window reload to take effect. "HAML: Restart lint server" also picks up the current values.
 - "Go to Definition" on a route helper now finds controllers that live in an in-repo engine; only `app/controllers/` at the root was searched.
 - Routes are reloaded when `config/routes*.rb` changes instead of expiring every five minutes, so a route added minutes ago no longer costs a `rails routes` run on the next completion.
 - Double-clicking (and Ctrl+D) now selects `data-controller`, `@user` and `root_path` as one word instead of stopping at the `-` or `@`.

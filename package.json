@@ -66,6 +66,11 @@
           "scope": "machine",
           "description": "Ruby interpreter used to run the lint server. Set it to an absolute path when a version manager's shims (rbenv, asdf, mise) are not on the PATH of a GUI-launched VS Code. May include arguments. Machine-scoped for security: it cannot be set by a workspace's .vscode/settings.json, only in your user settings."
         },
+        "hamlAll.lintOnType": {
+          "type": "boolean",
+          "default": true,
+          "description": "Lint while typing (debounced). When false, files are linted only when opened or saved."
+        },
         "hamlAll.useBundler": {
           "type": "boolean",
           "default": false,

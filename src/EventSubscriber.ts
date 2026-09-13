@@ -19,6 +19,19 @@ import { toPosix } from './utils/file';
 import Routes from './rails/routes';
 import LintServer from './server';
 
+/**
+ * Whether a text change should schedule a lint. Exported for tests: it is the
+ * whole of `hamlAll.lintOnType`, read on every change so toggling the setting
+ * takes effect at once.
+ */
+export function shouldLintOnChange(changeCount: number, isActiveDocument: boolean): boolean {
+  if (changeCount === 0 || !isActiveDocument) {
+    return false;
+  }
+
+  return workspace.getConfiguration('hamlAll').get<boolean>('lintOnType', true);
+}
+
 class EventSubscriber {
   public routes: Routes;
   public isARailsProject: boolean = false;
@@ -122,7 +135,7 @@ class EventSubscriber {
 
     this.context.subscriptions.push(
       workspace.onDidChangeTextDocument(async (event) => {
-        if (event.contentChanges.length > 0 && event.document === window.activeTextEditor?.document) {
+        if (shouldLintOnChange(event.contentChanges.length, event.document === window.activeTextEditor?.document)) {
           this.clearChangeDebounce();
           this.changeDebounce = setTimeout(() => updateDiagnostics(event.document), this.CHANGE_DEBOUNCE_MS);
         }
@@ -133,6 +146,12 @@ class EventSubscriber {
       workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration('hamlAll.lintEnabled')) {
           this.updateAllDiagnostics();
+        }
+
+        // Nothing to recompute, but a lint already queued was scheduled under
+        // the old setting.
+        if (event.affectsConfiguration('hamlAll.lintOnType')) {
+          this.clearChangeDebounce();
         }
       })
     );

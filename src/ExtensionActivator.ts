@@ -83,8 +83,13 @@ export class ExtensionActivator {
     }
     this.trustedActivated = true;
 
-    const config = vscode.workspace.getConfiguration('hamlAll');
-    this.lintServer = new LintServer(getWorkspaceRoot(), config.useBundler, this.outputChannel, helpers.rubyCommand());
+    // Read on every (re)start, so changing either setting only costs a restart.
+    const serverOptions = () => ({
+      useBundler: vscode.workspace.getConfiguration('hamlAll').get<boolean>('useBundler', false),
+      rubyCommand: helpers.rubyCommand(),
+    });
+
+    this.lintServer = new LintServer(getWorkspaceRoot(), serverOptions, this.outputChannel);
 
     // Probe for haml-lint in the background so a slow Ruby boot never delays
     // activation; surface the error only if the gem is genuinely missing.
@@ -117,6 +122,19 @@ export class ExtensionActivator {
       // `editor.codeActionsOnSave: { "source.fixAll.hamlLint": "explicit" }`
       vscode.languages.registerCodeActionsProvider(this.HAML_SELECTOR, formattingProvider, {
         providedCodeActionKinds: [FIX_ALL_KIND],
+      })
+    );
+
+    // Both settings only take effect when the server process is spawned, so a
+    // change is worth a restart — otherwise it would need a window reload.
+    this.context.subscriptions.push(
+      vscode.workspace.onDidChangeConfiguration((event) => {
+        const changed = ['hamlAll.useBundler', 'hamlAll.rubyCommand'].find((setting) => event.affectsConfiguration(setting));
+
+        if (changed) {
+          this.outputChannel.appendLine(`Haml All: ${changed} changed, restarting the lint server`);
+          this.restartLintServer();
+        }
       })
     );
 
