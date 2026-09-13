@@ -130,7 +130,7 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 - [x] `tmp/relatorio-analise.md` não precisa mudar neste PRD (é atualizado ao fim, ver §8).
 - [x] `npm run compile` e `npm test` passam; a contagem de testes Mocha cai (formatter/haml_lint_cops removidos) e isso é esperado.
 
-### US-006: `hamlAll.lintOnType` e restart automático ao mudar `useBundler`/`rubyCommand` (M2)
+### US-006: `hamlAll.lintOnType` e restart automático ao mudar `useBundler`/`rubyCommand` (M2) ✅ (`22a098e`)
 
 **Descrição:** Como usuário, quero desligar o lint enquanto digito (só ao abrir e salvar) e quero que mudar `hamlAll.useBundler` ou `hamlAll.rubyCommand` reinicie o servidor sem recarregar a janela.
 
@@ -138,15 +138,15 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 
 **Critérios de aceite:**
 
-- [ ] `package.json` › `contributes.configuration`: `hamlAll.lintOnType` (`boolean`, default `true`, description "Lint while typing (debounced). When false, files are linted only when opened or saved."). Sem `lintDebounceMs` (decisão do mantenedor).
-- [ ] `EventSubscriber`: o handler de `onDidChangeTextDocument` retorna cedo quando `workspace.getConfiguration('hamlAll').get('lintOnType', true) === false` (lido a cada evento, como `Linter.isEnabled()` faz). Save e open continuam lintando. `onDidChangeConfiguration` para `hamlAll.lintOnType` apenas cancela o debounce pendente (`clearChangeDebounce`).
-- [ ] `LintServer` deixa de receber `useBundler`/`rubyCommand` fixos: o construtor recebe `options: () => { useBundler: boolean; rubyCommand: string }` (um getter), chamado dentro de `start()`. `ExtensionActivator` passa `() => ({ useBundler: getConfiguration('hamlAll').get('useBundler', false), rubyCommand: helpers.rubyCommand() })`. Assim `restart()` (manual ou automático) sempre usa os valores atuais, sem novo código.
-- [ ] `ExtensionActivator.activateTrusted` registra `workspace.onDidChangeConfiguration`: se `affectsConfiguration('hamlAll.useBundler') || affectsConfiguration('hamlAll.rubyCommand')`, loga `Haml All: <setting> changed, restarting the lint server` e chama `this.restartLintServer()` (o método já existente, que trata erro com "Show Output"). Mudanças enquanto o workspace não é confiável são ignoradas (o servidor não existe).
-- [ ] `src/test/server/index.test.ts`: com `spawn` falso, `start()` com o getter devolvendo `useBundler: false` gera argv sem `--use-bundler`; mudar o valor devolvido pelo getter e chamar `restart()` gera argv com `--use-bundler` e o novo `rubyCommand` como executável.
-- [ ] `src/test/EventSubscriber.test.ts` (novo, ou em `linter/index.test.ts` se `EventSubscriber` for pesado de instanciar): com `lintOnType: false` (stub de `getConfiguration`, padrão de `Helpers.test.ts`), uma mudança de texto não agenda lint (o `linter.run` falso não é chamado após 300 ms); com `true`, é chamado uma vez. Se instanciar `EventSubscriber` exigir refatoração, extrair a decisão para uma função pura `shouldLintOnChange(config, event, activeDocument): boolean` e testar essa.
-- [ ] `README.md` › Configuration: `hamlAll.lintOnType` no bloco JSON; nota de que mudar `useBundler`/`rubyCommand` reinicia o servidor automaticamente.
-- [ ] `CHANGELOG.md` `### Added`: "`hamlAll.lintOnType` to lint only on open/save"; `### Fixes`: "Changing `hamlAll.useBundler` or `hamlAll.rubyCommand` restarts the lint server; a window reload is no longer needed".
-- [ ] `npm run compile` e `npm test` passam.
+- [x] `package.json` › `contributes.configuration`: `hamlAll.lintOnType` (`boolean`, default `true`, description "Lint while typing (debounced). When false, files are linted only when opened or saved."). Sem `lintDebounceMs` (decisão do mantenedor).
+- [x] `EventSubscriber`: o handler de `onDidChangeTextDocument` retorna cedo quando `workspace.getConfiguration('hamlAll').get('lintOnType', true) === false` (lido a cada evento, como `Linter.isEnabled()` faz). Save e open continuam lintando. `onDidChangeConfiguration` para `hamlAll.lintOnType` apenas cancela o debounce pendente (`clearChangeDebounce`).
+- [x] `LintServer` deixa de receber `useBundler`/`rubyCommand` fixos: o construtor recebe `options: () => { useBundler: boolean; rubyCommand: string }` (um getter), chamado dentro de `start()`. `ExtensionActivator` passa `() => ({ useBundler: getConfiguration('hamlAll').get('useBundler', false), rubyCommand: helpers.rubyCommand() })`. Assim `restart()` (manual ou automático) sempre usa os valores atuais, sem novo código.
+- [x] `ExtensionActivator.activateTrusted` registra `workspace.onDidChangeConfiguration`: se `affectsConfiguration('hamlAll.useBundler') || affectsConfiguration('hamlAll.rubyCommand')`, loga `Haml All: <setting> changed, restarting the lint server` e chama `this.restartLintServer()` (o método já existente, que trata erro com "Show Output"). Mudanças enquanto o workspace não é confiável são ignoradas (o servidor não existe).
+- [x] `src/test/server/index.test.ts`: com `spawn` falso, `start()` com o getter devolvendo `useBundler: false` gera argv sem `--use-bundler`; mudar o valor devolvido pelo getter e chamar `restart()` gera argv com `--use-bundler` e o novo `rubyCommand` como executável.
+- [x] `src/test/EventSubscriber.test.ts` (novo, ou em `linter/index.test.ts` se `EventSubscriber` for pesado de instanciar): com `lintOnType: false` (stub de `getConfiguration`, padrão de `Helpers.test.ts`), uma mudança de texto não agenda lint (o `linter.run` falso não é chamado após 300 ms); com `true`, é chamado uma vez. Se instanciar `EventSubscriber` exigir refatoração, extrair a decisão para uma função pura `shouldLintOnChange(config, event, activeDocument): boolean` e testar essa.
+- [x] `README.md` › Configuration: `hamlAll.lintOnType` no bloco JSON; nota de que mudar `useBundler`/`rubyCommand` reinicia o servidor automaticamente.
+- [x] `CHANGELOG.md` `### Added`: "`hamlAll.lintOnType` to lint only on open/save"; `### Fixes`: "Changing `hamlAll.useBundler` or `hamlAll.rubyCommand` restarts the lint server; a window reload is no longer needed".
+- [x] `npm run compile` e `npm test` passam.
 
 ### US-007: Status bar do servidor de lint (M1)
 
