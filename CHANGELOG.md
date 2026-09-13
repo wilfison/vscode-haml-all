@@ -30,6 +30,7 @@
 ### Performance
 
 - Partials are indexed once and kept in memory: partial completion no longer scans the workspace on every keystroke, and signature help no longer re-reads the partial's `-# locals:` on every key.
+- The lint server warms RuboCop up while it starts instead of charging it to whatever you do first. RuboCop only loads its cop classes and the `plugins:` from your `.rubocop.yml` when it first inspects something, which on a project with several plugins took seconds — and a format-on-save that landed on it hit its timeout and left the file untouched. The first lint or format now finds the server warm.
 
 ### Fixes
 

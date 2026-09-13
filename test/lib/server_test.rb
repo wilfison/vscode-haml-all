@@ -77,6 +77,19 @@ class ServerTest < Minitest::Test
     assert_nil(server.send(:start_stdin_watchdog))
   end
 
+  # A nil return means the rescue swallowed an exception -- Report.lint/.autocorrect
+  # lean on haml_lint internals (see the WARNING in lib/lint_server/runner.rb), so
+  # this is what catches a gem bump breaking the warm-up.
+  def test_prewarm_runs_a_real_round_trip_without_writing_to_stdout
+    server = LintServer::Server.new
+    result = nil
+
+    output = silence_stdout { result = server.send(:prewarm) }
+
+    assert_equal("%p x\n", result)
+    assert_empty(output, "prewarm must not write to the stream carrying the handshake")
+  end
+
   private
 
   def with_stdin(io)
@@ -105,6 +118,7 @@ class ServerTest < Minitest::Test
     original = $stdout
     $stdout = StringIO.new
     yield
+    $stdout.string
   ensure
     $stdout = original
   end

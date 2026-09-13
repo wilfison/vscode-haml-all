@@ -36,9 +36,10 @@ module LintServer
 
     attr_reader :port
 
-    def initialize(port: DEFAULT_PORT, watch_stdin: false)
+    def initialize(port: DEFAULT_PORT, watch_stdin: false, prewarm: false)
       @requested_port = port
       @watch_stdin = watch_stdin
+      @prewarm = prewarm
     end
 
     def start
@@ -48,6 +49,11 @@ module LintServer
       start_stdin_watchdog
 
       notify(status: "success", message: "Server started on port #{port}.", port: port, pid: Process.pid)
+
+      # After the handshake on purpose: the client's start-up budget stays
+      # intact. The socket is already bound, so a request arriving now waits in
+      # the backlog -- and waits at most for what it would have paid itself.
+      prewarm if @prewarm
 
       accept_loop
     end
@@ -73,6 +79,34 @@ module LintServer
       $stdin.stat.pipe?
     rescue SystemCallError, IOError
       false
+    end
+
+    # The first request on a project with RuboCop plugins pays seconds of lazy
+    # loading: RuboCop registers its cop classes as autoloads and only requires
+    # the `plugins:` from .rubocop.yml when it first inspects something. A real
+    # round trip over a throwaway template pays that here instead, off the
+    # user's path. With no config_file, discovery falls back to Dir.pwd -- the
+    # workspace root the extension launched us in, where the project's own
+    # .haml-lint.yml and .rubocop.yml live.
+    #
+    # Reports through stderr, not stdout: nobody reads our stdout once the
+    # handshake line has been scanned (src/server/processRunner.ts#finish
+    # detaches the listener), while stderr stays wired to the "Haml" output.
+    def prewarm
+      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      request = { "template" => "%p x\n", "file_path" => "__prewarm__.haml" }
+
+      Report.lint(request)
+      corrected = Report.autocorrect(request)
+
+      warn "Warmed up in #{((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1000).round}ms."
+      corrected
+    rescue StandardError, ScriptError => e
+      # A cold cache is a slow first request, not a broken server. ScriptError
+      # too, so a plugin that fails to parse cannot take the boot down -- same
+      # reasoning as Dispatcher.dispatch.
+      warn "Warm-up failed: #{e.message}"
+      nil
     end
 
     # Binds to the first free port at or above the requested one. Binding and
@@ -122,7 +156,7 @@ def boot_server
   end
 
   # Spawned by the extension, so stdin is a pipe whose EOF means the host is gone.
-  LintServer::Server.new(watch_stdin: true).start
+  LintServer::Server.new(watch_stdin: true, prewarm: true).start
 end
 
 boot_server if ARGV.include?("start")
