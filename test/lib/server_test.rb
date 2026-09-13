@@ -60,7 +60,9 @@ class ServerTest < Minitest::Test
     assert_kind_of(Array, response["result"])
   ensure
     client&.close
-    thread&.kill
+    # join: the thread's silence_stdout restores the global $stdout in its
+    # ensure, which would otherwise land in the middle of the next test.
+    thread&.kill&.join
   end
 
   def test_stdin_watchdog_is_not_armed_when_stdin_is_not_a_pipe
@@ -116,9 +118,10 @@ class ServerTest < Minitest::Test
 
   def silence_stdout
     original = $stdout
-    $stdout = StringIO.new
+    buffer = StringIO.new
+    $stdout = buffer
     yield
-    $stdout.string
+    buffer.string
   ensure
     $stdout = original
   end
