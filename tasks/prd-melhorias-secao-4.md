@@ -148,7 +148,7 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 - [x] `CHANGELOG.md` `### Added`: "`hamlAll.lintOnType` to lint only on open/save"; `### Fixes`: "Changing `hamlAll.useBundler` or `hamlAll.rubyCommand` restarts the lint server; a window reload is no longer needed".
 - [x] `npm run compile` e `npm test` passam.
 
-### US-007: Status bar do servidor de lint (M1)
+### US-007: Status bar do servidor de lint (M1) ✅ (`e30cd44`)
 
 **Descrição:** Como usuário, quero ver na status bar se o haml-lint está funcionando, e clicar nele para abrir o output "Haml" quando algo der errado.
 
@@ -156,15 +156,15 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 
 **Critérios de aceite:**
 
-- [ ] Novo `src/StatusBar.ts` exportando `class LintStatusBar implements Disposable` com `constructor(item: StatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 100))` (injeção para teste) e três métodos: `starting()` → texto `$(sync~spin) HAML`, tooltip `Starting haml-lint server…`; `ok()` → `$(check) HAML`, tooltip `haml-lint running`; `warning(reason: string)` → `$(warning) HAML`, tooltip `reason`, `backgroundColor = new ThemeColor('statusBarItem.warningBackground')`. `item.command = 'hamlAll.showOutput'`. `item.name = 'HAML lint server'`.
-- [ ] Visibilidade: `LintStatusBar` ouve `window.onDidChangeActiveTextEditor` e chama `item.show()` se `editor?.document.languageId === 'haml'`, senão `item.hide()`; avalia o editor ativo no construtor. `dispose()` descarta o item e a subscription.
-- [ ] Novo comando `hamlAll.showOutput` ("HAML: Show output") em `package.json` › `contributes.commands` e em `ExtensionActivator.registerCommands` → `this.outputChannel.show()`.
-- [ ] Ligações em `ExtensionActivator.activateTrusted`: `starting()` antes de `linter.startServer()`; `ok()` quando `startServer` resolve; `warning('haml-lint server failed to start. Click to see the output.')` quando rejeita; `warning('haml-lint not found. Install the gem or set hamlAll.useBundler.')` quando `hamlLintPresent()` é `false`; `onRestarted` → `ok()`; `onGaveUp` → `warning('haml-lint server stopped and could not be restarted. Run "HAML: Restart lint server".')`. `LintServer` ganha `handlers.onRestarting?: (attempt: number, max: number) => void`, chamado em `scheduleRestart`, ligado a `warning(\`haml-lint server died, restarting (${attempt}/${max})…\`)`. O comando de restart manual chama `starting()` antes e `ok()`/`warning()` depois. Em workspace não confiável a status bar não é criada (nada a mostrar).
-- [ ] `src/test/StatusBar.test.ts` (novo): com um `StatusBarItem` falso (objeto com `text`, `tooltip`, `backgroundColor`, `command`, `show()`, `hide()`, `dispose()` contando chamadas), (a) `starting/ok/warning` setam `text`/`tooltip`/`backgroundColor` esperados (`backgroundColor` `undefined` fora do warning); (b) construtor com editor ativo `.haml` → `show()`; com `.rb` → `hide()`; (c) `dispose()` descarta o item. Para (b), injetar também `activeEditorLanguage: () => string | undefined` ou abrir documentos reais com `window.showTextDocument`.
-- [ ] `src/test/server/index.test.ts`: `onRestarting` é chamado com `(1, n)` na primeira morte do processo falso.
-- [ ] `README.md`: um parágrafo em "Linting" descrevendo os três estados e o clique.
-- [ ] `CHANGELOG.md` `### Added`: "Status bar item showing the lint server state (starting / running / problem); click it to open the Haml output. New command **HAML: Show output**."
-- [ ] `npm run compile` e `npm test` passam.
+- [x] Novo `src/StatusBar.ts` exportando `class LintStatusBar implements Disposable` com `constructor(item: StatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 100))` (injeção para teste) e três métodos: `starting()` → texto `$(sync~spin) HAML`, tooltip `Starting haml-lint server…`; `ok()` → `$(check) HAML`, tooltip `haml-lint running`; `warning(reason: string)` → `$(warning) HAML`, tooltip `reason`, `backgroundColor = new ThemeColor('statusBarItem.warningBackground')`. `item.command = 'hamlAll.showOutput'`. `item.name = 'HAML lint server'`.
+- [x] Visibilidade: `LintStatusBar` ouve `window.onDidChangeActiveTextEditor` e chama `item.show()` se `editor?.document.languageId === 'haml'`, senão `item.hide()`; avalia o editor ativo no construtor. `dispose()` descarta o item e a subscription.
+- [x] Novo comando `hamlAll.showOutput` ("HAML: Show output") em `package.json` › `contributes.commands` e em `ExtensionActivator.registerCommands` → `this.outputChannel.show()`.
+- [x] Ligações em `ExtensionActivator.activateTrusted`: `starting()` antes de `linter.startServer()`; `ok()` quando `startServer` resolve; `warning('haml-lint server failed to start. Click to see the output.')` quando rejeita; `warning('haml-lint not found. Install the gem or set hamlAll.useBundler.')` quando `hamlLintPresent()` é `false`; `onRestarted` → `ok()`; `onGaveUp` → `warning('haml-lint server stopped and could not be restarted. Run "HAML: Restart lint server".')`. `LintServer` ganha `handlers.onRestarting?: (attempt: number, max: number) => void`, chamado em `scheduleRestart`, ligado a `warning(\`haml-lint server died, restarting (${attempt}/${max})…\`)`. O comando de restart manual chama `starting()` antes e `ok()`/`warning()` depois. Em workspace não confiável a status bar não é criada (nada a mostrar).
+- [x] `src/test/StatusBar.test.ts` (novo): com um `StatusBarItem` falso (objeto com `text`, `tooltip`, `backgroundColor`, `command`, `show()`, `hide()`, `dispose()` contando chamadas), (a) `starting/ok/warning` setam `text`/`tooltip`/`backgroundColor` esperados (`backgroundColor` `undefined` fora do warning); (b) construtor com editor ativo `.haml` → `show()`; com `.rb` → `hide()`; (c) `dispose()` descarta o item. Para (b), injetar também `activeEditorLanguage: () => string | undefined` ou abrir documentos reais com `window.showTextDocument`.
+- [x] `src/test/server/index.test.ts`: `onRestarting` é chamado com `(1, n)` na primeira morte do processo falso.
+- [x] `README.md`: um parágrafo em "Linting" descrevendo os três estados e o clique.
+- [x] `CHANGELOG.md` `### Added`: "Status bar item showing the lint server state (starting / running / problem); click it to open the Haml output. New command **HAML: Show output**."
+- [x] `npm run compile` e `npm test` passam.
 
 ### US-008: Índice de partials (M4)
 
