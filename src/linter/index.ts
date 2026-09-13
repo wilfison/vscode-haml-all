@@ -9,9 +9,8 @@ export const SOURCE = 'haml-lint';
 
 export default class Linter {
   /**
-   * Whether the installed haml-lint autocorrects its own linters (0.74.0+), or
-   * `null` while the server has not answered `list_cops` yet. Formatting uses it
-   * only to decide whether to tell the user what their version cannot do.
+   * Whether the installed haml-lint autocorrects its own linters (0.74.0+), `null` until
+   * the server answers `list_cops`. Only used to tell the user what their version lacks.
    */
   public nativeAutocorrect: boolean | null = null;
 
@@ -22,9 +21,8 @@ export default class Linter {
   private servers: LintServerPool;
   private collection: DiagnosticCollection = languages.createDiagnosticCollection('haml-lint');
 
-  // Monotonic per-document lint counter. A response is only applied if it is
-  // still the latest request for that document, so a slow older lint cannot
-  // overwrite the diagnostics of a newer one (see lint()).
+  // Monotonic per-document lint counter: a response only applies while it is still the
+  // latest request, so a slow older lint cannot clobber newer diagnostics (see lint()).
   private lintVersions = new Map<string, number>();
 
   constructor(outputChanel: OutputChannel, servers: LintServerPool) {
@@ -92,9 +90,8 @@ export default class Linter {
     } catch (error) {
       this.outputChanel.appendLine(`Error starting Haml Lint server: ${error}`);
 
-      // Surface the failure reason (it carries the server's stderr tail, e.g.
-      // the "install it with: gem install haml_lint" hint) instead of a
-      // generic message the user cannot act on.
+      // The reason carries the server's stderr tail (the "gem install haml_lint" hint),
+      // which the user can act on, unlike a generic message.
       const reason = error instanceof Error ? error.message : String(error);
 
       window.showErrorMessage(`Failed to start HAML Lint server. ${reason}`, 'Show Output').then((selection) => {
@@ -145,8 +142,7 @@ export default class Linter {
     this.outputChanel.appendLine(`Linting ${document.uri.scheme}:${document.uri.path}`);
 
     await server.lint(document.getText(), filePath, configPath, (data: LinterOffense[]) => {
-      // A newer lint (or a clear) has superseded this request — drop the stale
-      // result so it cannot clobber fresher diagnostics.
+      // A newer lint (or a clear) superseded this request: drop the stale result.
       if (this.lintVersions.get(key) !== version) {
         return;
       }
@@ -161,9 +157,8 @@ export default class Linter {
   }
 
   private parse(lintOffenses: LinterOffense[], document: TextDocument): DiagnosticFull[] {
-    // One diagnostic per (line, linter, message): the same linter can report the
-    // same message for a line more than once (e.g. per node), but two linters
-    // sharing a message are two findings.
+    // One diagnostic per (line, linter, message): a linter can repeat itself per node,
+    // but two linters sharing a message are two findings.
     const offenses = new Map<string, LinterOffense>();
 
     lintOffenses.forEach((offense) => {

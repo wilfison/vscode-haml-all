@@ -26,9 +26,8 @@ const LINTER_SOURCES = [SOURCE, RUBOCOP_SOURCE];
 /** Runs haml-lint's safe autocorrect restricted to `linters`; null on failure. */
 export type AutocorrectFn = (document: TextDocument, linters: string[]) => Promise<string | null>;
 
-// haml-lint cannot fix a single line: the smallest unit is a linter, and for
-// RuboCop the whole RuboCop linter (no `--only` pass-through). Resolved lazily,
-// so listing the lightbulb costs no server round-trip.
+// haml-lint cannot fix a single line: the smallest unit is a linter, and the whole of
+// RuboCop for its cops. Resolved lazily, so the lightbulb costs no server round-trip.
 class AutocorrectAction extends CodeAction {
   constructor(
     public readonly document: TextDocument,
@@ -113,8 +112,8 @@ export default class FixActionsProvider implements CodeActionProvider {
       this.codeActions.push(new AutocorrectAction(document, rule, linters, diagnostic));
     }
 
-    // haml-lint has no directive for a single RuboCop cop — disabling one means
-    // disabling the whole RuboCop linter for the file.
+    // haml-lint has no directive for a single RuboCop cop: disabling one disables the
+    // whole RuboCop linter for the file.
     const disableRule = linter === SOURCE ? rule : RUBOCOP_SOURCE;
 
     const disableFix = new CodeAction(`Disable \`${disableRule}\` for this entire file`, CodeActionKind.QuickFix);
@@ -156,9 +155,8 @@ export default class FixActionsProvider implements CodeActionProvider {
     const text = document.getText(range);
     const quote = text[0];
 
-    // Offer this only for a single string literal: same quote at both ends and
-    // not in between. Comparing just the ends turns `"a" + "b"` into
-    // `'a" + "b'`.
+    // Only for a single string literal: same quote at both ends and not in between,
+    // since comparing just the ends turns `"a" + "b"` into `'a" + "b'`.
     if (['"', "'"].includes(quote) === false || text.length < 2 || text.at(-1) !== quote) {
       return;
     }

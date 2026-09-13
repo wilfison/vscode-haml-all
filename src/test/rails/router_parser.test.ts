@@ -2,9 +2,8 @@ import * as assert from 'assert';
 
 import { parseRoutes } from '../../rails/router_parser';
 
-// Shape of `bin/rails routes -E`, including the cases that used to throw:
-// stdout noise before the first block, a mounted engine with no `controller#action`
-// and no source location, and a `redirect(...)` route with a blank prefix.
+// Shape of `bin/rails routes -E`, including what used to throw: stdout noise, a mounted
+// engine with no `controller#action`, and a `redirect(...)` route with a blank prefix.
 const ROUTES_OUTPUT = `DEPRECATION WARNING: something from an initializer
 --[ Route 1 ]-------------------------------------------------------------
 Prefix            | users

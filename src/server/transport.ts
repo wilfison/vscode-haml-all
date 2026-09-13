@@ -5,18 +5,8 @@ import { Logger, ServerResponse } from './protocol';
 const noop: Logger = () => {};
 
 /**
- * Sends one request to the Ruby lint server over a fresh TCP socket and
- * resolves with the parsed response.
- *
- * The server writes a single JSON line and then closes the connection, so the
- * response is accumulated until socket-`end` and parsed exactly once. This
- * single-encode/single-decode contract is kept in sync with
- * lib/lint_server/transport.rb — do not double-encode.
- *
- * The promise settles exactly once and the socket is always destroyed on the
- * way out, so a stuck server (one that never closes the connection) cannot
- * leak the socket or hang the caller: when `timeoutMs` is given, the request is
- * rejected and the socket torn down once the budget elapses.
+ * Sends one request over a fresh TCP socket, parsing the response exactly once, in sync
+ * with lib/lint_server/transport.rb. The socket is always destroyed on the way out.
  *
  * @param port - TCP port the server is listening on
  * @param host - host to connect to (127.0.0.1 in production)

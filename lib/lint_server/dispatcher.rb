@@ -1,11 +1,8 @@
 # frozen_string_literal: true
 
 module LintServer
-  # Routes a parsed request to the handler for its "action" and wraps the
-  # outcome in the uniform { status:, result: } envelope the client expects.
-  #
-  # This module is intentionally free of any socket/IO concerns so it can be
-  # unit-tested with plain Hashes.
+  # Routes a parsed request to its "action" handler and wraps the outcome in the
+  # { status:, result: } envelope. Free of IO, so it unit-tests with plain Hashes.
   module Dispatcher
     module_function
 
@@ -16,9 +13,8 @@ module LintServer
       "list_cops" => ->(_request) { Cops.list_cops }
     }.freeze
 
-    # Runs the handler for +request+ and returns a response Hash. Never raises:
-    # any handler error is captured into an "error" response so the accept loop
-    # keeps serving.
+    # Runs the handler for +request+. Never raises: a handler error becomes an
+    # "error" response so the accept loop keeps serving.
     def dispatch(request)
       handler = HANDLERS[request["action"]]
       return error("Unknown action: #{request['action'].inspect}") unless handler

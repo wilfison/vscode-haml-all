@@ -8,10 +8,8 @@ let activator: ExtensionActivator | undefined;
 let outputChanel = vscode.window.createOutputChannel('Haml');
 
 /**
- * Activates the HAML All-in-One extension.
- * Registers the editor-only features, and — once the workspace is trusted —
- * the linting server and the rest of the Ruby-backed features.
- * @param context - The VS Code extension context
+ * Registers the editor-only features, then the Ruby-backed ones once the workspace
+ * is trusted.
  */
 export async function activate(context: vscode.ExtensionContext) {
   // Capture the install path first: bundled asset lookups (lib/, templates/)
@@ -22,10 +20,7 @@ export async function activate(context: vscode.ExtensionContext) {
   await activator.activate();
 }
 
-/**
- * Deactivates the extension.
- * Stops the linting server and cleans up all resources.
- */
+/** Stops the linting server and cleans up all resources. */
 export function deactivate() {
   if (activator) {
     activator.dispose();

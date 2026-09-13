@@ -1,6 +1,6 @@
-# PRD: Correção dos bugs do relatório de análise (B1–B20)
+# PRD: Correção dos bugs do relatório de análise (B1-B20)
 
-Origem: `tmp/relatorio-analise.md`, seção 2 (B1–B20), 2026-09-12, branch `main` @ `1ba0eb8`.
+Origem: `tmp/relatorio-analise.md`, seção 2 (B1-B20), 2026-09-12, branch `main` @ `1ba0eb8`.
 
 ## 1. Introdução / Visão geral
 
@@ -10,9 +10,9 @@ O relatório de análise da v3.1.0 lista 20 bugs confirmados. Três famílias do
 2. **Configurações que não fazem o que prometem.** `railsRoutes.railsCommand` é ignorado ao carregar rotas (`Routes.execCmd` tem `bin/rails` fixo) e `hamlAll.linterExecutablePath` só afeta o probe `--version`, nunca o lint real (B2, B3, B4).
 3. **Crashes e fragilidades.** `extractPartialNameFromLine` lança `TypeError` em qualquer linha com a palavra `render` fora do padrão esperado (B5); `Routes.execCmd` não trata `error`, rejeita em qualquer byte de stderr e tem corrida entre processos (B6); `parseLintOffence` pode lançar e descartar **todas** as diagnósticas do arquivo (B12).
 
-Somam-se a isso uma família de bugs de Windows (`path.sep` aplicado a caminhos POSIX — B9), uma regra de `onEnterRules` que indenta depois de praticamente qualquer linha (B7), formatação que silenciosamente não faz nada por timeout curto (B8), servidor que não reinicia após morrer (B14) e um conjunto de itens menores e de código morto (B15–B20).
+Somam-se a isso uma família de bugs de Windows (`path.sep` aplicado a caminhos POSIX, B9), uma regra de `onEnterRules` que indenta depois de praticamente qualquer linha (B7), formatação que silenciosamente não faz nada por timeout curto (B8), servidor que não reinicia após morrer (B14) e um conjunto de itens menores e de código morto (B15-B20).
 
-Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em `tasks/prd-seguranca-workspace-trust.md`. Este PRD cobre **apenas a seção 2 do relatório**.
+Os itens de segurança (S1-S5) já foram implementados e têm PRD próprio em `tasks/prd-seguranca-workspace-trust.md`. Este PRD cobre **apenas a seção 2 do relatório**.
 
 ## 2. Objetivos
 
@@ -36,7 +36,7 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 
 - [ ] `filterWarnings` aceita `diagnostic.source` em `['haml-lint', 'RuboCop']` e **não** filtra por severidade (uma ofensa `error` do haml-lint também recebe ações).
 - [ ] `createGlobalRubocopActions` filtra por `diagnostic.source === 'RuboCop'` (não por `code`), e `fixAllStringLiterals` é oferecido quando há uma ofensa cuja mensagem começa com `Style/StringLiterals:`.
-- [ ] A checagem redundante de `diagnostic.code` dentro de `fixSpaceBeforeScript` é removida — `hamlLintFixes` (`src/quick_fixes/index.ts:18`) já despacha por `rule`, e o `rule` recebido já vem de `diagnostic.code.value`.
+- [ ] A checagem redundante de `diagnostic.code` dentro de `fixSpaceBeforeScript` é removida: `hamlLintFixes` (`src/quick_fixes/index.ts:18`) já despacha por `rule`, e o `rule` recebido já vem de `diagnostic.code.value`.
 - [ ] Para ofensa com `source === 'RuboCop'`, a ação "Disable ... for this entire file" insere `-# haml-lint:disable RuboCop` (haml-lint não desabilita um cop individual do RuboCop por diretiva), e o título da ação diz `Disable \`RuboCop\` for this entire file`.
 - [ ] Para ofensa com `source === 'haml-lint'`, a ação continua inserindo `-# haml-lint:disable <Cop>` com o nome do cop.
 - [ ] Novo `src/test/providers/FixActionsProvider.test.ts` cobre: (a) ofensa `SpaceBeforeScript` severidade `Warning` → oferece o fix + o disable; (b) ofensa `SpaceBeforeScript` severidade `Error` → oferece as mesmas ações; (c) ofensa RuboCop `Style/StringLiterals` → oferece `fixStringLiterals`, `fixAllStringLiterals` e o disable com `haml-lint:disable RuboCop`; (d) ofensa de cop sem fix conhecido → oferece só o disable.
@@ -97,7 +97,7 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 - [ ] `package.json` declara `hamlAll.railsCommand` (`string`, default `bin/rails`, `scope: machine`, com a mesma justificativa de segurança da setting atual).
 - [ ] `railsRoutes.railsCommand` permanece declarada, com `"deprecationMessage"` apontando para `hamlAll.railsCommand`, e continua sendo lida como fallback quando `hamlAll.railsCommand` não foi definida explicitamente. Sem código de migração e sem remoção agendada. (Ver §9, decisão D1.)
 - [ ] Um único helper (ex. `Helpers.railsCommand()`) resolve a precedência `hamlAll.railsCommand` → `railsRoutes.railsCommand` → `'bin/rails'`, e é usado tanto por `isARailsProject` quanto por `Routes`.
-- [ ] `Routes.execCmd` usa esse comando. Se o comando resolvido contiver espaços (ex. `bundle exec rails`), ele é dividido em executável + argumentos antes do `spawn` — **sem** `shell: true`, já que o valor vem de configuração.
+- [ ] `Routes.execCmd` usa esse comando. Se o comando resolvido contiver espaços (ex. `bundle exec rails`), ele é dividido em executável + argumentos antes do `spawn`, **sem** `shell: true`, já que o valor vem de configuração.
 - [ ] Um caminho relativo é resolvido contra o root do workspace; um caminho absoluto é usado como está (mesma regra já aplicada em `isARailsProject`).
 - [ ] Teste unitário do helper de resolução do comando (precedência e split de argumentos), sem depender de um Rails real.
 - [ ] `README.md` documenta a nova setting e marca a antiga como deprecada.
@@ -107,7 +107,7 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 
 **Descrição:** Como usuário de rbenv/asdf/mise que abre o VS Code pelo dock, quero poder apontar o Ruby que a extensão usa, em vez de receber `ENOENT` sem saída; e quero que a descrição de `linterExecutablePath` diga o que ela realmente faz.
 
-**Contexto:** `src/server/processRunner.ts:70` faz `spawnFn('ruby', args, ...)` sem shell, então não vê shims de gerenciadores de versão quando o `PATH` do processo do VS Code não os inclui. `hamlAll.linterExecutablePath` é lida só em `Helpers.hamlLintPresent` (`src/Helpers.ts:28`) — o servidor sempre roda `ruby lib/server.rb` + `require "haml_lint"` —, mas sua descrição e o README a apresentam como "path to haml-lint executable".
+**Contexto:** `src/server/processRunner.ts:70` faz `spawnFn('ruby', args, ...)` sem shell, então não vê shims de gerenciadores de versão quando o `PATH` do processo do VS Code não os inclui. `hamlAll.linterExecutablePath` é lida só em `Helpers.hamlLintPresent` (`src/Helpers.ts:28`), já que o servidor sempre roda `ruby lib/server.rb` + `require "haml_lint"`, mas sua descrição e o README a apresentam como "path to haml-lint executable".
 
 **Critérios de aceite:**
 
@@ -126,7 +126,7 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 
 **Critérios de aceite:**
 
-- [ ] Com `hamlAll.useBundler: true`, o probe global não roda e nenhum erro de "não encontrado" é exibido — a falha real, se houver, já chega pelo `startServer` (`src/linter/index.ts:106`), que mostra a cauda do stderr do servidor.
+- [ ] Com `hamlAll.useBundler: true`, o probe global não roda e nenhum erro de "não encontrado" é exibido: a falha real, se houver, já chega pelo `startServer` (`src/linter/index.ts:106`), que mostra a cauda do stderr do servidor.
 - [ ] Com `hamlAll.useBundler: false`, o comportamento atual é preservado.
 - [ ] Teste em `src/test/Helpers.test.ts` cobrindo os dois ramos (com o `execFile` real substituído ou com a função de probe injetada).
 - [ ] `npm run compile` e `npm test` passam.
@@ -135,7 +135,7 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 
 **Descrição:** Como usuário digitando HAML, quero que o Enter indente depois de um bloco ou de uma tag vazia, e **não** depois de `= render "foo"` ou `%p Hello world`.
 
-**Contexto:** `haml-configuration.json:38` usa o padrão `^\s*[%\.#-=][\w\s][\w\d\-\|]*[^>]*[^\)]$`. O trecho `#-=` dentro do character class é um **range** (0x23–0x3D) que inclui dígitos, `(`, `)`, `,`, `:`, `<`. Verificado: `= render "foo"`, `%p Hello world` e `= link_to "x", path` todos disparam indentação. Além disso `blockComment: ["-#", ""]` é inválido.
+**Contexto:** `haml-configuration.json:38` usa o padrão `^\s*[%\.#-=][\w\s][\w\d\-\|]*[^>]*[^\)]$`. O trecho `#-=` dentro do character class é um **range** (0x23-0x3D) que inclui dígitos, `(`, `)`, `,`, `:`, `<`. Verificado: `= render "foo"`, `%p Hello world` e `= link_to "x", path` todos disparam indentação. Além disso `blockComment: ["-#", ""]` é inválido.
 
 **Critérios de aceite:**
 
@@ -167,11 +167,11 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 
 **Descrição:** Como usuário de Windows, quero que os nomes de partials e assets saiam corretos, em vez de misturarem `\` e `/`.
 
-**Contexto:** `workspace.asRelativePath` e `Uri.path` sempre usam `/`, mas o código divide por `path.sep`: `src/providers/ViewCompletionProvider.ts:18,27,71,76,79` (score e nome do partial errados), `src/providers/RoutesCompletionProvider.ts:20-21`, `src/providers/ViewCodeActionProvider.ts:121` (`getPartialName` — partial criado com nome errado), `src/utils/file.ts:22,65,94,102` (mistura `/` literal com `fsPath`, que no Windows usa `\`), e `AssetsCompletionProvider.getAssetName` (`src/providers/AssetsCompletionProvider.ts:110`), que insere `relativePath` com `\` no HAML.
+**Contexto:** `workspace.asRelativePath` e `Uri.path` sempre usam `/`, mas o código divide por `path.sep`: `src/providers/ViewCompletionProvider.ts:18,27,71,76,79` (score e nome do partial errados), `src/providers/RoutesCompletionProvider.ts:20-21`, `src/providers/ViewCodeActionProvider.ts:121` (`getPartialName`, partial criado com nome errado), `src/utils/file.ts:22,65,94,102` (mistura `/` literal com `fsPath`, que no Windows usa `\`), e `AssetsCompletionProvider.getAssetName` (`src/providers/AssetsCompletionProvider.ts:110`), que insere `relativePath` com `\` no HAML.
 
 **Critérios de aceite:**
 
-- [ ] Um único helper exportado em `src/utils/file.ts` — `toPosix(p: string): string` — converte `\` em `/` (`p.split(path.sep).join('/')`, idempotente para caminhos já POSIX).
+- [ ] Um único helper exportado em `src/utils/file.ts`, `toPosix(p: string): string`, converte `\` em `/` (`p.split(path.sep).join('/')`, idempotente para caminhos já POSIX).
 - [ ] Todos os `split(path.sep)`/`join(path.sep)` e `path.join` aplicados a caminhos relativos ou a `Uri.path` nos arquivos acima passam a usar `path.posix` e/ou `toPosix`.
 - [ ] Todo `fsPath` usado como string para split ou comparação passa por `toPosix` antes.
 - [ ] `src/test/utils/file.test.ts` cobre `toPosix` (entrada Windows, entrada POSIX, string vazia) e `isPartialDocument` com `fileName` em estilo Windows.
@@ -208,7 +208,7 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 
 **Descrição:** Como usuário sem a gem `html2haml`, quero uma mensagem clara dizendo como instalá-la, em vez de um erro genérico do VS Code; e quero que a conversão não congele o editor.
 
-**Contexto:** `src/html2Haml.ts:8` usa `exec(command)` (assíncrono) dentro de try/catch — nunca lança, então `html2HamlAvailable` sempre retorna `true`. Depois `execSync` (linha 26) lança sem tratamento e bloqueia o extension host, e roda sem `cwd` do workspace — com `useBundler`, `bundle exec` não acha o `Gemfile` do projeto. `newFilePath` (linha 31) não trata `.htm`.
+**Contexto:** `src/html2Haml.ts:8` usa `exec(command)` (assíncrono) dentro de try/catch: nunca lança, então `html2HamlAvailable` sempre retorna `true`. Depois `execSync` (linha 26) lança sem tratamento e bloqueia o extension host, e roda sem `cwd` do workspace: com `useBundler`, `bundle exec` não acha o `Gemfile` do projeto. `newFilePath` (linha 31) não trata `.htm`.
 
 **Critérios de aceite:**
 
@@ -222,7 +222,7 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 
 ### US-014: Servidor de lint reinicia e pode ser reiniciado à mão (B14)
 
-**Descrição:** Como usuário cujo servidor Ruby morreu (OOM, `kill`, `bundle install`), quero que o lint volte sozinho, e ter um comando para reiniciá-lo quando não voltar — em vez de descobrir depois que nada acontece mais.
+**Descrição:** Como usuário cujo servidor Ruby morreu (OOM, `kill`, `bundle install`), quero que o lint volte sozinho, e ter um comando para reiniciá-lo quando não voltar, em vez de descobrir depois que nada acontece mais.
 
 **Contexto:** `LintServer.start` é chamado uma única vez por `Linter.startServer` (`src/linter/index.ts:94`). Quando o processo morre, `rubyServerProcess` vira `null` (`src/server/index.ts:170`) e `Linter.lint` passa a retornar cedo (`linter/index.ts:139`) silenciosamente até um reload da janela. Além disso, se o extension host morrer, `ruby server.rb` fica rodando indefinidamente ocupando a porta.
 
@@ -232,7 +232,7 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 - [ ] Depois de um restart bem-sucedido, as diagnósticas do workspace são recalculadas (reaproveitar `EventSubscriber.updateAllDiagnostics`) e as configs recarregadas (`Linter.loadConfigs`).
 - [ ] Esgotadas as tentativas, o usuário recebe `showErrorMessage` com o botão "Show Output" e a informação de que há o comando de restart.
 - [ ] Novo comando `hamlAll.restartLintServer`, título `HAML: Restart lint server`, declarado em `package.json` e registrado em `ExtensionActivator`. Em workspace não confiável, exibe aviso e não faz nada (mesma política de `html2Haml`).
-- [ ] O comando manual é o **único** jeito de zerar o contador de tentativas — não há reset por tempo nem timer de "servidor estável". (Ver §9, decisão D2.)
+- [ ] O comando manual é o **único** jeito de zerar o contador de tentativas: não há reset por tempo nem timer de "servidor estável". (Ver §9, decisão D2.)
 - [ ] `stop()` e `dispose()` marcam o desligamento como intencional, para o restart automático não disparar na desativação da extensão.
 - [ ] `lib/server.rb` ganha um watchdog: uma thread que lê `$stdin` até EOF e então encerra o processo, para o servidor não sobreviver à morte do extension host. O watchdog só é armado quando `$stdin` é um pipe (não quebra a execução manual nem a suíte Minitest).
 - [ ] Teste em `src/test/server/index.test.ts` com `spawn` injetado: ao emitir `close` inesperado, um novo spawn acontece; após `stop()`, um `close` não dispara spawn; esgotadas as 3 tentativas, nenhum spawn adicional.
@@ -257,14 +257,14 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 
 **Descrição:** Como usuário extraindo um partial de uma seleção, quero que os locals declarados correspondam às variáveis de instância de verdade, que eu possa criar `shared/_foo`, e que um arquivo já existente não seja sobrescrito em silêncio.
 
-**Contexto:** `src/providers/ViewCodeActionProvider.ts`. `globalVariableList` (linha 127) usa `/(@[\w\d_]*)/g` e captura `@bar` de `mailto:foo@bar.com` — verificado. `formatPartialVariables` (linha 141) usa `new RegExp(variable, 'g')` sem escapar e sem `\b`. A sanitização do nome remove `/`, impedindo `shared/_foo`. `edit.createFile(uri)` falha em silêncio se o partial já existe (`applyEdit` retorna `false`, e o retorno é ignorado). `wrapContentInBlock` (linhas 195–206) tem `if`/`else` com corpos idênticos.
+**Contexto:** `src/providers/ViewCodeActionProvider.ts`. `globalVariableList` (linha 127) usa `/(@[\w\d_]*)/g` e captura `@bar` de `mailto:foo@bar.com`, verificado. `formatPartialVariables` (linha 141) usa `new RegExp(variable, 'g')` sem escapar e sem `\b`. A sanitização do nome remove `/`, impedindo `shared/_foo`. `edit.createFile(uri)` falha em silêncio se o partial já existe (`applyEdit` retorna `false`, e o retorno é ignorado). `wrapContentInBlock` (linhas 195-206) tem `if`/`else` com corpos idênticos.
 
 **Critérios de aceite:**
 
 - [ ] `globalVariableList` exige início de palavra antes do `@` (ex. `(?<![\w@])@([A-Za-z_]\w*)`), então não captura `@bar` de `mailto:foo@bar.com` nem `@@classvar`.
 - [ ] `formatPartialVariables` escapa o nome da variável no regex e usa fronteira à direita (`(?![\w])`), para `@user` não casar dentro de `@user_id`.
 - [ ] O nome informado pelo usuário aceita `/` (ex. `shared/foo` cria `app/views/shared/_foo.html.haml` e renderiza `= render('shared/foo')`); segmentos `.`/`..` e caminhos absolutos são rejeitados com mensagem.
-- [ ] Se o arquivo de destino já existe, o comando avisa (`showErrorMessage`) e não altera nada — o retorno de `workspace.applyEdit` é verificado.
+- [ ] Se o arquivo de destino já existe, o comando avisa (`showErrorMessage`) e não altera nada: o retorno de `workspace.applyEdit` é verificado.
 - [ ] O `if`/`else` idêntico em `wrapContentInBlock` é reduzido a uma atribuição.
 - [ ] Testes em `src/test/providers/ViewCodeActionProvider.test.ts` (já existe) cobrem: `globalVariableList` com `mailto:foo@bar.com` → `[]`; conteúdo com `@user` e `@user_id` → substituição correta dos dois; nome `shared/foo` → caminho e texto de render esperados; nome `../x` → rejeitado.
 - [ ] `npm run compile` e `npm test` passam.
@@ -299,9 +299,9 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 
 **Descrição:** Como mantenedor, quero que `src/` não contenha funções exportadas sem uso nem scripts que contradizem o processo documentado, para ninguém os usar por engano.
 
-**Contexto:** Verificado por grep (0 referências fora da própria definição): `src/utils/array.ts` (`stringContainsAny`), `src/utils/ruby.ts` (`stringReplace`, `RESERVED_RUBY_WORDS`), `notifyErrors` e `LinterConfigWithErrors` (`src/linter/parser.ts:70`, `src/types.d.ts:37`), `simpleAutoFixOnSave` em `ExtensionConfig` (`src/types.d.ts:6` — não existe em `package.json`), `EventSubscriber.unsubscribe` (`src/EventSubscriber.ts:63`), o parâmetro `enable` de `createWorkspaceEdit` (`src/providers/FixActionsProvider.ts:63`). `bin/test` usa exatamente o padrão `ruby -Ilib:test test/**/*_test.rb` que o `AGENTS.md` proíbe, e `bin/release` cria a tag sem o prefixo `v` exigido por `release.yml`. `src/test/extension.test.ts` é o boilerplate do gerador (`[1,2,3].indexOf(5)`). `package.json` declara `tags` e `recommendations`, que o VS Code não reconhece (`keywords` já existe e duplica `tags`).
+**Contexto:** Verificado por grep (0 referências fora da própria definição): `src/utils/array.ts` (`stringContainsAny`), `src/utils/ruby.ts` (`stringReplace`, `RESERVED_RUBY_WORDS`), `notifyErrors` e `LinterConfigWithErrors` (`src/linter/parser.ts:70`, `src/types.d.ts:37`), `simpleAutoFixOnSave` em `ExtensionConfig` (`src/types.d.ts:6`, não existe em `package.json`), `EventSubscriber.unsubscribe` (`src/EventSubscriber.ts:63`), o parâmetro `enable` de `createWorkspaceEdit` (`src/providers/FixActionsProvider.ts:63`). `bin/test` usa exatamente o padrão `ruby -Ilib:test test/**/*_test.rb` que o `AGENTS.md` proíbe, e `bin/release` cria a tag sem o prefixo `v` exigido por `release.yml`. `src/test/extension.test.ts` é o boilerplate do gerador (`[1,2,3].indexOf(5)`). `package.json` declara `tags` e `recommendations`, que o VS Code não reconhece (`keywords` já existe e duplica `tags`).
 
-**Correção ao relatório:** `ExtensionActivator.dispose` **não** é código morto — `src/extension.ts:31` o chama em `deactivate()`, e ele é o único ponto que para o servidor Ruby (`this.lintServer?.stop()`). Fica onde está. (Ver §9, decisão D3.)
+**Correção ao relatório:** `ExtensionActivator.dispose` **não** é código morto: `src/extension.ts:31` o chama em `deactivate()`, e ele é o único ponto que para o servidor Ruby (`this.lintServer?.stop()`). Fica onde está. (Ver §9, decisão D3.)
 
 **Critérios de aceite:**
 
@@ -329,7 +329,7 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 
 **Descrição:** Como agente ou contribuidor lendo o guia, quero que a descrição do release corresponda ao que o workflow faz.
 
-**Contexto:** `AGENTS.md` diz que o release faz "package → publish → GitHub Release", mas `.github/workflows/release.yml` apenas empacota o `.vsix` e o anexa à Release — não roda `vsce publish`.
+**Contexto:** `AGENTS.md` diz que o release faz "package → publish → GitHub Release", mas `.github/workflows/release.yml` apenas empacota o `.vsix` e o anexa à Release, sem rodar `vsce publish`.
 
 **Critérios de aceite:**
 
@@ -342,7 +342,7 @@ Os itens de segurança (S1–S5) já foram implementados e têm PRD próprio em 
 Quick fixes e diagnósticas:
 
 - FR-1: `FixActionsProvider` deve considerar diagnósticas com `source` igual a `haml-lint` ou `RuboCop`, em qualquer severidade.
-- FR-2: O sistema deve usar `diagnostic.code.value` — nunca `diagnostic.code` — ao comparar o nome de um cop.
+- FR-2: O sistema deve usar `diagnostic.code.value`, nunca `diagnostic.code`, ao comparar o nome de um cop.
 - FR-3: Para uma ofensa do RuboCop, a ação de desabilitar deve inserir `-# haml-lint:disable RuboCop`.
 - FR-4: `parseLintOffence` deve limitar a linha reportada ao intervalo válido do documento e nunca lançar por causa de uma ofensa fora do intervalo.
 - FR-5: Quando a mensagem do RuboCop não contiver `Cop/Name:`, o código da diagnóstica deve ser `RuboCop`, nunca a string `"undefined"`.
@@ -384,25 +384,25 @@ Editor, watchers e higiene:
 
 ## 5. Não-objetivos (fora de escopo)
 
-- Itens de segurança S1–S5 — já implementados; ver `tasks/prd-seguranca-workspace-trust.md`.
-- Seção 4 do relatório (melhorias M1–M9), exceto o que está acoplado a um bug: o status bar item (M1), a leitura dinâmica de `useBundler`, `hamlAll.lintOnType`/`lintDebounceMs` (M2), a aposentadoria do formatter legado (M3), o índice de partials (M4), melhorias de rotas e completions (M5), `.haml-lint.yml` por diretório e multi-root (M6), registro de providers fora de projetos Rails (M7), injection grammars (M8) e as demais limpezas de M9 não incluídas em US-019.
+- Itens de segurança S1-S5: já implementados; ver `tasks/prd-seguranca-workspace-trust.md`.
+- Seção 4 do relatório (melhorias M1-M9), exceto o que está acoplado a um bug: o status bar item (M1), a leitura dinâmica de `useBundler`, `hamlAll.lintOnType`/`lintDebounceMs` (M2), a aposentadoria do formatter legado (M3), o índice de partials (M4), melhorias de rotas e completions (M5), `.haml-lint.yml` por diretório e multi-root (M6), registro de providers fora de projetos Rails (M7), injection grammars (M8) e as demais limpezas de M9 não incluídas em US-019.
 - Seção 6 do relatório (features novas), incluindo "Fix all autocorrectable", range formatting, hover de cops, rename de partial, diagnóstico de partial não encontrado e publicação automática no Marketplace.
 - Job `windows-latest` no CI. As correções de B9 são cobertas por testes de funções puras no job atual; adicionar a matriz de SO é decisão separada.
 - Suporte multi-root (`workspaceFolders[0]` continua sendo a raiz assumida).
-- Qualquer bump de versão em `package.json`/`package-lock.json` — o release é do mantenedor.
+- Qualquer bump de versão em `package.json`/`package-lock.json`: o release é do mantenedor.
 
 ## 6. Considerações de design
 
 - As mudanças de `haml-configuration.json` (US-008) e de `syntaxes/haml.json` (US-020) são as únicas sem teste automatizado possível no setup atual; ambas exigem verificação manual documentada no PR, com "Developer: Inspect Editor Tokens and Scopes" para os escopos.
 - As mensagens ao usuário (timeout de formatação, servidor morto, html2haml ausente) devem dizer o que fazer, não apenas o que falhou, e sempre oferecer "Show Output" quando houver detalhe no output channel "Haml".
-- Uma correção que melhore a descrição de uma setting (`linterExecutablePath`) precisa atualizar `package.json` **e** `README.md` juntos — hoje os dois prometem a mesma coisa errada.
+- Uma correção que melhore a descrição de uma setting (`linterExecutablePath`) precisa atualizar `package.json` **e** `README.md` juntos: hoje os dois prometem a mesma coisa errada.
 
 ## 7. Considerações técnicas
 
 - **Onde registrar providers:** `ExtensionActivator.registerHamlProviders` / `registerRailsProviders` / `activateTrusted`. Tudo que roda ferramenta Ruby vive em `activateTrusted`; o comando de restart (US-014) também precisa respeitar o gate de trust.
 - **Subscriptions:** todo watcher, provider e comando novo vai para `context.subscriptions` (ver `AGENTS.md`).
 - **Testes TypeScript:** mocha sob `src/test/`, compilados por `tsc -p ./` para `out/` e executados por `vscode-test`. Espelhar o layout de `src/` (ex. `src/linter/parser.ts` → `src/test/linter/parser.test.ts`). Para evitar o servidor Ruby real, reutilizar o padrão de `src/test/server/fakeServer.ts` e a injeção de `spawn` já presente em `startRubyServer` (`src/server/processRunner.ts`).
-- **Testes Ruby (US-014):** Minitest sob `test/`, rodados por `bundle exec rake` — nunca `ruby -Ilib:test test/**/*_test.rb`. `bundle exec rubocop` precisa ficar em 0 ofensas; não usar `# rubocop:disable` para escapar de `Metrics/*`, extrair helper.
+- **Testes Ruby (US-014):** Minitest sob `test/`, rodados por `bundle exec rake`, nunca `ruby -Ilib:test test/**/*_test.rb`. `bundle exec rubocop` precisa ficar em 0 ofensas; não usar `# rubocop:disable` para escapar de `Metrics/*`, extrair helper.
 - **Bundle:** o shipped code vem de `dist/extension.js` (esbuild). Caminhos de assets embarcados (`lib/`, `templates/`) resolvem por `getExtensionRoot()` (`src/utils/extensionRoot.ts`), nunca `path.join(__dirname, '..')`.
 - **Log:** sempre no output channel "Haml"; `console.log` é proibido.
 - **Ordem de execução sugerida** (dependências reais entre as stories):
@@ -414,7 +414,7 @@ Editor, watchers e higiene:
 
 ## 8. Métricas de sucesso
 
-- Abrir um `.haml` com uma ofensa `SpaceBeforeScript` e uma `Style/StringLiterals` oferece, respectivamente, o fix específico e o "Autocorrect all occurrences" — hoje nenhum dos dois aparece.
+- Abrir um `.haml` com uma ofensa `SpaceBeforeScript` e uma `Style/StringLiterals` oferece, respectivamente, o fix específico e o "Autocorrect all occurrences": hoje nenhum dos dois aparece.
 - Nenhuma das funções listadas em §5 de "lacunas de teste" do relatório (`FixActionsProvider`, `linter/parser`, `rails/router_parser`, `utils/file`, `PartialSignatureHelpProvider`, `CodeLensProvider`, `html2Haml`) permanece sem teste.
 - Digitar `= render "foo"` + Enter não indenta; digitar `- items.each do |item|` + Enter indenta.
 - `kill` no processo `ruby server.rb` faz o lint voltar sozinho em menos de ~20 s, sem reload da janela.
@@ -425,26 +425,26 @@ Editor, watchers e higiene:
 
 Nenhuma questão em aberto. As quatro dúvidas levantadas na primeira versão deste PRD estão resolvidas abaixo; quem implementar segue estas decisões sem reabrir o debate.
 
-### D1 — `railsRoutes.railsCommand` fica, sem data de remoção (US-005)
+### D1: `railsRoutes.railsCommand` fica, sem data de remoção (US-005)
 
 A setting antiga continua declarada e continua sendo lida como fallback, com `deprecationMessage` apontando para `hamlAll.railsCommand`. **Não** haverá código de migração (nada de reescrever a configuração do usuário) nem remoção agendada neste PRD.
 
-Motivo: remover a setting é breaking change, e breaking change pertence a um major — que é decisão do mantenedor no momento do release, não deste PRD. O custo de mantê-la é a linha de fallback em `Helpers.railsCommand()`; o custo de removê-la agora é quebrar silenciosamente quem já configurou `bundle exec rails`. Quando o próximo major for cortado, a remoção é um diff de 4 linhas e uma nota no CHANGELOG.
+Motivo: remover a setting é breaking change, e breaking change pertence a um major, que é decisão do mantenedor no momento do release, não deste PRD. O custo de mantê-la é a linha de fallback em `Helpers.railsCommand()`; o custo de removê-la agora é quebrar silenciosamente quem já configurou `bundle exec rails`. Quando o próximo major for cortado, a remoção é um diff de 4 linhas e uma nota no CHANGELOG.
 
-### D2 — Reset do backoff só pelo comando manual (US-014)
+### D2: Reset do backoff só pelo comando manual (US-014)
 
 3 tentativas com backoff 1 s / 4 s / 16 s. Esgotadas, o sistema para de tentar até o usuário rodar `HAML: Restart lint server`. Sem timer de "servidor estável por N minutos", sem reset automático.
 
-Motivo: o reset por tempo exige estado extra (timestamp do último start bem-sucedido, um timer ou uma checagem a cada close) para resolver um cenário raro — um servidor que morre em intervalos maiores que a janela de reset. O caminho de escape já existe e é explícito: o comando. Se a telemetria informal (issues) mostrar gente rodando o comando repetidamente, aí vale o timer.
+Motivo: o reset por tempo exige estado extra (timestamp do último start bem-sucedido, um timer ou uma checagem a cada close) para resolver um cenário raro: um servidor que morre em intervalos maiores que a janela de reset. O caminho de escape já existe e é explícito: o comando. Se a telemetria informal (issues) mostrar gente rodando o comando repetidamente, aí vale o timer.
 
-### D3 — `ExtensionActivator.dispose` permanece (US-019)
+### D3: `ExtensionActivator.dispose` permanece (US-019)
 
-Verificado: `src/extension.ts:29-33` implementa `deactivate()` chamando `activator.dispose()`, que executa `this.lintServer?.stop()` (`src/ExtensionActivator.ts:189-191`). O método está em uso e é o único ponto que mata o processo Ruby na desativação — **o relatório errou ao listá-lo como código morto** (seção M9).
+Verificado: `src/extension.ts:29-33` implementa `deactivate()` chamando `activator.dispose()`, que executa `this.lintServer?.stop()` (`src/ExtensionActivator.ts:189-191`). O método está em uso e é o único ponto que mata o processo Ruby na desativação: **o relatório errou ao listá-lo como código morto** (seção M9).
 
-Consequência prática: não há vazamento de servidor na desativação normal, e US-019 não mexe nele. O vazamento que US-014 resolve é outro — o extension host morrer sem chamar `deactivate()` (crash, `kill -9`), que é exatamente o caso do watchdog de stdin.
+Consequência prática: não há vazamento de servidor na desativação normal, e US-019 não mexe nele. O vazamento que US-014 resolve é outro: o extension host morrer sem chamar `deactivate()` (crash, `kill -9`), que é exatamente o caso do watchdog de stdin.
 
-### D4 — Notificação de timeout de formatação: uma por sessão, rearmada no sucesso (US-009)
+### D4: Notificação de timeout de formatação: uma por sessão, rearmada no sucesso (US-009)
 
 `FormattingEditProvider` mantém um booleano `timeoutWarned`. A primeira falha/timeout notifica e marca o flag; as seguintes só vão para o output channel. A primeira formatação bem-sucedida limpa o flag.
 
-Motivo: duas linhas de estado resolvem os dois extremos de uma vez. Sem o flag, `editor.formatOnSave` em um projeto com RuboCop pesado gera uma notificação por save — ruído que treina o usuário a ignorar avisos. Com flag permanente (sem rearmar), um problema transitório consome a única notificação da sessão e um problema real posterior passa calado. Rearmar no sucesso é o comportamento correto nas duas pontas pelo mesmo tamanho de código.
+Motivo: duas linhas de estado resolvem os dois extremos de uma vez. Sem o flag, `editor.formatOnSave` em um projeto com RuboCop pesado gera uma notificação por save, ruído que treina o usuário a ignorar avisos. Com flag permanente (sem rearmar), um problema transitório consome a única notificação da sessão e um problema real posterior passa calado. Rearmar no sucesso é o comportamento correto nas duas pontas pelo mesmo tamanho de código.

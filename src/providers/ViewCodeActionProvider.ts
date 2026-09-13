@@ -78,11 +78,8 @@ function buildWrapInBlockAction(range: Range): CodeAction | null {
 const VIEWS_SEGMENT = '/app/views/';
 
 /**
- * Cleans up the name the user typed, or returns null when it cannot be used.
- *
- * A "/" is kept so `shared/foo` can create `app/views/shared/_foo.html.haml`;
- * `.`/`..` segments and absolute paths are refused, since the name ends up in a
- * file path.
+ * Cleans up the name the user typed, or returns null when it cannot be used. "/" is kept
+ * for `shared/foo`; `.`/`..` and absolute paths are refused, the name becomes a path.
  */
 export function sanitizePartialName(input: string): string | null {
   const trimmed = input.trim().replace(/\\/g, '/');
@@ -111,10 +108,8 @@ export function sanitizePartialName(input: string): string | null {
 }
 
 /**
- * Where a new partial goes and how `render` should reference it.
- *
- * A name with a "/" is a path under app/views; a bare name lands next to the
- * current document. documentPath is a `Uri.path`, i.e. POSIX on every platform.
+ * Where a new partial goes and how `render` references it. A name with a "/" is a path
+ * under app/views, a bare name a sibling. documentPath is a POSIX `Uri.path`.
  */
 export function resolvePartialTarget(documentPath: string, name: string): { filePath: string; renderName: string } {
   const viewsIndex = documentPath.lastIndexOf(VIEWS_SEGMENT);
@@ -154,7 +149,7 @@ export async function createPartialFromSelection(): Promise<void> {
   const name = sanitizePartialName(input);
 
   if (!name) {
-    window.showErrorMessage('Invalid partial name. Use letters, numbers, "_", "-" and "/" — no "..", no absolute path.');
+    window.showErrorMessage('Invalid partial name. Use letters, numbers, "_", "-" and "/", no "..", no absolute path.');
     return;
   }
 

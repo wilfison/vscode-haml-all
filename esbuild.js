@@ -4,8 +4,8 @@ const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
 
 /**
- * Surfaces esbuild errors in a format the VS Code build task can parse and
- * makes watch-mode start/finish visible in the terminal.
+ * Surfaces esbuild errors in the format the build task parses, and makes watch-mode
+ * start/finish visible in the terminal.
  * @type {import('esbuild').Plugin}
  */
 const esbuildProblemMatcherPlugin = {

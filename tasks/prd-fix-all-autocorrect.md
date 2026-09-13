@@ -6,12 +6,12 @@ Origem: `tmp/relatorio-analise.md`, seção 6, item 2 ("Quick fixes funcionando 
 
 O servidor Ruby já expõe a ação `autocorrect` (`lib/lint_server/report.rb`, `LintServer::Runner#run_autocorrect`), e `FormattingEditProvider` já a usa para "Format Document" com timeout de 10 s, cancelamento do lint pendente e aviso único por sessão (B8). O que falta é expor a mesma capacidade em dois pontos onde o usuário espera encontrá-la:
 
-1. **`Source Action` / `editor.codeActionsOnSave`.** Hoje só existe `editor.formatOnSave`. Quem usa outro formatter para HAML, ou quer "fix all" sem formatação, não tem como ligar `"source.fixAll.hamlLint": "explicit"` — o padrão que ESLint, RuboCop LSP e Ruby LSP seguem.
+1. **`Source Action` / `editor.codeActionsOnSave`.** Hoje só existe `editor.formatOnSave`. Quem usa outro formatter para HAML, ou quer "fix all" sem formatação, não tem como ligar `"source.fixAll.hamlLint": "explicit"`, o padrão que ESLint, RuboCop LSP e Ruby LSP seguem.
 2. **Lâmpada na ofensa.** Os quick fixes voltaram a aparecer (B1), mas só para três cops reimplementados em TypeScript (`SpaceBeforeScript`, `Style/StringLiterals`, `Layout/SpaceInsideHashLiteralBraces`). O haml-lint ≥ 0.74 corrige nativamente 21 linters (`supports_autocorrect(true)` em `lib/haml_lint/linter/*.rb`) mais os cops safe do RuboCop, e desde a **0.76.0** informa por ofensa se ela é corrigível. Nenhuma dessas correções chega à lâmpada.
 
 ### Resultado da verificação pedida (`correctable` no JSON)
 
-Verificado no gem instalado (`haml_lint-0.78.0`) e nas versões 0.72–0.78:
+Verificado no gem instalado (`haml_lint-0.78.0`) e nas versões 0.72-0.78:
 
 | Versão haml_lint | `HamlLint::Lint#correctable` | `HashReporter#map_offense` inclui `correctable` |
 |---|---|---|
@@ -20,21 +20,21 @@ Verificado no gem instalado (`haml_lint-0.78.0`) e nas versões 0.72–0.78:
 
 Como o valor é calculado:
 
-- **Linters do haml-lint:** `Linter#record_lint(..., correctable: supports_autocorrect?)` — flag por linter (`lib/haml_lint/linter.rb:218`). `HtmlAttributes` refina por nó (`correctable?(node)`).
-- **RuboCop:** `Linter::RuboCop#record_lint(..., correctable: offense.correctable?)` — por ofensa (`lib/haml_lint/linter/rubocop.rb:285`). No RuboCop, `Offense#correctable?` é `status != :unsupported && status != :disabled`, ou seja, **"o cop suporta autocorrect"**, incluindo cops cujo autocorrect é *unsafe*. Como o servidor roda `autocorrect: :safe`, uma ofensa marcada `correctable: true` pode **não** ser corrigida (ver D4).
+- **Linters do haml-lint:** `Linter#record_lint(..., correctable: supports_autocorrect?)`: flag por linter (`lib/haml_lint/linter.rb:218`). `HtmlAttributes` refina por nó (`correctable?(node)`).
+- **RuboCop:** `Linter::RuboCop#record_lint(..., correctable: offense.correctable?)`: por ofensa (`lib/haml_lint/linter/rubocop.rb:285`). No RuboCop, `Offense#correctable?` é `status != :unsupported && status != :disabled`, ou seja, **"o cop suporta autocorrect"**, incluindo cops cujo autocorrect é *unsafe*. Como o servidor roda `autocorrect: :safe`, uma ofensa marcada `correctable: true` pode **não** ser corrigida (ver D4).
 
 Confirmado em runtime (`bundle exec haml-lint --reporter json` na 0.78.0, arquivo com `=foo`, `%meta{:foo => "bar"}` e `%p.a#b x   `): todas as ofensas vieram com `correctable: true`, inclusive as do RuboCop (`Style/HashSyntax`, `Style/StringLiterals`) num lint **sem** `--autocorrect`. E `LintServer::Runner#run_autocorrect(..., included_linters: ["SpaceBeforeScript"])` devolveu `= foo` com o hash Ruby 1.8 e o espaço final intactos; um nome desconhecido lança `HamlLint::NoSuchLinter`.
 
 O que o servidor da extensão faz hoje: `Report.lint_hash` monta o hash à mão (`location`, `severity`, `message`, `linter_name`) e **não repassa `correctable`**. O `JsonReporter` é instanciado mas só serve para o `HamlLint::Report`; o JSON que chega ao TypeScript é o de `lint_hash`. Logo, é preciso mudar o servidor (1 linha com guarda de versão) e o tipo `LinterOffense`.
 
-Limitação estrutural confirmada: **o haml-lint não corrige uma única linha**. A menor granularidade da API é *por linter* — `HamlLint::LinterSelector` aceita `options[:included_linters]` (`lib/haml_lint/linter_selector.rb:33`) e o `LintServer::Runner#run` já passa `options` para ele. Para o linter `RuboCop`, a granularidade mínima é "todos os cops safe do RuboCop": `rubocop_options` só constrói `--except` a partir de `ignored_cops` (`lib/haml_lint/linter/rubocop.rb:319-360`); não há `--only`. Ver D3 e §9.
+Limitação estrutural confirmada: **o haml-lint não corrige uma única linha**. A menor granularidade da API é *por linter*: `HamlLint::LinterSelector` aceita `options[:included_linters]` (`lib/haml_lint/linter_selector.rb:33`) e o `LintServer::Runner#run` já passa `options` para ele. Para o linter `RuboCop`, a granularidade mínima é "todos os cops safe do RuboCop": `rubocop_options` só constrói `--except` a partir de `ignored_cops` (`lib/haml_lint/linter/rubocop.rb:319-360`); não há `--only`. Ver D3 e §9.
 
 ## 2. Objetivos
 
 - `"source.fixAll.hamlLint": "explicit"` (ou `"source.fixAll"`) em `editor.codeActionsOnSave` aplica o autocorrect safe do haml-lint ao salvar, e o menu `Source Action...` oferece "Fix all auto-correctable haml-lint offenses".
 - Toda ofensa que o haml-lint marcar como `correctable` e que não tenha um quick fix TypeScript próprio recebe uma ação na lâmpada que roda o autocorrect **restrito ao linter daquela ofensa**.
 - Nada muda para quem só usa `editor.formatOnSave`: o resultado do fix-all é idêntico ao do format (mesmo caminho de código).
-- Com haml_lint < 0.76 (sem `correctable`), a extensão continua funcionando exatamente como hoje — sem ação nova na lâmpada e sem erro.
+- Com haml_lint < 0.76 (sem `correctable`), a extensão continua funcionando exatamente como hoje, sem ação nova na lâmpada e sem erro.
 - Cada peça de lógica nova deixa um teste que falha se ela regredir (Mocha e Minitest).
 
 ## 3. User Stories
@@ -49,7 +49,7 @@ Limitação estrutural confirmada: **o haml-lint não corrige uma única linha**
 
 - [ ] `lint_hash` inclui `correctable: lint.correctable` quando `lint.respond_to?(:correctable)`; caso contrário a chave fica `nil` (haml_lint < 0.76). Nunca `NoMethodError`.
 - [ ] A requisição `autocorrect` aceita a chave opcional `linters` (array de strings). `Report.autocorrect` passa `included_linters: Array(request["linters"]).grep(String)` para `run_autocorrect`; quando vazio, comportamento atual (todos os linters).
-- [ ] Um nome de linter desconhecido faz o haml-lint lançar (`NoSuchLinter`); isso vira resposta `{ status: "error" }` pelo `Dispatcher` sem derrubar o servidor — comportamento já existente, apenas confirmado por teste.
+- [ ] Um nome de linter desconhecido faz o haml-lint lançar (`NoSuchLinter`); isso vira resposta `{ status: "error" }` pelo `Dispatcher` sem derrubar o servidor, comportamento já existente, apenas confirmado por teste.
 - [ ] `test/lib/lint_server/report_test.rb`: o `Struct` `Lint` ganha `correctable`; teste de que `lint_hash` propaga `true`/`false`; teste de que um lint sem o método (Struct antigo) produz `correctable: nil`.
 - [ ] `test/lib/lint_server/runner_test.rb`: `run_autocorrect` com `included_linters: ["SpaceBeforeScript"]` sobre `"=foo\n%meta{:foo => 'bar'}"` corrige `=foo` → `= foo` e **deixa** `%meta{:foo => 'bar'}` intacto (RuboCop não rodou).
 - [ ] `test/lib/lint_server/dispatcher_test.rb` (ou `report_test.rb`): `autocorrect` com `linters: ["NaoExiste"]` retorna `status: "error"`.
@@ -78,10 +78,10 @@ Limitação estrutural confirmada: **o haml-lint não corrige uma única linha**
 **Critérios de aceite:**
 
 - [ ] O provider de fix-all é registrado em `activateTrusted` com `providedCodeActionKinds: [CodeActionKind.SourceFixAll.append('hamlLint')]` e o mesmo `HAML_SELECTOR`, dentro de `context.subscriptions` (D1: `FormattingEditProvider` passa a implementar também `CodeActionProvider`, reutilizando a lógica extraída para um método `computeEdits(document, token)`).
-- [ ] `provideCodeActions` retorna `[]` quando `context.only` é `undefined` ou não intersecta `source.fixAll` — a ação **não** aparece na lâmpada, só em `Source Action...` e no on-save.
+- [ ] `provideCodeActions` retorna `[]` quando `context.only` é `undefined` ou não intersecta `source.fixAll`: a ação **não** aparece na lâmpada, só em `Source Action...` e no on-save.
 - [ ] Quando solicitada, retorna **uma** `CodeAction` com título `Fix all auto-correctable haml-lint offenses`, `kind = source.fixAll.hamlLint`, **sem** `edit` (resolução preguiçosa).
 - [ ] `resolveCodeAction` calcula o edit pelo mesmo caminho do format: mesmo timeout, mesmo `cancelPendingLint`, mesmo fallback legado, mesmo aviso único. Texto igual → `edit` vazio. Falha/timeout → `edit` ausente e aviso (uma vez por sessão, rearmado no sucesso, como hoje).
-- [ ] `resolveCodeAction` respeita `token.isCancellationRequested` após a resposta do servidor: se cancelado (VS Code cancela ao estourar `editor.codeActionsOnSaveTimeout`), não seta `edit` nem emite aviso — o cancelamento não é falha.
+- [ ] `resolveCodeAction` respeita `token.isCancellationRequested` após a resposta do servidor: se cancelado (VS Code cancela ao estourar `editor.codeActionsOnSaveTimeout`), não seta `edit` nem emite aviso: o cancelamento não é falha.
 - [ ] `src/test/providers/FormattingEditProvider.test.ts`: (a) `only = undefined` → `[]`; (b) `only = CodeActionKind.SourceFixAll` → 1 ação, sem `edit`; (c) `only = source.fixAll.hamlLint` → 1 ação; (d) resolve com servidor devolvendo texto diferente → `edit` com replace do documento inteiro; (e) servidor devolvendo `null` → sem `edit`, 1 aviso; (f) token já cancelado → sem `edit`, 0 avisos; (g) `lintEnabled: false` → `provideCodeActions` retorna `[]` e o servidor não é chamado.
 - [ ] `README.md`: nova subseção em "Formatting" mostrando `"editor.codeActionsOnSave": { "source.fixAll.hamlLint": "explicit" }`, avisando que (1) com `editor.formatOnSave` também ligado o autocorrect roda duas vezes por save (a segunda não muda nada, mas custa uma ida ao servidor) e (2) arquivos grandes com RuboCop podem exigir aumentar `editor.codeActionsOnSaveTimeout` (default 750 ms).
 - [ ] `CHANGELOG.md` `## [Unreleased]` → `### Added`.
@@ -147,10 +147,10 @@ Cliente TypeScript:
 
 ## 7. Considerações técnicas
 
-- **Reuso, não duplicação.** O único caminho de autocorrect de documento é o de `FormattingEditProvider`; o fix-all o reutiliza via extração de um método interno (D1). `FixActionsProvider` recebe uma função, não o `LintServer` — mantém o provider testável sem servidor e sem `vscode.workspace.getConfiguration`.
+- **Reuso, não duplicação.** O único caminho de autocorrect de documento é o de `FormattingEditProvider`; o fix-all o reutiliza via extração de um método interno (D1). `FixActionsProvider` recebe uma função, não o `LintServer`: mantém o provider testável sem servidor e sem `vscode.workspace.getConfiguration`.
 - **`resolveCodeAction`** existe desde o VS Code 1.48; `engines.vscode` é `^1.103.0`. O on-save chama `provideCodeActions` com `only = source.fixAll` e depois `resolveCodeAction`, cancelando pelo token ao estourar `editor.codeActionsOnSaveTimeout`. A extensão não cancela a requisição no servidor (o transporte não suporta); ela só descarta a resposta.
 - **Servidor single-threaded:** o `cancelPendingLint()` antes de qualquer autocorrect continua obrigatório (B8). O aviso único por sessão (`timeoutWarned`) é compartilhado entre format e fix-all, já que vivem na mesma instância.
-- **`included_linters` usa nomes de classe** (`SpaceBeforeScript`, `RuboCop`), exatamente o que `lint.linter.name` devolve e o que a extensão já guarda em `code.value` para ofensas haml-lint. Para RuboCop, `code.value` é o cop (`Style/StringLiterals`) — por isso o `linters` enviado é derivado do `source`, não de `code.value`.
+- **`included_linters` usa nomes de classe** (`SpaceBeforeScript`, `RuboCop`), exatamente o que `lint.linter.name` devolve e o que a extensão já guarda em `code.value` para ofensas haml-lint. Para RuboCop, `code.value` é o cop (`Style/StringLiterals`): por isso o `linters` enviado é derivado do `source`, não de `code.value`.
 - **Versões:** `correctable` ≥ 0.76.0; `included_linters` existe há muito (LinterSelector) e `supports_autocorrect` ≥ 0.74.0 (já detectado por `supports_native_autocorrect`). Não é necessário novo flag em `list_cops`: a ausência de `correctable` no JSON já desliga a feature por ofensa.
 - **Trust:** `EventSubscriber` e `FormattingEditProvider` só existem após `activateTrusted`; nada novo precisa de gate próprio.
 - **Testes Ruby:** Minitest via `bundle exec rake`; `bundle exec rubocop` em 0 ofensas, sem `# rubocop:disable` para `Metrics/*` (extrair helper).
@@ -167,23 +167,23 @@ Cliente TypeScript:
 
 ## 9. Decisões registradas e questões em aberto
 
-### D1 — Fix-all vive em `FormattingEditProvider`
+### D1: Fix-all vive em `FormattingEditProvider`
 
-`FormattingEditProvider` passa a implementar `DocumentFormattingEditProvider` **e** `CodeActionProvider`, com a lógica de "texto → edit" extraída para um método privado usado pelos dois. Motivo: é o menor diff que evita duplicar timeout, cancelamento, fallback legado e o aviso único — e o estado `timeoutWarned` precisa ser um só. Se o arquivo crescer além do confortável, separar em `FixAllProvider` recebendo a mesma função é uma refatoração de 20 linhas.
+`FormattingEditProvider` passa a implementar `DocumentFormattingEditProvider` **e** `CodeActionProvider`, com a lógica de "texto → edit" extraída para um método privado usado pelos dois. Motivo: é o menor diff que evita duplicar timeout, cancelamento, fallback legado e o aviso único, e o estado `timeoutWarned` precisa ser um só. Se o arquivo crescer além do confortável, separar em `FixAllProvider` recebendo a mesma função é uma refatoração de 20 linhas.
 
-### D2 — Fix local tem precedência sobre o autocorrect do servidor
+### D2: Fix local tem precedência sobre o autocorrect do servidor
 
 Quando `hamlLintFixes`/`rubocopFix` devolvem uma ação para a regra, a ação de autocorrect por linter **não** é oferecida. Motivo: o fix local é síncrono, por linha e sem ida ao servidor; oferecer as duas é ruído. Quando M3 (aposentar o formatter legado) for feito, os fixes locais podem ser reavaliados um a um.
 
-### D3 — Ofensa RuboCop → "Fix all RuboCop offenses in this file"
+### D3: Ofensa RuboCop → "Fix all RuboCop offenses in this file"
 
-O haml-lint não expõe `--only`. A ação corrige todos os cops safe do RuboCop no arquivo e o título diz isso. Alternativa descartada: montar `ignored_cops` com todos os cops menos o alvo — depende da lista de cops carregada, muda com plugins (`rubocop-rails` etc.) e converte uma chamada de 1 linha num módulo. Reabrir se surgir demanda concreta.
+O haml-lint não expõe `--only`. A ação corrige todos os cops safe do RuboCop no arquivo e o título diz isso. Alternativa descartada: montar `ignored_cops` com todos os cops menos o alvo: depende da lista de cops carregada, muda com plugins (`rubocop-rails` etc.) e converte uma chamada de 1 linha num módulo. Reabrir se surgir demanda concreta.
 
-### D4 — Quick fix por ofensa roda autocorrect `:all`; texto inalterado = aviso informativo
+### D4: Quick fix por ofensa roda autocorrect `:all`; texto inalterado = aviso informativo
 
 Revisado pelo mantenedor (2026-09-12): clicar na lâmpada de uma ofensa específica é um pedido explícito, então a ação por ofensa envia `unsafe: true` e o servidor roda `autocorrect: :all` (`--autocorrect-all` no RuboCop; libera os linters `autocorrect_safe(false)` do haml-lint, como `UnnecessaryStringOutput`). Format Document e `source.fixAll.hamlLint` continuam `:safe`. Quando mesmo assim o resultado é igual ao original (cop desabilitado no `.haml-lint.yml`, ou o autocorrect não cobre aquele código), a extensão informa que não foi possível corrigir e registra o motivo no output "Haml".
 
-### D5 — Sem versão mínima fixada; só documentação
+### D5: Sem versão mínima fixada; só documentação
 
 Decisão do mantenedor (2026-09-12): a extensão **não** passa a exigir `haml_lint >= 0.76`. `README.md` e `CHANGELOG.md` apenas informam que a correção por ofensa depende do suporte a autocorreção do haml-lint (`correctable`, disponível a partir da 0.76.0) e que, em versões anteriores, a lâmpada segue como hoje. Nenhuma checagem de versão nova em `Cops.list_cops`, nenhum aviso ao usuário: a ausência do campo desliga a feature silenciosamente.
 

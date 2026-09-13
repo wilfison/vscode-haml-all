@@ -1,15 +1,8 @@
 import path from 'node:path';
 
 /**
- * Absolute path to the extension's install directory (the folder holding
- * `lib/`, `templates/`, `dist/`, …). Set once at activation from
- * `context.extensionPath`.
- *
- * Bundling collapses every module into `dist/extension.js`, so `__dirname` can
- * no longer be used to walk up to the extension root a fixed number of levels
- * (the depth differs between the bundled build and the `tsc` test build). The
- * extension context knows the real install path regardless of layout, so we
- * capture it here and resolve bundled asset paths against it.
+ * Absolute path to the install directory, set once at activation. `__dirname` cannot do
+ * it: the bundle and the `tsc` test build put this file at different depths.
  */
 let extensionRoot: string | undefined;
 
@@ -19,12 +12,8 @@ export function setExtensionRoot(root: string): void {
 }
 
 /**
- * Returns the extension's install directory.
- *
- * In production {@link setExtensionRoot} is always called before any consumer
- * runs. The `__dirname` fallback only serves code paths that run without
- * activation (the test suite, where this file lives at `out/utils/` — two
- * levels below the repo root).
+ * In production {@link setExtensionRoot} always runs first. The `__dirname` fallback
+ * serves code that runs without activation (the test suite, at `out/utils/`).
  */
 export function getExtensionRoot(): string {
   return extensionRoot ?? path.join(__dirname, '..', '..');

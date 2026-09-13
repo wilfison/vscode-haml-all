@@ -1,12 +1,8 @@
 import { Disposable, StatusBarAlignment, StatusBarItem, ThemeColor, window } from 'vscode';
 
 /**
- * Shows the state of the Ruby lint server while a HAML file is in front of the
- * user. Until now a dead server was only visible as a one-off notification, so a
- * dismissed notice left no trace that linting had stopped.
- *
- * It is shown only for HAML documents: the server is useless to every other
- * language, and the status bar is crowded enough.
+ * Shows the state of the Ruby lint server, so a dismissed notification is not the only
+ * trace of a dead one. HAML documents only: the status bar is crowded enough.
  */
 export class LintStatusBar implements Disposable {
   private readonly subscription: Disposable;

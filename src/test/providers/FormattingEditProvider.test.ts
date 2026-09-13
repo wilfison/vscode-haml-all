@@ -14,9 +14,8 @@ function fakeLinter(enabled = true, nativeAutocorrect: boolean | null = true, ha
   };
 }
 
-// Returns the queued results in order; `null` stands for a failed/timed-out
-// autocorrect, a string for a successful one. Shaped as the pool the provider
-// asks for the document's server.
+// Returns the queued results in order, `null` for a failed autocorrect. Shaped as the
+// pool the provider asks for the document's server.
 function fakeLintServer(results: (string | null)[]): any {
   const server: any = {
     calls: 0,

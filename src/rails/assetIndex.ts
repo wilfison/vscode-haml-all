@@ -4,10 +4,8 @@ import * as path from 'node:path';
 import { toPosix } from '../utils/file';
 
 /**
- * A single file discovered under an asset directory. All the fields consumers
- * need are precomputed once at scan time so that hot paths (a CodeLens that
- * re-runs on every edit, a completion that re-triggers as you type) only do
- * cheap in-memory string comparisons instead of touching disk.
+ * A file under an asset directory, with every field consumers need precomputed at scan
+ * time, so a CodeLens or completion compares strings instead of touching disk.
  */
 export interface AssetFile {
   /** Absolute path on disk. */
@@ -27,18 +25,14 @@ interface CacheEntry {
   loadedAt: number;
 }
 
-// Asset directories are walked recursively, which is expensive on large trees
-// (a built `public/assets` can hold thousands of fingerprinted files). The
-// listing only stores paths, so it is invalidated when files are added/removed
-// (see the watcher in EventSubscriber) — a plain content edit never changes it.
-// The TTL is a backstop in case a create/delete event is ever missed.
+// The recursive walk is expensive on a built `public/assets`. The listing only stores
+// paths, so create/delete invalidates it; the TTL is a backstop for a missed event.
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const cache = new Map<string, CacheEntry>();
 
 /**
- * Returns every file under {@link directory} (recursively), served from an
- * in-memory cache. A missing or unreadable directory yields an empty list, so
- * callers need not pre-check existence. Safe to call on every keystroke.
+ * Every file under {@link directory}, recursively, from an in-memory cache. A missing or
+ * unreadable directory yields an empty list, so this is safe on every keystroke.
  */
 export function listAssetFiles(directory: string): AssetFile[] {
   const cached = cache.get(directory);
@@ -53,9 +47,8 @@ export function listAssetFiles(directory: string): AssetFile[] {
   return files;
 }
 
-// Build output lives under public/ and churns constantly (assets:precompile, a
-// webpack/vite watcher), and a fingerprinted bundle is never what a completion
-// offers — so those trees must not invalidate the index on every write.
+// Build output under public/ churns constantly and a fingerprinted bundle is never what
+// a completion offers, so those trees must not invalidate the index on every write.
 const PUBLIC_BUILD_DIRS = ['assets', 'packs', 'packs-test', 'builds', 'vite'];
 
 /**
@@ -86,7 +79,7 @@ function walk(root: string, current: string, out: AssetFile[]): void {
   try {
     entries = fs.readdirSync(current, { withFileTypes: true });
   } catch (error) {
-    // Directory does not exist or cannot be read — treat as empty.
+    // Directory does not exist or cannot be read: treat as empty.
     return;
   }
 

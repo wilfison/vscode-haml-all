@@ -8,13 +8,8 @@ import * as fileHelper from '../utils/file';
 const VIEWS_PREFIX = 'app/views/';
 
 /**
- * Maps a view file to the controller that renders it, both as absolute paths.
- *
- * The lookup is anchored on the workspace root instead of searching the absolute
- * path for "/app/": a project living under a directory called `app`
- * (`/home/x/app/project`) would otherwise match that one first and build a
- * controller path outside the project. Returns '' when the document is not a
- * view under app/views.
+ * Maps a view file to its controller, both absolute, or '' outside app/views. Anchored
+ * on the workspace root: searching the path for "/app/" matches `/home/x/app/project`.
  */
 export function resolveControllerPath(workspaceRoot: string, documentPath: string): string {
   const relativePath = fileHelper.toPosix(path.relative(workspaceRoot, documentPath));
@@ -32,9 +27,8 @@ export function resolveControllerPath(workspaceRoot: string, documentPath: strin
   return path.join(workspaceRoot, 'app', 'controllers', `${viewPath}_controller.rb`);
 }
 
-// Caches each controller's split lines keyed by mtime, so the CodeLens — which
-// re-runs on every edit of the view — reads and splits the controller file only
-// when it actually changes instead of on each refresh.
+// Keyed by mtime, so the CodeLens (which re-runs on every edit of the view) reads and
+// splits the controller file only when it actually changes.
 const controllerLinesCache = new Map<string, { mtimeMs: number; lines: string[] }>();
 
 function readControllerLines(controllerPath: string): string[] {

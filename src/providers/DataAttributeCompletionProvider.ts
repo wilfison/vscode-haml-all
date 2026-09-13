@@ -16,9 +16,8 @@ import {
 } from '../data/html_attributes';
 import { RAILS_HELPERS } from '../data/rails_helpers';
 
-// Rails-helper matchers built once from RAILS_HELPERS. These were previously
-// recompiled up to three times per keystroke (helper context, insert-text and
-// presence checks); none use the global flag, so they are safe to share.
+// Built once from RAILS_HELPERS instead of up to three times per keystroke. None use
+// the global flag, so they are safe to share.
 const RAILS_HELPERS_ALTERNATION = RAILS_HELPERS.join('|');
 const RAILS_HELPER_CONTEXT_REGEX = new RegExp(
   `(?:^|\\s)(?:=\\s*)?(?:${RAILS_HELPERS_ALTERNATION})\\b.*?(?:,\\s*|\\s+)([^,\\s]*)$`
@@ -83,13 +82,8 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
   }
 
   private isInAttributeContext(beforeCursor: string): { isDataAttribute: boolean; prefix: string } | null {
-    // HAML patterns:
-    // %tag{data-  or %tag{ data-  or %tag{attr: 'value', data-
-    // %tag(data-  or %tag( data-  or %tag(attr: 'value', data-
-    // .class{data-  or #id{data-
-    // Rails helpers: link_to "text", path, data_ or form_with model: @model, data_
-
-    // Remove any quoted strings to avoid false matches
+    // Covers `%tag{data-`, `%tag(data-`, `.class{data-` and Rails helpers such as
+    // `link_to "text", path, data_`. Quoted strings go first, to avoid false matches.
     const cleanedCursor = beforeCursor.replace(/(['"]).*?\1/g, '');
 
     // Check for Rails helpers with data attributes
@@ -139,12 +133,8 @@ export default class DataAttributeCompletionProvider implements CompletionItemPr
   }
 
   private checkRailsHelperContext(cleanedCursor: string): { isDataAttribute: boolean; prefix: string } | null {
-    // Create a regex pattern to match Rails helpers with data attributes
-    // Examples:
-    // = link_to "Text", path, data_
-    // = form_with model: @model, data_
-    // = button_to "Delete", path, method: :delete, data_
-    // = text_field :user, :name, data_
+    // Matches a data attribute as the last argument of a Rails helper, as in
+    // `= button_to "Delete", path, method: :delete, data_`.
     const match = cleanedCursor.match(RAILS_HELPER_CONTEXT_REGEX);
     if (match) {
       const potentialAttr = match[1];

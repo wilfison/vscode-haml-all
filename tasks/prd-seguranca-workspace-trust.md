@@ -1,6 +1,6 @@
 # PRD: Correções de segurança (relatório de análise v3.1.0)
 
-Origem: `tmp/relatorio-analise.md`, seção 3 (S1–S5), 2026-09-12, branch `main` @ `1ba0eb8`.
+Origem: `tmp/relatorio-analise.md`, seção 3 (S1-S5), 2026-09-12, branch `main` @ `1ba0eb8`.
 
 ## 1. Introdução
 
@@ -8,7 +8,7 @@ A extensão declara no manifesto que suporta workspaces não confiáveis de form
 
 Além do vetor principal, o relatório aponta: instalação automática de gem sem consentimento no servidor Ruby (S2), webview sem Content Security Policy e com interpolação sem escape (S3), autenticação do servidor TCP que fica aberta quando o token está vazio (S4) e endurecimento de CI/supply chain (S5).
 
-Este PRD cobre **apenas** os itens de segurança. Bugs funcionais (B1–B20) e melhorias (M1–M9) ficam para PRDs próprios.
+Este PRD cobre **apenas** os itens de segurança. Bugs funcionais (B1-B20) e melhorias (M1-M9) ficam para PRDs próprios.
 
 ## 2. Objetivos
 
@@ -45,7 +45,7 @@ Este PRD cobre **apenas** os itens de segurança. Bugs funcionais (B1–B20) e m
 - [ ] `package.json` → `capabilities.untrustedWorkspaces.restrictedConfigurations` contém `"hamlAll.useBundler"`.
 - [ ] `hamlAll.lintEnabled` **não** é restrito (não muda o que é executado).
 - [ ] Manifesto continua com `supported: "limited"`; a `description` é atualizada para dizer que linting, formatação, rotas e html2haml ficam desabilitados até o workspace ser confiável.
-- [ ] README ganha uma subseção "Workspace Trust" (3–5 linhas) listando o que fica desabilitado em Modo Restrito.
+- [ ] README ganha uma subseção "Workspace Trust" (3-5 linhas) listando o que fica desabilitado em Modo Restrito.
 
 ### US-003: Remover `gem install` automático do servidor Ruby
 
@@ -109,7 +109,7 @@ Este PRD cobre **apenas** os itens de segurança. Bugs funcionais (B1–B20) e m
 
 ## 5. Não-objetivos
 
-- Não corrigir bugs funcionais B1–B20 nem melhorias M1–M9 (exceto o mínimo tocado acima).
+- Não corrigir bugs funcionais B1-B20 nem melhorias M1-M9 (exceto o mínimo tocado acima).
 - Não adicionar comando "Restart server", status bar ou watchdog (M1): vão em PRD próprio.
 - Não mudar `untrustedWorkspaces.supported` para `false`: highlighting e completions puras devem seguir funcionando em Modo Restrito.
 - Não passar o token via stdin (S4): mesmo trust boundary de `/proc/<pid>/environ`, ganho marginal.

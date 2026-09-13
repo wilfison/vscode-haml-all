@@ -11,10 +11,8 @@ const PARTIAL_IMPLICIT_REGEX = /["':\/\-_]([\/\-_\w]+)/;
 const PARTIAL_OBJECT_REGEX = /^@?([a-z_]\w*)/;
 
 /**
- * Normalizes a path to `/` separators. `Uri.path` and `workspace.asRelativePath`
- * already use `/` everywhere, but `fsPath`/`document.fileName` use `\` on
- * Windows — and these paths are split, compared and even inserted into HAML, so
- * they all have to agree on one separator. Idempotent.
+ * Normalizes a path to `/` separators, idempotently. `Uri.path` already uses `/`, but
+ * `fsPath` uses `\` on Windows, and these paths get compared and inserted into HAML.
  */
 export function toPosix(filePath: string): string {
   return filePath.split(path.sep).join('/');

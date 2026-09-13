@@ -1,42 +1,28 @@
 # frozen_string_literal: true
 
 module LintServer
-  # Wire protocol between the VS Code extension and this server.
-  #
-  # Framing: one JSON object per line. Requests are read with #read_line;
-  # responses are written *single-encoded* with #write_response. Keep this in
-  # sync with the TypeScript client in `src/server/index.ts`, which parses the
-  # response exactly once.
+  # Wire protocol: one JSON object per line, responses written *single-encoded*.
+  # Keep in sync with `src/server/index.ts`, which parses the response exactly once.
   module Transport
     module_function
 
-    # Cap on a single request line. Without it, a client that streams bytes
-    # without ever sending a newline makes #gets buffer until the process runs
-    # out of memory and dies with a NoMemoryError — which is not a
-    # StandardError, so the accept loop's rescue would not catch it. 16 MiB is
-    # far above any real lint/autocorrect payload.
+    # Without a cap, a client that never sends a newline buffers until NoMemoryError,
+    # which the accept loop's rescue does not catch. 16 MiB is far above any payload.
     MAX_REQUEST_BYTES = 16 * 1024 * 1024
 
-    # How long a client may take to send its request line. The server is
-    # single-threaded and handles one connection at a time, so a slow or
-    # half-open connection with no timeout would block #gets — and every request
-    # queued behind it — indefinitely (a Slowloris DoS). Ruby 3.2+ IO#timeout
-    # makes blocking reads raise IO::TimeoutError past the deadline.
+    # The server handles one connection at a time, so a half-open connection with no
+    # timeout would block #gets and everything queued behind it (a Slowloris DoS).
     READ_TIMEOUT_SECONDS = 5
 
-    # Arms +client+'s read timeout so a stalled connection is dropped instead of
-    # wedging the accept loop. No-op for objects that don't support IO#timeout=
-    # (e.g. the in-memory test double). Returns +client+ for chaining.
+    # Arms +client+'s read timeout and returns it for chaining. No-op for objects
+    # without IO#timeout= (the in-memory test double).
     def apply_read_timeout(client, seconds: READ_TIMEOUT_SECONDS)
       client.timeout = seconds if client.respond_to?(:timeout=)
       client
     end
 
-    # Reads a single request line from the client, reading at most +limit+
-    # bytes. Returns the raw line (including trailing newline), or nil when the
-    # client closed without sending anything or stalled past its read timeout.
-    # An over-limit line comes back truncated and without a newline — see
-    # #line_too_long?.
+    # Reads at most +limit+ bytes. Returns the raw line, or nil when the client closed
+    # or stalled. An over-limit line comes back truncated (see #line_too_long?).
     def read_line(client, limit: MAX_REQUEST_BYTES)
       client.gets("\n", limit)
     rescue IO::TimeoutError

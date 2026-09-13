@@ -21,9 +21,8 @@ function fakeRoutes(routes: Route[]) {
   return { getAll: () => new Map(routes.map((r) => [r.prefix, r])) } as any;
 }
 
-// `getText` ignores the range (the provider only asks for the text before the
-// cursor, which is what `line` holds); `getWordRangeAtPosition` implements the
-// real semantics against that same text.
+// `getText` ignores the range, since the provider only asks for the text before the
+// cursor; `getWordRangeAtPosition` implements the real semantics against it.
 function fakeDocument(line: string, file = '/workspace/app/views/users/index.html.haml') {
   return {
     uri: vscode.Uri.file(file),

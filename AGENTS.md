@@ -86,6 +86,20 @@ Applies to everything written here: `README.md`, `CHANGELOG.md`, code comments, 
 - Prefer the concrete claim to the vague one: "linting runs in a persistent Ruby process" beats "linting is fast".
 - Document behaviour that exists, not behaviour that is planned.
 
+### Comments
+
+The code is the explanation. A comment earns its place only where a quick read does not
+explain the *why*: a non-obvious constraint, a security decision, a workaround, a trade-off.
+
+- **At most 2 lines of prose per comment.** Longer only when the reasoning genuinely does
+  not fit, which is rare. JSDoc `@param`/`@returns`/`@option` tags do not count toward it.
+- No comment that restates the code (`// increments the counter`), no `@param` that only
+  repeats the parameter's name and type, no section banners.
+- Write the reason, not the mechanics: "a shell would make settings a command injection"
+  beats "uses execFile instead of exec".
+- A comment that needs more than two lines is usually a sign the code should be clearer,
+  or that the explanation belongs in this file.
+
 ## Project-Specific Patterns
 
 ### Provider registration

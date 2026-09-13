@@ -7,9 +7,8 @@ import { AssetFile, listAssetFiles } from '../rails/assetIndex';
 // once instead of per helper on every completion trigger.
 const BRACE_STRING_PATTERN = /\{\s*['"](.*?)$/;
 
-// Where each kind of asset lives, relative to the workspace root (POSIX form;
-// joined with the native separator when used). A helper may match several
-// kinds: the pack/vite helpers serve both JavaScript and stylesheets.
+// Where each kind of asset lives, relative to the workspace root (POSIX form). A helper
+// may match several kinds: the pack/vite helpers serve JavaScript and stylesheets.
 const ASSET_DIRECTORIES: { matches: (helper: string) => boolean; dirs: string[] }[] = [
   {
     matches: (helper) => helper.includes('image') || helper === 'asset_path',

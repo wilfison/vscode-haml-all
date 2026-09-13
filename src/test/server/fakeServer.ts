@@ -1,33 +1,26 @@
 import * as net from 'node:net';
 
-// A responder receives the parsed request (or null when it was not valid JSON)
-// plus the raw request line, and returns the exact string to write back before
-// the socket is closed. Returning null closes the connection with no body,
-// which lets tests characterize the "empty/unparseable response" paths.
+// Receives the parsed request (null when it was not valid JSON) plus the raw line, and
+// returns what to write back. null closes the connection with no body.
 export type Responder = (request: any, raw: string) => string | null;
 
 export interface FakeServerOptions {
-  // When false, the socket is left open after replying (or after receiving the
-  // request when the responder returns null) instead of being closed. Lets a
-  // test drive the client's per-request timeout. Defaults to true.
+  // When false, the socket is left open after replying instead of being closed, so a
+  // test can drive the client's per-request timeout. Defaults to true.
   closeAfterResponse?: boolean;
 }
 
 export interface FakeServer {
   port: number;
   requests: string[];
-  // Number of client connections still open server-side. After the client
-  // destroys its socket on timeout/error, its connection drops to 0 here —
-  // proving the transport released the socket rather than leaking it.
+  // Client connections still open server-side. It drops to 0 once the client destroys
+  // its socket, proving the transport released it rather than leaking it.
   openConnections: () => number;
   close: () => Promise<void>;
 }
 
-// Stands in for the Ruby lint server: a real in-process TCP listener on an
-// ephemeral port. It reads one newline-terminated request, records it, writes
-// the responder's reply and (by default) closes the socket — mirroring
-// lib/lint_server's close-per-response framing that the client transport
-// relies on.
+// A real in-process TCP listener standing in for the Ruby lint server. Reads one
+// request, records it, replies and (by default) closes, as lib/lint_server does.
 export function startFakeServer(responder: Responder, options: FakeServerOptions = {}): Promise<FakeServer> {
   const closeAfterResponse = options.closeAfterResponse ?? true;
 

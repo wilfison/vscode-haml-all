@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
 module LintServer
-  # Orchestrates a single client connection: read the request line, dispatch it,
-  # and write the response. Kept thin on purpose — parsing/routing lives in
-  # Dispatcher and framing lives in Transport, both of which are unit-testable
-  # without a real socket.
+  # Orchestrates a single client connection: read, dispatch, respond. Parsing lives
+  # in Dispatcher and framing in Transport, both unit-testable without a socket.
   module Controller
-    # Set to true only by lib/server.rb when it is started with --no-auth, for
-    # local development runs without a token. The extension always launches the
-    # server with a token, so this stays false there.
+    # Set by lib/server.rb under --no-auth, for local runs without a token. The
+    # extension always passes a token, so this stays false there.
     class << self
       attr_accessor :allow_unauthenticated
     end
@@ -16,9 +13,8 @@ module LintServer
 
     module_function
 
-    # Accepts one pending connection from +server+ and handles it. The read
-    # timeout is armed here, on the real socket, so a stalled client cannot
-    # block the single-threaded accept loop.
+    # Accepts one pending connection and handles it. The read timeout is armed on the
+    # real socket, so a stalled client cannot block the single-threaded accept loop.
     def call(server)
       handle(Transport.apply_read_timeout(server.accept))
     end
@@ -33,11 +29,8 @@ module LintServer
 
       Transport.write_response(client, build_response(line))
     ensure
-      # Guarantee the socket is released on *every* path — the early returns, a
-      # normal response, or an unexpected raise (e.g. String#strip raising on a
-      # non-UTF-8 line) — so a stream of malformed requests can't leak file
-      # descriptors. write_response already closes on the paths that reach it;
-      # closing again here is a harmless no-op.
+      # Released on every path (early return, response, unexpected raise), so malformed
+      # requests can't leak descriptors. A second close after write_response is a no-op.
       client.close
     end
 
@@ -49,13 +42,8 @@ module LintServer
       Dispatcher.error("Invalid JSON")
     end
 
-    # The extension launches the server with a per-session token in the
-    # HAML_LINT_SERVER_TOKEN env var and echoes it in every request. Requests
-    # without a matching token are rejected, so another local process — or
-    # another user sharing 127.0.0.1 on a multi-user host — cannot drive the
-    # server (it can run arbitrary Ruby via lint/autocorrect configs). With no
-    # token configured the server fails closed, unless it was explicitly started
-    # with --no-auth.
+    # Requests must echo the per-session HAML_LINT_SERVER_TOKEN, so no other process on
+    # 127.0.0.1 can drive the server (a lint config can run arbitrary Ruby). Fails closed.
     def authorized?(request)
       expected = ENV["HAML_LINT_SERVER_TOKEN"].to_s
       return Controller.allow_unauthenticated if expected.empty?

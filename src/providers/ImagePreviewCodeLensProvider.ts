@@ -6,11 +6,8 @@ import { IMAGE_EXTENSIONS, IMAGE_HELPERS } from '../data/rails_helpers';
 import { AssetFile, listAssetFiles } from '../rails/assetIndex';
 import { getExtensionRoot } from '../utils/extensionRoot';
 
-// The first quoted argument of each image helper call on a line. Anchoring on
-// the helper is what keeps `alt:`, `class:` and every other quoted option out:
-// scanning the whole line meant probing the disk for every string on it.
-// Compiled once; it carries the global flag, so `lastIndex` is reset before
-// each scan (see findImageReferences).
+// The first quoted argument of each image helper call, so `alt:` and `class:` values do
+// not get probed on disk. Global flag: `lastIndex` is reset before each scan.
 const IMAGE_HELPER_ARGUMENT_REGEX = new RegExp(`\\b(?:${IMAGE_HELPERS.join('|')})\\s*\\(?\\s*['"]([^'"]+)['"]`, 'g');
 
 const HTML_ESCAPES: Record<string, string> = {
@@ -26,13 +23,8 @@ export function escapeHtml(value: string): string {
 }
 
 /**
- * Fills `{{placeholder}}` slots in the webview template, escaping every value.
- * The values come from the repository (file names, paths), so they are
- * untrusted input: interpolating them raw would make a crafted file name run
- * as markup inside the webview.
- *
- * The replacement is a function so that `$&` and friends in an escaped value
- * are never treated as replacement patterns.
+ * Fills `{{placeholder}}` slots in the webview template, escaping every value: a crafted
+ * file name would otherwise run as markup. A function replacement neutralizes `$&`.
  */
 export function renderWebviewTemplate(template: string, values: Record<string, string>): string {
   return Object.entries(values).reduce((html, [key, value]) => {
@@ -161,9 +153,8 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
       return true;
     }
 
-    // Match against the file name. (The original recursive scan compared the
-    // path relative to the *immediate* parent directory, which always reduced
-    // to the base name — preserved here.)
+    // Match against the file name, as the original recursive scan did: it compared
+    // against the immediate parent directory, which always reduced to the base name.
     const normalizedName = name.replace(/\\/g, '/');
     const normalizedImageName = imageName.replace(/\\/g, '/');
 

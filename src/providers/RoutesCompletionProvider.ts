@@ -46,8 +46,8 @@ export default class RoutesCompletionProvider implements CompletionItemProvider 
       return this.buildCompletionItems(document.uri);
     }
 
-    // Outside a helper call, the word being typed has to look like a route
-    // helper itself — `users_pa` completing to `users_path`.
+    // Outside a helper call, the word being typed has to look like a route helper
+    // itself, as `users_pa` completing to `users_path`.
     const wordRange = document.getWordRangeAtPosition(position, WORD_REGEXP);
     const word = wordRange ? document.getText(wordRange) : '';
 

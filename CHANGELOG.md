@@ -22,8 +22,8 @@
 - `source.fixAll.hamlLint` code action: set `"editor.codeActionsOnSave": { "source.fixAll.hamlLint": "explicit" }` to apply haml-lint's safe autocorrect on save without `editor.formatOnSave`, or run "Fix all auto-correctable haml-lint offenses" from the `Source Action...` menu.
 - The lightbulb on an offense haml-lint reports as auto-correctable now offers to fix every offense of that linter in the file through haml-lint's own autocorrect, unsafe corrections included (for a RuboCop offense: every RuboCop cop). Formatting and fix-all stay safe-only. Needs the `correctable` flag reported by `haml_lint` 0.76.0 or newer; with an older version the lightbulb behaves as before.
 - New command `HAML: Restart lint server`, for when the lint server needs a kick.
-- `hamlAll.rubyCommand` lets you point at the Ruby interpreter that runs the lint server — useful when rbenv/asdf/mise shims are missing from the PATH of a VS Code launched from the dock. When it cannot be spawned, the error now names the command and the setting.
-- `hamlAll.railsCommand` replaces `railsRoutes.railsCommand`, and it is now actually used to load routes — `bin/rails` used to be hardcoded. It accepts arguments, so `bundle exec rails` works. The old setting is deprecated but still read when the new one is unset.
+- `hamlAll.rubyCommand` lets you point at the Ruby interpreter that runs the lint server, useful when rbenv/asdf/mise shims are missing from the PATH of a VS Code launched from the dock. When it cannot be spawned, the error now names the command and the setting.
+- `hamlAll.railsCommand` replaces `railsRoutes.railsCommand`, and it is now actually used to load routes: `bin/rails` used to be hardcoded. It accepts arguments, so `bundle exec rails` works. The old setting is deprecated but still read when the new one is unset.
 
 ### Changed
 
@@ -32,7 +32,7 @@
 ### Performance
 
 - Partials are indexed once and kept in memory: partial completion no longer scans the workspace on every keystroke, and signature help no longer re-reads the partial's `-# locals:` on every key.
-- The lint server warms RuboCop up while it starts instead of charging it to whatever you do first. RuboCop only loads its cop classes and the `plugins:` from your `.rubocop.yml` when it first inspects something, which on a project with several plugins took seconds — and a format-on-save that landed on it hit its timeout and left the file untouched. The first lint or format now finds the server warm.
+- The lint server warms RuboCop up while it starts instead of charging it to whatever you do first. RuboCop only loads its cop classes and the `plugins:` from your `.rubocop.yml` when it first inspects something, which on a project with several plugins took seconds, and a format-on-save that landed on it hit its timeout and left the file untouched. The first lint or format now finds the server warm.
 
 ### Fixes
 
@@ -42,7 +42,7 @@
 - Double-clicking (and Ctrl+D) now selects `data-controller`, `@user` and `root_path` as one word instead of stopping at the `-` or `@`.
 - `-# locals: (user:, title: nil)` is highlighted as Ruby instead of being greyed out as a comment.
 - Data attribute completion and the image preview now work in projects without `bin/rails`; they were registered only for Rails projects even though neither reads anything Rails-specific.
-- The image preview no longer probes the disk for every quoted string on an `image_tag` line — only the helper's own argument is looked up, so `alt:` and `class:` values are left alone.
+- The image preview no longer probes the disk for every quoted string on an `image_tag` line: only the helper's own argument is looked up, so `alt:` and `class:` values are left alone.
 - The "Remove space inside hash literal braces" quick fix now removes the space on both sides of the hash; it used to leave the closing one.
 - Quick fixes are offered again: the lightbulb now appears for haml-lint **and** RuboCop offenses, at any severity. Previously almost none of them ever showed up.
 - "Disable ... for this entire file" on a RuboCop offense now inserts a directive haml-lint understands (`-# haml-lint:disable RuboCop`).
@@ -54,7 +54,7 @@
 - A mounted engine (`mount Sidekiq::Web`) or extra output before the first route no longer breaks route parsing.
 - `hamlAll.linterExecutablePath` no longer claims to control linting: it is only used to check that haml-lint is available (documented in the setting and the README).
 - With `hamlAll.useBundler` on, activation no longer claims "haml-lint not found" when the gem is only inside the bundle.
-- Pressing Enter only indents where HAML actually nests — after a Ruby block, a `do`, a tag with no inline content or a filter. `= render "foo"`, `%p Hello world` and `= link_to "x", path` no longer indent the next line.
+- Pressing Enter only indents where HAML actually nests: after a Ruby block, a `do`, a tag with no inline content or a filter. `= render "foo"`, `%p Hello world` and `= link_to "x", path` no longer indent the next line.
 - Typing `- else`, `- elsif`, `- when`, `- rescue`, `- ensure` or `- end` now outdents.
 - Removed the invalid block-comment definition (HAML has no delimited block comment); `-#` line comments are unaffected.
 - Formatting a large file works again: the autocorrect budget went from 1s to 10s and the pending lint is dropped first, so it no longer loses its whole budget queued behind a RuboCop run.
@@ -66,7 +66,7 @@
 - The partial signature help now highlights the parameter you are actually typing instead of always the second one.
 - `HAML: Convert HTML to HAML` no longer freezes the editor while Ruby boots, runs in the workspace root (so `bundle exec` finds the Gemfile), and reports a missing `html2haml` gem with the command it tried and how to install it.
 - Converting a `.htm` file now produces a `.haml` file instead of leaving the extension untouched.
-- A lint server that dies (out of memory, `kill`, a `bundle install` mid-session) is restarted automatically — up to 3 attempts with backoff — and the diagnostics come back with it. Linting used to go quiet until the window was reloaded.
+- A lint server that dies (out of memory, `kill`, a `bundle install` mid-session) is restarted automatically (up to 3 attempts with backoff) and the diagnostics come back with it. Linting used to go quiet until the window was reloaded.
 - The Ruby server now exits when the extension host does, instead of surviving a crashed host and holding its port.
 - "Create a partial from selection" accepts a path (`shared/foo` creates `app/views/shared/_foo.html.haml`), refuses `..` and absolute paths, and says so instead of silently doing nothing when the partial already exists.
 - The extracted partial's `locals` no longer include an email address's domain (`foo@bar.com`) or a class variable, and replacing `@user` no longer corrupts `@user_id`.
@@ -81,14 +81,14 @@
 
 ### Performance
 
-- Ships as a single minified bundle — faster startup and lower memory use.
+- Ships as a single minified bundle: faster startup and lower memory use.
 - Activation no longer runs Ruby or Rails to detect a Rails project, so the editor no longer freezes on startup.
 - Asset and image lookups use an in-memory index instead of scanning the disk on every keystroke.
 - Linting while typing is debounced (300ms), and saving a file no longer lints it twice.
 
 ### Fixes
 
-- `hamlAll.lintEnabled` is now honoured — turning it off clears diagnostics and stops linting.
+- `hamlAll.lintEnabled` is now honoured, turning it off clears diagnostics and stops linting.
 - Overlapping lints no longer let a stale result overwrite newer diagnostics.
 - Formatting no longer double-corrects HAML on haml-lint 0.74.0+.
 - Editing `config/routes.rb` reloads Rails routes again, and only once.

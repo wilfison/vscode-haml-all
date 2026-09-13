@@ -79,9 +79,8 @@ class ServerTest < Minitest::Test
     assert_nil(server.send(:start_stdin_watchdog))
   end
 
-  # A nil return means the rescue swallowed an exception -- Report.lint/.autocorrect
-  # lean on haml_lint internals (see the WARNING in lib/lint_server/runner.rb), so
-  # this is what catches a gem bump breaking the warm-up.
+  # A nil return means the rescue swallowed an exception. Report.lint leans on haml_lint
+  # internals, so this is what catches a gem bump breaking the warm-up.
   def test_prewarm_runs_a_real_round_trip_without_writing_to_stdout
     server = LintServer::Server.new
     result = nil

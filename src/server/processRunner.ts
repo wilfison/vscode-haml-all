@@ -1,11 +1,6 @@
 /**
- * Startup-handshake helpers for the Ruby lint server process.
- *
- * The Ruby server announces readiness by printing a single JSON line to stdout
- * that carries the bound port (see lib/server.rb#notify). Because that line may
- * arrive split across chunks or interleaved with other output, we scan stdout
- * line by line and only accept the first complete, valid JSON line whose `port`
- * is a number.
+ * Start-up handshake: the server announces readiness as a JSON line carrying its port
+ * (lib/server.rb#notify), which can arrive split, so stdout is scanned line by line.
  */
 
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
@@ -48,13 +43,8 @@ export interface StartedRubyServer {
 }
 
 /**
- * Spawns the Ruby lint server and resolves once it announces its port.
- *
- * Resolves with the live process and the bound port; rejects on spawn failure
- * (e.g. `ruby` not on PATH), on the process exiting before it is ready, or when
- * the start-up line does not arrive within the startup timeout. The promise
- * settles exactly once — callers own the process lifecycle after that (attach
- * their own long-lived 'close'/'error' handlers).
+ * Spawns the server, resolving with the live process and its port, rejecting on a spawn
+ * failure, an early exit or a missed timeout. Settles once: callers own the lifecycle.
  */
 export function startRubyServer(config: RubyServerConfig, deps: RubyServerDeps = {}): Promise<StartedRubyServer> {
   const spawnFn = deps.spawn ?? spawn;
@@ -63,9 +53,8 @@ export function startRubyServer(config: RubyServerConfig, deps: RubyServerDeps =
 
   const libPath = config.libPath ?? defaultLibPath();
 
-  // The interpreter is configurable (rbenv/asdf/mise shims are invisible to a
-  // GUI-launched VS Code) and may carry arguments, which go to spawn's argv —
-  // never through a shell, since the value comes from settings.
+  // The interpreter is configurable (a GUI-launched VS Code cannot see rbenv shims) and
+  // may carry arguments, which go to spawn's argv: the value comes from settings.
   const [executable, ...interpreterArgs] = splitCommand(config.rubyCommand || 'ruby');
 
   const args = [...interpreterArgs, `${libPath}/server.rb`, 'start'];
@@ -87,12 +76,8 @@ export function startRubyServer(config: RubyServerConfig, deps: RubyServerDeps =
 
     const stderrTail = () => (stderrBuffer.trim() ? ` Last stderr: ${stderrBuffer.trim()}` : '');
 
-    // Settle the start-up promise exactly once. Every listener stays attached:
-    // the 'close'/'error' handlers become no-ops, and stdout keeps being logged.
-    // Detaching the stdout listener would not stall the child (node keeps the
-    // stream flowing and simply discards the data), it would silently throw away
-    // everything the server says after boot, including the errors accept_loop
-    // prints when something escapes the dispatcher.
+    // Settles the start-up promise exactly once, with every listener left attached:
+    // detaching stdout would discard everything the server says after boot.
     const finish = (settle: () => void): void => {
       if (settled) {
         return;
@@ -142,13 +127,8 @@ export function startRubyServer(config: RubyServerConfig, deps: RubyServerDeps =
 }
 
 /**
- * Creates a stateful scanner over a process's stdout.
- *
- * Call the returned function with each stdout chunk. It buffers partial lines
- * across calls and returns the port as soon as a complete JSON line with a
- * numeric `port` is seen; every subsequent call returns null (the port is
- * learned exactly once). Non-JSON lines and lines without a numeric `port` are
- * ignored.
+ * A stateful scanner over stdout: feed it each chunk and it buffers partial lines until
+ * a JSON line with a numeric `port` appears. Every call after that returns null.
  */
 export function createStartupPortScanner(): (chunk: string) => number | null {
   let buffer = '';

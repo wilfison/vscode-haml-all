@@ -18,10 +18,8 @@ import {
 import Linter from '../linter';
 import { LintServerPool } from '../server/pool';
 
-// `editor.codeActionsOnSave: { "source.fixAll.hamlLint": "explicit" }` and the
-// `Source Action...` menu. Kept on the formatting provider so "fix all" and
-// "format" are literally the same code path (timeout, pending-lint cancel and
-// the once-per-session warnings).
+// `editor.codeActionsOnSave` and the `Source Action...` menu. Kept on the formatting
+// provider so "fix all" and "format" are literally the same code path.
 export const FIX_ALL_KIND = CodeActionKind.SourceFixAll.append('hamlLint');
 const FIX_ALL_TITLE = 'Fix all auto-correctable haml-lint offenses';
 
@@ -42,9 +40,8 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
   // At most one "your haml-lint is too old" notice per session.
   private versionWarned = false;
 
-  // At most one timeout warning per session: `editor.formatOnSave` on a project
-  // with heavy RuboCop cops would otherwise notify on every single save. The
-  // first successful format rearms it, so a later real problem is still shown.
+  // At most one timeout warning per session, or formatOnSave on a heavy project notifies
+  // on every save. The first successful format rearms it, so a later problem still shows.
   private timeoutWarned = false;
 
   constructor(linter: Linter, outputChanel: OutputChannel, servers: LintServerPool, cancelPendingLint: () => void = () => {}) {
@@ -143,9 +140,8 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
   }
 
   /**
-   * haml-lint only autocorrects its own linters from 0.74.0 on; before that the
-   * server can still fix RuboCop offenses, and nothing else. Say so once, rather
-   * than leaving the user to wonder why half the offenses survive a format.
+   * Before haml-lint 0.74.0 the server fixes RuboCop offenses and nothing else. Say so
+   * once, rather than leaving the user wondering why half the offenses survive.
    */
   private warnIfAutocorrectIsPartial(): void {
     // `null` means list_cops has not answered yet: say nothing rather than guess.

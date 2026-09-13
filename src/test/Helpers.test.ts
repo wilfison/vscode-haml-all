@@ -7,9 +7,8 @@ import * as vscode from 'vscode';
 import { hamlLintPresent, isARailsProject, resolveRailsCommand } from '../Helpers';
 import { splitCommand } from '../utils/command';
 
-// Overrides workspace.getConfiguration so that a given config section returns
-// `values`, supporting both the property access and the inspect() call that
-// Helpers.ts uses. Returns a restore function.
+// Overrides workspace.getConfiguration so a section returns `values`, through both the
+// property access and the inspect() call Helpers.ts uses. Returns a restore function.
 function stubConfiguration(section: string, values: Record<string, unknown>): () => void {
   const original = vscode.workspace.getConfiguration;
 
@@ -95,9 +94,8 @@ suite('Helpers Tests', () => {
         // ignore
       }
 
-      // With exec()/a shell this would run `touch <marker>`. With execFile
-      // (argv form) it is treated as a single executable name that does not
-      // exist, so nothing is written and the probe simply returns false.
+      // A shell would run `touch <marker>` here. execFile treats it as one executable
+      // name that does not exist, so nothing is written and the probe returns false.
       const payload = `${nodeBinary}; touch ${marker}`;
       const restore = stubConfiguration('hamlAll', { linterExecutablePath: payload });
 
@@ -176,9 +174,8 @@ suite('Helpers Tests', () => {
         // ignore
       }
 
-      // Rails detection checks the command on disk (existsSync) instead of
-      // spawning it, and the routes command goes to spawn in argv form, so a
-      // shell metacharacter is never interpreted.
+      // Rails detection checks the command on disk instead of spawning it, and routes
+      // go to spawn in argv form, so a shell metacharacter is never interpreted.
       const payload = `${nodeBinary}; touch ${marker}`;
       const restore = stubConfiguration('railsRoutes', { railsCommand: payload });
 

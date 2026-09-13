@@ -15,12 +15,8 @@ module LintServer
       }
     end
 
-    # Only honor a config_file that exists AND lives inside the server's working
-    # directory (the workspace root the extension launched us in). A request
-    # cannot change our cwd, so this stops a client from pointing us at an
-    # arbitrary config elsewhere on disk: haml-lint/RuboCop configs can `require:`
-    # Ruby, which would otherwise be arbitrary code execution. A path outside the
-    # workspace is ignored, falling back to haml-lint's default config discovery.
+    # Only honor a config inside the workspace root: a config's `require:` runs Ruby,
+    # so an arbitrary path elsewhere on disk would be code execution. Outside: nil.
     def self.safe_config_file(path)
       return nil unless path && File.exist?(path)
 
@@ -33,11 +29,6 @@ module LintServer
       nil
     end
 
-    # @param [Hash] options
-    # @option options [String] :template The HAML template to lint.
-    # @option options [String] :file_path The path to the file being linted.
-    # @option options [String] :config_file The path to the HAML lint config file.
-    # @return [Array<Hash>] An array of hashes containing linting results.
     def self.lint(request = {})
       options = options_from_request(request)
 
@@ -52,14 +43,8 @@ module LintServer
       report.lints.map { |lint| lint_hash(lint) }
     end
 
-    # A lint carries no linter when haml-lint reports a HAML parse/syntax error
-    # (and haml-lint's own reporter guards this with `offense.linter.name if
-    # offense.linter`). Call #name unconditionally and a syntax error — exactly
-    # when a diagnostic matters most — would raise NoMethodError and be turned
-    # into a server error instead. Guard it and fall back to a "Syntax" label.
-    #
-    # `correctable` exists since haml_lint 0.76.0; older versions get nil so the
-    # client simply offers no per-offense autocorrect.
+    # A parse error carries no linter, so #name unguarded would raise exactly when the
+    # diagnostic matters most. `correctable` is nil before haml_lint 0.76.0.
     def self.lint_hash(lint)
       {
         location: { line: lint.line },
@@ -74,11 +59,8 @@ module LintServer
       lint.respond_to?(:correctable) ? lint.correctable : nil
     end
 
-    # @return String the autocorrected source code. An optional `linters` array
-    #   (haml-lint linter class names, e.g. "SpaceBeforeScript" or "RuboCop")
-    #   restricts the run to those linters; empty means all of them. `unsafe:
-    #   true` also applies corrections haml-lint/RuboCop mark as unsafe
-    #   (`--autocorrect-all`); the default is safe only.
+    # Returns the autocorrected source. `linters` (haml-lint class names) restricts the
+    # run, empty means all; `unsafe: true` is `--autocorrect-all`, default safe only.
     def self.autocorrect(request = {})
       options = options_from_request(request)
       linters = Array(request["linters"]).grep(String)

@@ -1,6 +1,6 @@
 /**
- * Shared vocabulary for talking to the Ruby lint server. Pure type/constant
- * declarations — no runtime dependency on node or vscode.
+ * Shared vocabulary for talking to the Ruby lint server. Types and constants only, with
+ * no runtime dependency on node or vscode.
  */
 
 /** Uniform response envelope returned by the Ruby lint server. */
@@ -25,9 +25,8 @@ export const ACTIONS = {
 /** Time budgets (ms) for server interactions. */
 export const TIMEOUTS = {
   /**
-   * Budget for a format request. It covers queueing too: the Ruby server is
-   * single-threaded, so an in-flight lint (RuboCop on a large file easily passes
-   * a second) is charged to the autocorrect waiting behind it.
+   * Budget for a format request, queueing included: the server is single-threaded, so an
+   * in-flight lint is charged to the autocorrect waiting behind it.
    */
   autocorrectMs: 10000,
   /** How long to wait for the Ruby server's start-up line before giving up. */

@@ -12,15 +12,8 @@ export interface LintServerPoolDeps {
 }
 
 /**
- * One Ruby lint server per workspace folder.
- *
- * A single server could not serve a multi-root workspace: it runs with one
- * working directory, so it picks up one `Gemfile`, and `Report.safe_config_file`
- * refuses a `.haml-lint.yml` outside it — every folder but the first was linted
- * with the first one's configuration, or not at all.
- *
- * Rails routes and asset completion stay on the first folder on purpose; only
- * linting is per folder.
+ * One Ruby lint server per workspace folder: a single one has a single working directory,
+ * so every other folder got the first one's Gemfile and `.haml-lint.yml`, or no linting.
  */
 export class LintServerPool implements Disposable {
   private readonly servers = new Map<string, LintServer>();

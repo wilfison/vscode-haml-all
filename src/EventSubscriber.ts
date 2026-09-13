@@ -21,9 +21,8 @@ import Routes from './rails/routes';
 import { LintServerPool } from './server/pool';
 
 /**
- * Whether a text change should schedule a lint. Exported for tests: it is the
- * whole of `hamlAll.lintOnType`, read on every change so toggling the setting
- * takes effect at once.
+ * Whether a text change should schedule a lint. `hamlAll.lintOnType` is read on every
+ * change, so toggling the setting takes effect at once.
  */
 export function shouldLintOnChange(changeCount: number, isActiveDocument: boolean): boolean {
   if (changeCount === 0 || !isActiveDocument) {
@@ -97,10 +96,8 @@ class EventSubscriber {
     this.clearChangeDebounce();
   }
 
-  // Backs the per-offense lightbulb fix: the same server call as formatting,
-  // restricted to the offense's linter. Unlike format/fix-all (safe only), a
-  // click on a specific offense is an explicit ask, so unsafe corrections are
-  // applied too.
+  // The same server call as formatting, restricted to the offense's linter. A click on
+  // one offense is an explicit ask, so unsafe corrections apply (format/fix-all: safe).
   private autocorrectLinters = async (document: TextDocument, linters: string[]): Promise<string | null> => {
     if (!this.linter.isEnabled()) {
       this.outputChanel.appendLine('Haml All: autocorrect skipped, hamlAll.lintEnabled is false');
@@ -239,9 +236,8 @@ class EventSubscriber {
     );
   }
 
-  // Invalidate the cached asset listing when files appear or disappear under an
-  // asset directory. A content edit is ignored on purpose: the index only holds
-  // paths, so only create/delete changes the file set.
+  // The index only holds paths, so only create/delete changes the file set: a content
+  // edit under an asset directory is ignored on purpose.
   private subscribeAssetWatchers() {
     const assetPatterns = ['app/assets/**', 'app/javascript/**', 'app/frontend/**', 'public/**', 'vendor/assets/**'];
 
@@ -261,9 +257,8 @@ class EventSubscriber {
     });
   }
 
-  // Patterns are anchored on the workspace folder: a global `**/config/routes.rb`
-  // also matches inside node_modules and vendor/bundle, and reloading routes for
-  // an engine's copy costs seconds.
+  // Anchored on the workspace folder: a global `**/config/routes.rb` also matches
+  // inside node_modules and vendor/bundle, and reloading an engine's copy costs seconds.
   private subscribeFileWatcher(pattern: string, callback: (e: Uri) => void): void {
     const watcher = workspace.createFileSystemWatcher(new RelativePattern(this.rootPath, pattern));
 

@@ -6,11 +6,8 @@ import { getWorkspaceRoot } from './utils/file';
 const CONVERSION_TIMEOUT_MS = 30000;
 
 /**
- * Runs html2haml with the HTML on stdin.
- *
- * Asynchronous on purpose: the old execSync blocked the extension host for as
- * long as Ruby took to boot. argv form with no shell, and cwd at the workspace
- * root so `bundle exec` finds the project's Gemfile.
+ * Runs html2haml with the HTML on stdin. Async so Ruby's boot does not block the
+ * extension host; argv with no shell, cwd at the root so `bundle exec` finds the Gemfile.
  */
 function runHtml2haml(html: string, useBundler: boolean, erb: boolean): Promise<string> {
   const args = ['--ruby19-attributes', '--stdin'];

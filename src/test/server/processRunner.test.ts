@@ -30,10 +30,8 @@ const baseConfig = {
   libPath: '/fake/lib',
 };
 
-// The scanner is the pure core of the Ruby server's startup handshake: it
-// consumes stdout chunks and yields the port from the first complete, valid
-// JSON line that carries a numeric `port`. Everything else (partial lines,
-// non-JSON lines, non-numeric ports) is buffered or ignored.
+// The pure core of the start-up handshake: it yields the port from the first valid JSON
+// line carrying a numeric `port`, and buffers or ignores everything else.
 suite('createStartupPortScanner', () => {
   test('returns the port from a JSON line carrying a numeric port', () => {
     const scan = createStartupPortScanner();
@@ -144,9 +142,8 @@ suite('startRubyServer', () => {
     proc.stdout.emit('data', Buffer.from('{"port":7654}\n'));
     const result = await promise;
 
-    // This listener is the only reader of the child's stdout: drop it and every
-    // error the server reports after boot is discarded without a trace. The
-    // scanner has already latched, so a later line cannot re-settle the promise.
+    // The only reader of the child's stdout: drop it and every error after boot is lost.
+    // The scanner has already latched, so a later line cannot re-settle the promise.
     proc.stdout.emit('data', Buffer.from('{"status":"error","message":"boom"}\n'));
 
     assert.ok(

@@ -48,9 +48,8 @@ class PartialSignatureHelpProvider implements SignatureHelpProvider {
     signatureHelp.activeSignature = 0;
     signatureHelp.signatures = [signature];
 
-    // One parameter per comma typed so far. There is always exactly one
-    // signature, so it is its parameter count — not the signature count — that
-    // bounds the index.
+    // One parameter per comma typed so far. There is always exactly one signature, so
+    // its parameter count, not the signature count, bounds the index.
     const commas = beforeCursor.split(',').length - 1;
     const lastParameter = Math.max(signature.parameters.length - 1, 0);
 

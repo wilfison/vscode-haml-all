@@ -3,9 +3,8 @@ import { RelativePattern, Uri, workspace } from 'vscode';
 import { toPosix } from '../utils/file';
 
 /**
- * A partial found under some `app/views` directory, pre-split into the parts
- * lookups compare, so resolution is string work on an in-memory list rather
- * than a walk over the disk for every keystroke.
+ * A partial under some `app/views`, pre-split into the parts lookups compare, so
+ * resolution is string work on an in-memory list instead of a walk over the disk.
  */
 export interface PartialFile {
   /** Absolute path, with the platform's own separators. */
@@ -68,11 +67,8 @@ export function partialFileFrom(absolutePath: string): PartialFile | null {
 }
 
 /**
- * Every partial in the workspace, built once and kept until a file appears or
- * disappears under `app/views` (see the watcher in EventSubscriber).
- *
- * Concurrent callers share one scan: completion, definition and signature help
- * all ask for it, and they fire together on the same keystroke.
+ * Every partial in the workspace, kept until one appears or disappears under `app/views`.
+ * Concurrent callers share one scan: they all fire together on the same keystroke.
  */
 export async function getPartialIndex(): Promise<PartialFile[]> {
   if (cache) {
@@ -124,13 +120,8 @@ export function watchPartials(invalidate: () => void = invalidatePartialIndex) {
 }
 
 /**
- * The files a `render` refers to, best match first.
- *
- * Resolution order: a name carrying a directory is a path under some
- * `app/views`; a bare name is looked up beside the current file first, then
- * anywhere, closest directory first. Every template of the winning partial is
- * returned — a Turbo app has `_row.html.haml` next to `_row.turbo_stream.haml`,
- * and both are places the reader may want to open.
+ * The files a `render` refers to, best match first. A name with a directory is a path
+ * under some `app/views`, a bare name is looked up beside the current file first.
  *
  * @param partialName - already carrying the leading underscore (`formatPartialName`)
  * @param currentViewFile - the file the `render` was typed in
@@ -197,9 +188,8 @@ function variantRank(variant: string): number {
   return index === -1 ? VARIANT_ORDER.length : index;
 }
 
-// ponytail: naive inflector, swap for a table if a real project breaks it. It
-// only has to undo the plural in `render @users`; a miss costs one failed
-// lookup, since the plural name is tried first.
+// ponytail: naive inflector, swap for a table if a real project breaks it. It only undoes
+// the plural in `render @users`, and a miss costs one failed lookup.
 function singularize(name: string): string {
   if (/(?:s|x|z|ch|sh)es$/.test(name)) {
     return name.slice(0, -2);

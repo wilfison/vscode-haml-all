@@ -1,13 +1,8 @@
 # frozen_string_literal: true
 
 module LintServer
-  # Adapter over HamlLint::Runner that lints an in-memory template (instead of a
-  # file on disk) and captures autocorrect output without writing it back.
-  #
-  # WARNING: this relies on haml_lint internals (#load_applicable_config,
-  # #extract_sources, #report and the #autocorrect_document contract, plus the
-  # private HamlLint::Document#unstrip_frontmatter). It is verified against the
-  # haml_lint version pinned in Gemfile.lock; revisit when bumping that gem.
+  # Lints an in-memory template and captures autocorrect output without writing it back.
+  # Relies on haml_lint internals, verified against the Gemfile.lock pin: revisit on bump.
   class Runner < HamlLint::Runner
     attr_accessor :document
 

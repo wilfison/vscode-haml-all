@@ -23,16 +23,8 @@ import { openFile, getWorkspaceRoot } from './utils/file';
 import * as helpers from './Helpers';
 
 /**
- * Manages the activation and registration of all extension features.
- * Handles initialization of providers, commands, and event subscribers for both HAML and Rails-specific functionality.
- *
- * Activation is split in two: features that only read files and buffers are
- * registered unconditionally, while everything that runs the project's Ruby
- * tooling waits for workspace trust. Linting, formatting and `bin/rails routes`
- * all execute code that lives in the repository (a `require:` in
- * .haml-lint.yml, the Gemfile, bin/rails itself), so running them in an
- * untrusted workspace would turn opening a .haml file into arbitrary code
- * execution.
+ * Registers every provider, command and event subscriber. Features that only read files
+ * register unconditionally; anything that runs repository code waits for workspace trust.
  */
 export class ExtensionActivator {
   private readonly HAML_SELECTOR = { language: 'haml', scheme: 'file' };
@@ -43,24 +35,14 @@ export class ExtensionActivator {
   private trustedActivated = false;
   private eventSubscriber: EventSubscriber | undefined;
 
-  /**
-   * Creates a new ExtensionActivator instance.
-   * @param context - The VS Code extension context
-   * @param outputChannel - Output channel for logging
-   */
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly outputChannel: vscode.OutputChannel
   ) {
-    // Detection is a plain existsSync on bin/rails; it spawns nothing, so it is
-    // safe to run before the workspace is trusted.
+    // A plain existsSync on bin/rails: it spawns nothing, so it is safe before trust.
     this.isARailsProject = helpers.isARailsProject(this.outputChannel);
   }
 
-  /**
-   * Activates the extension by registering all providers, commands, and event subscribers.
-   * This is called when the extension is first activated.
-   */
   public async activate(): Promise<void> {
     this.registerCommands();
     this.registerHamlProviders();
@@ -77,9 +59,8 @@ export class ExtensionActivator {
   }
 
   /**
-   * Registers everything that runs the project's Ruby tooling. Called either
-   * straight from {@link activate} or later, once the user grants trust —
-   * guarded so it only ever runs once.
+   * Registers everything that runs the project's Ruby tooling, from {@link activate}
+   * or from the trust grant. Guarded so it only ever runs once.
    */
   private activateTrusted(): void {
     if (this.trustedActivated) {
@@ -134,8 +115,8 @@ export class ExtensionActivator {
       })
     );
 
-    // Both settings only take effect when the server process is spawned, so a
-    // change is worth a restart — otherwise it would need a window reload.
+    // Both settings only take effect when the server process is spawned, so a change
+    // is worth a restart; otherwise it would need a window reload.
     this.context.subscriptions.push(
       vscode.workspace.onDidChangeConfiguration((event) => {
         const changed = ['hamlAll.useBundler', 'hamlAll.rubyCommand'].find((setting) => event.affectsConfiguration(setting));
@@ -235,12 +216,8 @@ export class ExtensionActivator {
   }
 
   /**
-   * What every server reports back. A server that died (OOM, `kill`, a
-   * `bundle install` mid-session) comes back on its own; the diagnostics and the
-   * cop list have to be rebuilt with it.
-   *
-   * The status bar only reads "running" once every folder's server is up, since
-   * one dead server means one folder silently unlinted.
+   * What every server reports back. A restarted server needs its diagnostics and cop
+   * list rebuilt; the status bar reads "running" only once every folder's server is up.
    */
   private restartHandlers(folderName: string) {
     const problem = (message: string) => this.statusBar?.warning(`${message} (folder "${folderName}")`);
@@ -304,10 +281,7 @@ export class ExtensionActivator {
     });
   }
 
-  /**
-   * Disposes of extension resources.
-   * Called when the extension is deactivated.
-   */
+  /** Disposes of extension resources, on deactivation. */
   public dispose(): void {
     this.lintServers?.dispose();
   }

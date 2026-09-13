@@ -8,10 +8,7 @@ import { OutputChannel } from 'vscode';
 import { railsCommand } from '../Helpers';
 import { isPathCommand, splitCommand } from '../utils/command';
 
-/**
- * Manages Rails routes loading and caching.
- * Implements intelligent caching based on routes.rb file modification time.
- */
+/** Loads Rails routes, cached on the modification time of `config/routes.rb`. */
 export default class Routes {
   private routes: Map<string, Route> = new Map();
   private process?: ChildProcessWithoutNullStreams | null = null;
@@ -35,11 +32,8 @@ export default class Routes {
   }
 
   /**
-   * Whether the loaded routes still match `config/routes.rb`.
-   *
-   * There is no time-based expiry: `rails routes` takes seconds, routes change
-   * only when the file does, and the watcher in EventSubscriber already forces a
-   * reload for `config/routes/**` (whose edits leave routes.rb untouched).
+   * Whether the loaded routes still match `config/routes.rb`. No time-based expiry:
+   * routes change only when the file does, and the watcher covers `config/routes/**`.
    */
   private isCacheValid(): boolean {
     const routesFilePath = path.join(this.rootPath, 'config', 'routes.rb');
@@ -60,19 +54,15 @@ export default class Routes {
     return true;
   }
 
-  /**
-   * Invalidates the routes cache.
-   */
+  /** Invalidates the routes cache. */
   private invalidateCache(): void {
     this.routesFileLastModified = 0;
   }
 
   /**
-   * Loads routes from the Rails application, reusing the loaded ones while
-   * `config/routes.rb` is unchanged.
+   * Loads routes, reusing the loaded ones while `config/routes.rb` is unchanged.
    *
-   * @param force - reload even if the cache looks valid. The file watcher passes
-   *   it, since a change under `config/routes/` does not touch `routes.rb`.
+   * @param force - reload anyway, as the watcher does for `config/routes/`
    */
   public async load(force = false) {
     if (!this.isARailsProject) {
@@ -132,9 +122,8 @@ export default class Routes {
       this.process = null;
     }
 
-    // Read the command on every run so a settings change takes effect without a
-    // window reload. It may carry arguments ("bundle exec rails"), which go to
-    // spawn's argv — never through a shell, since the value comes from settings.
+    // Read on every run, so a settings change needs no window reload. Arguments
+    // ("bundle exec rails") go to spawn's argv: the value comes from settings, no shell.
     const [executable, ...commandArgs] = splitCommand(railsCommand());
     const command = isPathCommand(executable) && !path.isAbsolute(executable) ? path.join(this.rootPath, executable) : executable;
     const args = [...commandArgs, 'routes', '-E'];
@@ -185,8 +174,8 @@ export default class Routes {
   }
 
   /**
-   * Only the process that a given run spawned may clear the shared reference —
-   * an older process closing after a newer one started would otherwise erase it.
+   * Only the process a given run spawned may clear the shared reference, or an older
+   * process closing after a newer one started would erase it.
    */
   private clearProcess(child: ChildProcessWithoutNullStreams) {
     if (this.process === child) {

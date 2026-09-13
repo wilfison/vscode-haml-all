@@ -8,9 +8,8 @@ require "json"
 require "stringio"
 require "pathname"
 
-# Fail closed when the gem is missing. Installing it here would reach the
-# network and write to the user's GEM_HOME without consent, and it would not
-# even help under --use-bundler, where a gem outside the bundle is unloadable.
+# Fail closed when the gem is missing: installing it here would reach the network
+# without consent, and a gem outside the bundle is unloadable under --use-bundler.
 begin
   require "haml_lint"
 rescue LoadError
@@ -27,8 +26,7 @@ require_relative "lint_server/cops"
 require_relative "lint_server/runner"
 
 module LintServer
-  # TCP server that keeps a Ruby process warm so the extension can lint and
-  # autocorrect HAML without paying interpreter start-up on every request.
+  # Keeps a Ruby process warm so linting does not pay interpreter start-up per request.
   # Handles one connection at a time, which is plenty for a single editor.
   class Server
     DEFAULT_PORT = 7654
@@ -50,9 +48,8 @@ module LintServer
 
       notify(status: "success", message: "Server started on port #{port}.", port: port, pid: Process.pid)
 
-      # After the handshake on purpose: the client's start-up budget stays
-      # intact. The socket is already bound, so a request arriving now waits in
-      # the backlog -- and waits at most for what it would have paid itself.
+      # After the handshake on purpose: the socket is already bound, so a request
+      # arriving now waits in the backlog, at most for what it would have paid itself.
       prewarm if @prewarm
 
       accept_loop
@@ -60,12 +57,8 @@ module LintServer
 
     private
 
-    # The extension host owns this process. If it dies without calling deactivate
-    # (a crash, `kill -9`), nothing would ever stop us and the port would stay
-    # taken for the rest of the session. Our stdin pipe closing is that signal.
-    #
-    # Only armed for a pipe: on a terminal, stdin never reaches EOF, and the
-    # Minitest suite starts the server without asking for the watchdog at all.
+    # stdin reaching EOF means the extension host died without calling deactivate,
+    # and nothing else would stop us. Only armed for a pipe: a terminal never EOFs.
     def start_stdin_watchdog
       return nil unless @watch_stdin && stdin_pipe?
 
@@ -81,16 +74,8 @@ module LintServer
       false
     end
 
-    # The first request on a project with RuboCop plugins pays seconds of lazy
-    # loading: RuboCop registers its cop classes as autoloads and only requires
-    # the `plugins:` from .rubocop.yml when it first inspects something. A real
-    # round trip over a throwaway template pays that here instead, off the
-    # user's path. With no config_file, discovery falls back to Dir.pwd -- the
-    # workspace root the extension launched us in, where the project's own
-    # .haml-lint.yml and .rubocop.yml live.
-    #
-    # Reports through stderr, where the boot-time diagnostics already go; both
-    # streams reach the "Haml" output channel.
+    # RuboCop loads its cop classes and .rubocop.yml `plugins:` only on first inspect,
+    # seconds on some projects. A throwaway round trip pays that off the user's path.
     def prewarm
       started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       request = { "template" => "%p x\n", "file_path" => "__prewarm__.haml" }
@@ -101,16 +86,14 @@ module LintServer
       warn "Warmed up in #{((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1000).round}ms."
       corrected
     rescue StandardError, ScriptError => e
-      # A cold cache is a slow first request, not a broken server. ScriptError
-      # too, so a plugin that fails to parse cannot take the boot down -- same
-      # reasoning as Dispatcher.dispatch.
+      # A cold cache is a slow first request, not a broken server. ScriptError too, so a
+      # plugin that fails to parse cannot take the boot down (as in Dispatcher.dispatch).
       warn "Warm-up failed: #{e.message}"
       nil
     end
 
-    # Binds to the first free port at or above the requested one. Binding and
-    # rescuing EADDRINUSE avoids shelling out to `lsof` (absent on Windows) and
-    # closes the race between "is the port free?" and "bind it".
+    # Binds to the first free port at or above the requested one. Rescuing EADDRINUSE
+    # avoids `lsof` (absent on Windows) and the "is it free?" / "bind it" race.
     def listen
       candidate = @requested_port
       attempts = 0
@@ -142,9 +125,8 @@ module LintServer
   end
 end
 
-# Refuse to expose an endpoint that can run arbitrary Ruby (through a lint or
-# autocorrect config) to every process on the host. The extension always passes
-# a per-session token; a manual run has to opt out on purpose.
+# A lint config can run arbitrary Ruby, so the endpoint is never exposed unauthenticated.
+# The extension always passes a per-session token; a manual run opts out on purpose.
 def boot_server
   LintServer::Controller.allow_unauthenticated = ARGV.include?("--no-auth")
 
