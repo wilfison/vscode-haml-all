@@ -33,7 +33,15 @@ export default class RoutesDefinitionProvider implements DefinitionProvider {
   }
 
   private async findControllerPaths(controller: string) {
-    return workspace.findFiles(`app/controllers/${controller}_controller.rb`);
+    // `**/` so a controller inside an in-repo engine is found too. The app's own
+    // controller wins when both exist: it is the shallower path.
+    const matches = await workspace.findFiles(
+      `**/app/controllers/${controller}_controller.rb`,
+      '**/{node_modules,vendor,tmp,log,public}/**',
+      5
+    );
+
+    return matches.sort((a, b) => a.path.split('/').length - b.path.split('/').length);
   }
 
   private async getLocations(uri: Uri, actions: Set<string>): Promise<Location[]> {

@@ -16,10 +16,8 @@ export default class Routes {
   private routes: Map<string, Route> = new Map();
   private process?: ChildProcessWithoutNullStreams | null = null;
 
-  // Cache management
-  private lastLoadTime: number = 0;
+  // Cache management: the routes are only re-read when config/routes.rb changes.
   private routesFileLastModified: number = 0;
-  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   private rootPath: string = '';
   private outputChannel: OutputChannel | null = null;
@@ -37,30 +35,23 @@ export default class Routes {
   }
 
   /**
-   * Checks if cached routes are still valid.
-   * @returns true if cache is valid, false otherwise
+   * Whether the loaded routes still match `config/routes.rb`.
+   *
+   * There is no time-based expiry: `rails routes` takes seconds, routes change
+   * only when the file does, and the watcher in EventSubscriber already forces a
+   * reload for `config/routes/**` (whose edits leave routes.rb untouched).
    */
   private isCacheValid(): boolean {
-    const now = Date.now();
-    const cacheAge = now - this.lastLoadTime;
-
-    // Check if cache has expired
-    if (cacheAge > this.CACHE_TTL) {
-      this.outputChannel?.appendLine('Routes cache expired (TTL exceeded)');
-      return false;
-    }
-
-    // Check if routes file has been modified
     const routesFilePath = path.join(this.rootPath, 'config', 'routes.rb');
-    try {
-      if (fs.existsSync(routesFilePath)) {
-        const stats = fs.statSync(routesFilePath);
-        const currentModTime = stats.mtimeMs;
 
-        if (currentModTime > this.routesFileLastModified) {
-          this.outputChannel?.appendLine('Routes cache invalidated (routes.rb modified)');
-          return false;
-        }
+    try {
+      if (!fs.existsSync(routesFilePath)) {
+        return true;
+      }
+
+      if (fs.statSync(routesFilePath).mtimeMs > this.routesFileLastModified) {
+        this.outputChannel?.appendLine('Routes cache invalidated (routes.rb modified)');
+        return false;
       }
     } catch (error) {
       this.outputChannel?.appendLine(`Error checking routes file: ${error}`);
@@ -73,21 +64,22 @@ export default class Routes {
    * Invalidates the routes cache.
    */
   private invalidateCache(): void {
-    this.lastLoadTime = 0;
     this.routesFileLastModified = 0;
   }
 
   /**
-   * Loads routes from Rails application.
-   * Uses cached routes if available and valid.
+   * Loads routes from the Rails application, reusing the loaded ones while
+   * `config/routes.rb` is unchanged.
+   *
+   * @param force - reload even if the cache looks valid. The file watcher passes
+   *   it, since a change under `config/routes/` does not touch `routes.rb`.
    */
-  public async load() {
+  public async load(force = false) {
     if (!this.isARailsProject) {
       return;
     }
 
-    // Return cached routes if still valid
-    if (this.routes.size > 0 && this.isCacheValid()) {
+    if (!force && this.routes.size > 0 && this.isCacheValid()) {
       this.outputChannel?.appendLine(`Using cached routes (${this.routes.size} routes)`);
       return;
     }
@@ -113,7 +105,6 @@ export default class Routes {
     this.routes = parseRoutes(output);
 
     // Update cache metadata
-    this.lastLoadTime = Date.now();
     const routesFilePath = path.join(this.rootPath, 'config', 'routes.rb');
     try {
       if (fs.existsSync(routesFilePath)) {
@@ -124,7 +115,7 @@ export default class Routes {
       this.outputChannel?.appendLine(`Error updating cache metadata: ${error}`);
     }
 
-    this.outputChannel?.appendLine(`Loaded ${this.routes.size} routes (cached for ${this.CACHE_TTL / 1000}s)`);
+    this.outputChannel?.appendLine(`Loaded ${this.routes.size} routes`);
   }
 
   public getAll() {

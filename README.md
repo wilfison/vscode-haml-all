@@ -20,6 +20,7 @@ The following features are supported to make your HAML development effortless:
 | ✅     | Data Attributes Completion | HTML, Rails UJS, Turbo Rails & Stimulus              |
 | ✅     | Image Preview              | CodeLens on `image_tag` and friends                  |
 | ✅     | Routes: Autocompletion     | Rails Project                                        |
+
 | ✅     | Routes: Go to Definition   | Rails Project                                        |
 | ✅     | Split to Partial           |                                                      |
 | ✅     | Convert HTML/ERB to HAML   | [`html2haml`](https://github.com/haml/html2haml) gem |

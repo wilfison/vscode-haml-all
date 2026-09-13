@@ -86,7 +86,18 @@ suite('RoutesDefinitionProvider Tests', () => {
     const result = await provider.provideDefinition(fakeDocument('= user_path(1)', 'user_path'), new vscode.Position(0, 5));
 
     assert.strictEqual(result, undefined);
-    assert.strictEqual(pattern, 'app/controllers/users_controller.rb');
+    assert.strictEqual(pattern, '**/app/controllers/users_controller.rb');
+  });
+
+  test('prefers the app controller over an in-repo engine copy', async () => {
+    const provider = new RoutesDefinitionProvider(fakeRoutes([USERS]));
+    const engineCopy = vscode.Uri.file('/w/engines/blog/app/controllers/users_controller.rb');
+    (vscode.workspace as any).findFiles = async () => [engineCopy, controllerUri];
+
+    const result = (await provider.provideDefinition(fakeDocument('= user_path(1)', 'user_path'), new vscode.Position(0, 5))) as vscode.Location[];
+
+    assert.ok(result.length > 0);
+    assert.strictEqual(result[0].uri.fsPath, controllerUri.fsPath);
   });
 
   test('points at every action the route maps to, skipping actions the controller lacks', async () => {
