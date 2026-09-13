@@ -28,6 +28,24 @@
       "name": "meta.prolog.haml"
     },
     {
+      "begin": "^(\\s*)(-#)\\s*(locals:)",
+      "beginCaptures": {
+        "2": {
+          "name": "punctuation.definition.comment.haml"
+        },
+        "3": {
+          "name": "keyword.other.locals.haml"
+        }
+      },
+      "end": "$",
+      "name": "meta.line.ruby.locals.haml",
+      "patterns": [
+        {
+          "include": "source.ruby"
+        }
+      ]
+    },
+    {
       "captures": {
         "1": {
           "name": "punctuation.section.comment.haml"

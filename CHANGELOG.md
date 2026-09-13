@@ -20,6 +20,8 @@
 
 ### Fixes
 
+- Double-clicking (and Ctrl+D) now selects `data-controller`, `@user` and `root_path` as one word instead of stopping at the `-` or `@`.
+- `-# locals: (user:, title: nil)` is highlighted as Ruby instead of being greyed out as a comment.
 - Data attribute completion and the image preview now work in projects without `bin/rails`; they were registered only for Rails projects even though neither reads anything Rails-specific.
 - The image preview no longer probes the disk for every quoted string on an `image_tag` line — only the helper's own argument is looked up, so `alt:` and `class:` values are left alone.
 - The "Remove space inside hash literal braces" quick fix now removes the space on both sides of the hash; it used to leave the closing one.
