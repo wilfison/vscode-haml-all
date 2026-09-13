@@ -313,6 +313,43 @@ suite('LintServer', () => {
 
       assert.strictEqual(restarted, 3);
     });
+
+  // The status bar paints these; without them a dead server is only visible as a
+    // notification the user may have dismissed.
+    suite('lifecycle handlers', () => {
+      test('reports every start, and each automatic restart attempt', async () => {
+        const { server, processes } = restartingServer(3);
+        const events: string[] = [];
+  
+        server.setRestartHandlers({
+          onStarted: () => events.push('started'),
+          onRestarting: (attempt, attempts) => events.push(`restarting ${attempt}/${attempts}`),
+        });
+  
+        await server.start();
+        processes[0].emit('close', 1);
+        await waitFor(() => events.length === 3);
+  
+        assert.deepStrictEqual(events, ['started', 'restarting 1/3', 'started']);
+  
+        server.stop();
+      });
+  
+      test('reports a failed start', async () => {
+        const failures: unknown[] = [];
+        const spawnFn: any = () => {
+          const proc = makeFakeProcess();
+          setImmediate(() => proc.emit('error', new Error('ruby: not found')));
+          return proc;
+        };
+  
+        const server = new LintServer('/ws', () => ({ useBundler: false, rubyCommand: 'ruby' }), null, { spawn: spawnFn });
+        server.setRestartHandlers({ onFailed: (error) => failures.push(error) });
+  
+        await assert.rejects(() => server.start());
+  
+        assert.strictEqual(failures.length, 1);
+      });
   });
 
   // useBundler and rubyCommand only apply when the process is spawned, so the
@@ -343,5 +380,7 @@ suite('LintServer', () => {
 
       server.stop();
     });
+  });
+
   });
 });

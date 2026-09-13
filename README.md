@@ -32,6 +32,8 @@ The following features are supported to make your HAML development effortless:
 
 ## Linting
 
+While a `.haml` file is open, a **HAML** item in the status bar reports the lint server: `$(sync~spin)` while it starts, `$(check)` once it is running, and `$(warning)` when it died or haml-lint is missing, with the reason in the tooltip. Clicking it opens the "Haml" output, also available as **HAML: Show output**.
+
 This extension utilizes the `haml-lint` and `rubocop` gems for linting HAML files.
 To configure, create a `.haml-lint.yml` and `.rubocop` files in your project root. Check the [default configuration](https://github.com/sds/haml-lint/blob/main/config/default.yml).
 

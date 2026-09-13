@@ -115,6 +115,10 @@
       {
         "command": "hamlAll.restartLintServer",
         "title": "HAML: Restart lint server"
+      },
+      {
+        "command": "hamlAll.showOutput",
+        "title": "HAML: Show output"
       }
     ],
     "languages": [

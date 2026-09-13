@@ -29,6 +29,12 @@ export interface RestartHandlers {
   onRestarted?: () => void;
   /** Called once the automatic attempts are exhausted. */
   onGaveUp?: () => void;
+  /** Called whenever a server process is up, initial start included. */
+  onStarted?: () => void;
+  /** Called when a start attempt fails (spawn error, handshake timeout). */
+  onFailed?: (error: unknown) => void;
+  /** Called before each automatic restart attempt, with its 1-based number. */
+  onRestarting?: (attempt: number, attempts: number) => void;
 }
 
 /**
@@ -213,17 +219,26 @@ class LintServer {
       return this.rubyServerProcess;
     }
 
+    // Read now, not at construction: a settings change only costs a restart.
     const { useBundler, rubyCommand } = this.options();
 
-    const { process: rubyProcess, port } = await startRubyServer(
-      {
-        workingDirectory: this.workingDirectory,
-        useBundler,
-        token: this.token,
-        rubyCommand,
-      },
-      { log: (message) => this.printOutput(message), spawn: this.deps.spawn }
-    );
+    let rubyProcess: ChildProcessWithoutNullStreams;
+    let port: number;
+
+    try {
+      ({ process: rubyProcess, port } = await startRubyServer(
+        {
+          workingDirectory: this.workingDirectory,
+          useBundler,
+          token: this.token,
+          rubyCommand,
+        },
+        { log: (message) => this.printOutput(message), spawn: this.deps.spawn }
+      ));
+    } catch (error) {
+      this.handlers.onFailed?.(error);
+      throw error;
+    }
 
     this.serverPort = port;
     this.rubyServerProcess = rubyProcess;
@@ -242,6 +257,8 @@ class LintServer {
     };
     rubyProcess.on('close', onExit);
     rubyProcess.on('error', onExit);
+
+    this.handlers.onStarted?.();
 
     return rubyProcess;
   }
@@ -297,6 +314,7 @@ class LintServer {
     }
 
     this.restartAttempts += 1;
+    this.handlers.onRestarting?.(this.restartAttempts, this.restartDelaysMs.length);
     this.printOutput(
       `Haml Lint server died; restarting in ${delay}ms (attempt ${this.restartAttempts}/${this.restartDelaysMs.length}).`
     );

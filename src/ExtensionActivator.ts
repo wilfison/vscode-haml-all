@@ -15,6 +15,7 @@ import AssetsDefinitionProvider from './providers/AssetsDefinitionProvider';
 import ImagePreviewCodeLensProvider from './providers/ImagePreviewCodeLensProvider';
 
 import LintServer from './server';
+import { LintStatusBar } from './StatusBar';
 
 import { html2Haml } from './html2Haml';
 import { openFile, getWorkspaceRoot } from './utils/file';
@@ -37,6 +38,7 @@ export class ExtensionActivator {
   private readonly RUBY_SELECTOR = { language: 'ruby', scheme: 'file' };
   private isARailsProject: boolean = false;
   private lintServer: LintServer | undefined;
+  private statusBar: LintStatusBar | undefined;
   private trustedActivated = false;
 
   /**
@@ -91,10 +93,16 @@ export class ExtensionActivator {
 
     this.lintServer = new LintServer(getWorkspaceRoot(), serverOptions, this.outputChannel);
 
+    // Created here rather than in activate(): with no trust there is no server,
+    // so there is no state to report.
+    this.statusBar = new LintStatusBar();
+    this.context.subscriptions.push(this.statusBar);
+
     // Probe for haml-lint in the background so a slow Ruby boot never delays
     // activation; surface the error only if the gem is genuinely missing.
     helpers.hamlLintPresent().then((present) => {
       if (!present) {
+        this.statusBar?.warning('haml-lint not found. Install the gem, or set hamlAll.useBundler.');
         vscode.window.showErrorMessage('haml-lint not found. Please install haml-lint gem to use this extension.');
       }
     });
@@ -108,7 +116,14 @@ export class ExtensionActivator {
         await eventSubscriber.linter.loadConfigs();
         eventSubscriber.updateAllDiagnostics();
       },
-      onGaveUp: () => this.reportLintServerGaveUp(),
+      onGaveUp: () => {
+        this.statusBar?.warning('haml-lint server stopped and could not be restarted. Run "HAML: Restart lint server".');
+        this.reportLintServerGaveUp();
+      },
+      onStarted: () => this.statusBar?.ok(),
+      onFailed: () => this.statusBar?.warning('haml-lint server failed to start.'),
+      onRestarting: (attempt, attempts) =>
+        this.statusBar?.warning(`haml-lint server died, restarting (attempt ${attempt} of ${attempts})…`),
     });
 
     eventSubscriber.subscribe();
@@ -219,7 +234,9 @@ export class ExtensionActivator {
         ImagePreviewCodeLensProvider.showImagePreview(imagePath, imageName);
       }),
 
-      vscode.commands.registerCommand('hamlAll.restartLintServer', () => this.restartLintServer())
+      vscode.commands.registerCommand('hamlAll.restartLintServer', () => this.restartLintServer()),
+
+      vscode.commands.registerCommand('hamlAll.showOutput', () => this.outputChannel.show())
     );
   }
 
@@ -239,6 +256,7 @@ export class ExtensionActivator {
     }
 
     this.outputChannel.appendLine('Restarting Haml Lint server (requested by the user)...');
+    this.statusBar?.starting();
 
     try {
       await this.lintServer.restart();
