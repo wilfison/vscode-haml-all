@@ -190,7 +190,7 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 - [x] `CHANGELOG.md` `### Added`: "Partial navigation, completion and signature help now understand `render @user`, `render user`, `collection:`, template variants (`.turbo_stream.haml`, `+mobile`) and partials inside in-repo engines"; `### Performance`: "Partials are indexed once and kept in memory; completion no longer scans the workspace on every keystroke, and signature help no longer re-reads the partial on every key".
 - [x] `npm run compile` e `npm test` passam.
 
-### US-009: Um servidor de lint por workspace folder (M6)
+### US-009: Um servidor de lint por workspace folder (M6) ✅ (`f2d3e81`)
 
 **Descrição:** Como usuário com um workspace multi-root (por exemplo, app + engine + gem de componentes), quero que cada pasta seja lintada com o seu `Gemfile`, seu `cwd` e seu `.haml-lint.yml`.
 
@@ -198,18 +198,18 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 
 **Critérios de aceite:**
 
-- [ ] Novo `src/server/pool.ts`: `class LintServerPool implements Disposable` com `constructor(create: (folder: WorkspaceFolder) => LintServer)`, `for(document: TextDocument): LintServer | undefined` (via `workspace.getWorkspaceFolder(document.uri)`; `undefined` para documento fora do workspace), `all(): LintServer[]`, `startAll()`, `restartAll()`, `stopAll()`/`dispose()`. Ouve `workspace.onDidChangeWorkspaceFolders`: pasta adicionada → cria e inicia; removida → `stop()` e remove do `Map`. Chave do `Map`: `folder.uri.toString()`.
-- [ ] `ExtensionActivator.activateTrusted` cria o pool com `create = (folder) => new LintServer(folder.uri.fsPath, optionsGetter, outputChannel)` e aplica `setRestartHandlers` a **cada** servidor criado (inclusive os adicionados depois). `restartLintServer` (comando) chama `pool.restartAll()`. `dispose()` chama `pool.dispose()`.
-- [ ] `Linter` recebe o pool em vez de um servidor; `lint()` usa `pool.for(document)` e retorna cedo se `undefined` ou se `rubyServerProcess` for `null`. `loadConfigs()` consulta o servidor da pasta 0 (o `list_cops` só alimenta `nativeAutocorrect`/versão; uma versão por workspace é suficiente — documentar no código). `startServer()` vira `pool.startAll()` e resolve quando todos responderem; um servidor que falha não impede os outros (log por pasta; `Promise.allSettled`).
-- [ ] `FormattingEditProvider.autocorrect` e `EventSubscriber.autocorrectLinters` usam `pool.for(document)`; sem servidor → `null` (mesmo tratamento de falha de hoje).
-- [ ] Status bar (US-007): `ok()` só quando **todos** os servidores estão de pé; `warning()` quando qualquer um falhou, com o nome da pasta no tooltip (`haml-lint server for "<folder.name>" …`).
-- [ ] Servidor Ruby: **sem mudança** em `safe_config_file` — cada processo já tem `cwd` na sua pasta, e o `.haml-lint.yml` da pasta passa no `ascend.any?(root)`. `lib/server.rb` não muda. (Minitest não muda.)
-- [ ] `EventSubscriber`: o watcher de `.haml-lint.yml` passa a ser um por workspace folder (`RelativePattern(folder, '.haml-lint.yml')`), chamando `onUpdateLintConfig()` (que já relinta tudo). Rotas e assets continuam em `workspaceFolders[0]` — adicionar um comentário `// ponytail: routes/assets are single-root on purpose, see tasks/prd-melhorias-secao-4.md US-009`.
-- [ ] `src/test/server/pool.test.ts` (novo): com `create` falso que devolve objetos `{ start, stop, restart, rubyServerProcess }` contadores, (a) `for(document)` devolve o servidor da pasta do documento (stub de `workspace.getWorkspaceFolder`); (b) documento fora do workspace → `undefined`; (c) `startAll` inicia todos; (d) `restartAll` reinicia todos; (e) `onDidChangeWorkspaceFolders` com `added` cria e inicia um novo; com `removed` para e remove. Para (e), disparar o evento via um `EventEmitter` injetado (`constructor(create, onDidChangeFolders = workspace.onDidChangeWorkspaceFolders)`).
-- [ ] `src/test/linter/index.test.ts`: `lint()` de um documento sem servidor no pool não lança e não chama `lint` em nenhum servidor.
-- [ ] `README.md` › "Linting": "In a multi-root workspace each folder gets its own lint server (own Gemfile, cwd and `.haml-lint.yml`). Rails routes and asset completion use the first folder."
-- [ ] `CHANGELOG.md` `### Added`: "Multi-root workspaces: every folder is linted with its own `.haml-lint.yml`, `Gemfile` and working directory."
-- [ ] `npm run compile`, `npm test`, `bundle exec rake` e `bundle exec rubocop` passam.
+- [x] Novo `src/server/pool.ts`: `class LintServerPool implements Disposable` com `constructor(create: (folder: WorkspaceFolder) => LintServer)`, `for(document: TextDocument): LintServer | undefined` (via `workspace.getWorkspaceFolder(document.uri)`; `undefined` para documento fora do workspace), `all(): LintServer[]`, `startAll()`, `restartAll()`, `stopAll()`/`dispose()`. Ouve `workspace.onDidChangeWorkspaceFolders`: pasta adicionada → cria e inicia; removida → `stop()` e remove do `Map`. Chave do `Map`: `folder.uri.toString()`.
+- [x] `ExtensionActivator.activateTrusted` cria o pool com `create = (folder) => new LintServer(folder.uri.fsPath, optionsGetter, outputChannel)` e aplica `setRestartHandlers` a **cada** servidor criado (inclusive os adicionados depois). `restartLintServer` (comando) chama `pool.restartAll()`. `dispose()` chama `pool.dispose()`.
+- [x] `Linter` recebe o pool em vez de um servidor; `lint()` usa `pool.for(document)` e retorna cedo se `undefined` ou se `rubyServerProcess` for `null`. `loadConfigs()` consulta o servidor da pasta 0 (o `list_cops` só alimenta `nativeAutocorrect`/versão; uma versão por workspace é suficiente — documentar no código). `startServer()` vira `pool.startAll()` e resolve quando todos responderem; um servidor que falha não impede os outros (log por pasta; `Promise.allSettled`).
+- [x] `FormattingEditProvider.autocorrect` e `EventSubscriber.autocorrectLinters` usam `pool.for(document)`; sem servidor → `null` (mesmo tratamento de falha de hoje).
+- [x] Status bar (US-007): `ok()` só quando **todos** os servidores estão de pé; `warning()` quando qualquer um falhou, com o nome da pasta no tooltip (`haml-lint server for "<folder.name>" …`).
+- [x] Servidor Ruby: **sem mudança** em `safe_config_file` — cada processo já tem `cwd` na sua pasta, e o `.haml-lint.yml` da pasta passa no `ascend.any?(root)`. `lib/server.rb` não muda. (Minitest não muda.)
+- [x] `EventSubscriber`: o watcher de `.haml-lint.yml` passa a ser um por workspace folder (`RelativePattern(folder, '.haml-lint.yml')`), chamando `onUpdateLintConfig()` (que já relinta tudo). Rotas e assets continuam em `workspaceFolders[0]` — adicionar um comentário `// ponytail: routes/assets are single-root on purpose, see tasks/prd-melhorias-secao-4.md US-009`.
+- [x] `src/test/server/pool.test.ts` (novo): com `create` falso que devolve objetos `{ start, stop, restart, rubyServerProcess }` contadores, (a) `for(document)` devolve o servidor da pasta do documento (stub de `workspace.getWorkspaceFolder`); (b) documento fora do workspace → `undefined`; (c) `startAll` inicia todos; (d) `restartAll` reinicia todos; (e) `onDidChangeWorkspaceFolders` com `added` cria e inicia um novo; com `removed` para e remove. Para (e), disparar o evento via um `EventEmitter` injetado (`constructor(create, onDidChangeFolders = workspace.onDidChangeWorkspaceFolders)`).
+- [x] `src/test/linter/index.test.ts`: `lint()` de um documento sem servidor no pool não lança e não chama `lint` em nenhum servidor.
+- [x] `README.md` › "Linting": "In a multi-root workspace each folder gets its own lint server (own Gemfile, cwd and `.haml-lint.yml`). Rails routes and asset completion use the first folder."
+- [x] `CHANGELOG.md` `### Added`: "Multi-root workspaces: every folder is linted with its own `.haml-lint.yml`, `Gemfile` and working directory."
+- [x] `npm run compile`, `npm test`, `bundle exec rake` e `bundle exec rubocop` passam.
 
 ## 4. Requisitos funcionais
 
