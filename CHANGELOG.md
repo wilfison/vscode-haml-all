@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-09-13
+
 ### Security
 
 - Restricted Mode is now enforced: linting, formatting, Rails routes and HTML/ERB conversion stay off until you trust the folder, so opening a `.haml` file no longer runs `bin/rails`, the project's `Gemfile` or a `require:` from `.haml-lint.yml`. Trusting the folder enables them right away, with no window reload.
