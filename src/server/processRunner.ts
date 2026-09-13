@@ -87,15 +87,18 @@ export function startRubyServer(config: RubyServerConfig, deps: RubyServerDeps =
 
     const stderrTail = () => (stderrBuffer.trim() ? ` Last stderr: ${stderrBuffer.trim()}` : '');
 
-    // Settle the start-up promise exactly once and stop watching stdout. The
-    // 'close'/'error' handlers stay attached but become no-ops once settled.
+    // Settle the start-up promise exactly once. Every listener stays attached:
+    // the 'close'/'error' handlers become no-ops, and stdout keeps being logged.
+    // Detaching the stdout listener would not stall the child (node keeps the
+    // stream flowing and simply discards the data), it would silently throw away
+    // everything the server says after boot, including the errors accept_loop
+    // prints when something escapes the dispatcher.
     const finish = (settle: () => void): void => {
       if (settled) {
         return;
       }
       settled = true;
       clearTimeout(timeout);
-      rubyProcess.stdout.off('data', onStdout);
       settle();
     };
 

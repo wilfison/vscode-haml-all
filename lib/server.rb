@@ -89,9 +89,8 @@ module LintServer
     # workspace root the extension launched us in, where the project's own
     # .haml-lint.yml and .rubocop.yml live.
     #
-    # Reports through stderr, not stdout: nobody reads our stdout once the
-    # handshake line has been scanned (src/server/processRunner.ts#finish
-    # detaches the listener), while stderr stays wired to the "Haml" output.
+    # Reports through stderr, where the boot-time diagnostics already go; both
+    # streams reach the "Haml" output channel.
     def prewarm
       started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       request = { "template" => "%p x\n", "file_path" => "__prewarm__.haml" }

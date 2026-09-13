@@ -136,6 +136,26 @@ suite('startRubyServer', () => {
     await assert.rejects(() => promise, /Timeout starting Ruby server/);
   });
 
+  test('keeps logging stdout after the handshake', async () => {
+    const proc = makeFakeProcess();
+    const logged: string[] = [];
+    const promise = startRubyServer(baseConfig, { spawn: fakeSpawnReturning(proc), log: (m) => logged.push(m) });
+
+    proc.stdout.emit('data', Buffer.from('{"port":7654}\n'));
+    const result = await promise;
+
+    // This listener is the only reader of the child's stdout: drop it and every
+    // error the server reports after boot is discarded without a trace. The
+    // scanner has already latched, so a later line cannot re-settle the promise.
+    proc.stdout.emit('data', Buffer.from('{"status":"error","message":"boom"}\n'));
+
+    assert.ok(
+      logged.some((message) => message.includes('boom')),
+      'stdout after the handshake must still reach the log'
+    );
+    assert.strictEqual(await promise, result);
+  });
+
   test('settles exactly once: a close after ready does not reject the resolved promise', async () => {
     const proc = makeFakeProcess();
     const promise = startRubyServer(baseConfig, { spawn: fakeSpawnReturning(proc) });
