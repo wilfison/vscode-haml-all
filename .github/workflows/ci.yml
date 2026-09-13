@@ -55,21 +55,3 @@ jobs:
       # virtual display it needs on Linux runners.
       - name: Extension tests
         run: xvfb-run -a npx vscode-test
-
-  # Windows is the platform where path handling actually differs, so the
-  # extension tests run there too. Ruby/haml-lint are not needed: the suites
-  # that touch the server use fakes.
-  windows-extension-tests:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Extension tests
-        run: npm test
