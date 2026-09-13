@@ -20,6 +20,7 @@
 
 ### Fixes
 
+- The "Remove space inside hash literal braces" quick fix now removes the space on both sides of the hash; it used to leave the closing one.
 - Quick fixes are offered again: the lightbulb now appears for haml-lint **and** RuboCop offenses, at any severity. Previously almost none of them ever showed up.
 - "Disable ... for this entire file" on a RuboCop offense now inserts a directive haml-lint understands (`-# haml-lint:disable RuboCop`).
 - "Go to Definition" and the partial signature help no longer break on a line that merely contains the word "render" (e.g. `@rendered_count`, `render_to_string`).

@@ -1,47 +1,21 @@
 import { CodeAction, CodeActionKind, Diagnostic, TextDocument, WorkspaceEdit } from 'vscode';
 
 export function fixSpaceInsideHashLiteralBraces(document: TextDocument, diagnostic: Diagnostic): CodeAction {
-  const fixType = diagnostic.message.match(/Space inside [\{\}] missing/) ? 'Add' : 'Remove';
+  const add = /Space inside [{}] missing/.test(diagnostic.message);
 
-  const fix = new CodeAction(`${fixType} space inside hash literal braces`, CodeActionKind.QuickFix);
-  const edit = new WorkspaceEdit();
+  const fix = new CodeAction(`${add ? 'Add' : 'Remove'} space inside hash literal braces`, CodeActionKind.QuickFix);
+  fix.edit = new WorkspaceEdit();
 
   const content = document.getText(diagnostic.range);
-  const hashRegex = /(\{[^\{]*\})/g;
-  const hashes = content.match(hashRegex);
+  // Rebuild every hash from its trimmed body, so both sides are fixed in one pass.
+  const fixed = content.replace(/\{([^{}]*)\}/g, (_, body: string) => {
+    const inner = body.trim();
+    return inner && add ? `{ ${inner} }` : `{${inner}}`;
+  });
 
-  if (hashes) {
-    hashes.forEach((hash) => {
-      const fixedHash = handleHashSpace(fixType, content, hash);
-      edit.replace(document.uri, diagnostic.range, fixedHash);
-    });
+  if (fixed !== content) {
+    fix.edit.replace(document.uri, diagnostic.range, fixed);
   }
-
-  fix.edit = edit;
 
   return fix;
-}
-
-function handleHashSpace(fixType: string, content: string, hash: string): string {
-  let newContent = content;
-
-  if (fixType === 'Add') {
-    if (hash[1] !== ' ') {
-      newContent = newContent.replace(hash, `{ ${hash.slice(1)}`);
-    }
-    if (hash[hash.length - 2] !== ' ') {
-      newContent = newContent.replace(hash.slice(1), `${hash.slice(1, -1)} }`);
-    }
-
-    return newContent;
-  }
-
-  if (hash[1] === ' ') {
-    newContent = newContent.replace(hash, `{${hash.slice(2)}`);
-  }
-  if (hash[hash.length - 2] === ' ') {
-    newContent = newContent.replace(hash.slice(1), `${hash.slice(1, -2)}}`);
-  }
-
-  return newContent;
 }
