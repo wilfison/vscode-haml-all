@@ -112,7 +112,7 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 - [x] `CHANGELOG.md` `### Added`: "Route helper completion also triggers while typing the helper name (`users_pa` → `users_path`)"; `### Fixes`: "Go to Definition on a route helper finds controllers inside in-repo engines"; "Routes are reloaded only when `config/routes*.rb` changes (no more 5-minute expiry)".
 - [x] `npm run compile` e `npm test` passam.
 
-### US-005: Remover o formatter legado (M3)
+### US-005: Remover o formatter legado (M3) ✅ (`11b6351`)
 
 **Descrição:** Como mantenedor, quero apagar `src/formatter/` para que só exista um caminho de autocorreção (o servidor), e como usuário com haml_lint < 0.74 quero ser avisado uma vez de que a autocorreção dos linters do haml-lint exige 0.74+.
 
@@ -120,15 +120,15 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 
 **Critérios de aceite:**
 
-- [ ] Apagados: `src/formatter/` (3 arquivos), `src/test/formatter/` (2 arquivos), `src/linter/cops.ts`, `src/utils/haml.ts`, `src/utils/regex.ts`, e em `src/types.d.ts` os tipos `LinterConfig`, `LinterConfigEnabler`, `LinterMetcher` e o que mais ficar sem referência (`tsc --noEmit` e `eslint` com `no-unused-vars` confirmam).
-- [ ] `Linter` perde `hamlLintConfig` e `legacyAutocorrectNeeded()`; mantém `hamlLintSupportsNativeAutocorrect` (renomeado para `nativeAutocorrect: boolean | null`, `null` = servidor ainda não respondeu) e `loadConfigs()` (que segue chamando `list_cops`).
-- [ ] `FormattingEditProvider.computeEdits`: sem o bloco legado. Quando `linter.nativeAutocorrect === false` (servidor respondeu e a versão é < 0.74), após o autocorrect do servidor, mostra **uma vez por sessão** `window.showWarningMessage('haml-lint <versão> only autocorrects RuboCop offenses. Update to haml_lint >= 0.74 to autocorrect haml-lint linters too.')` — a versão vem de `list_cops.version`, guardada em `Linter.hamlLintVersion`. Enquanto `null`, nenhum aviso. O edit do servidor é aplicado normalmente em todos os casos.
-- [ ] O servidor Ruby não muda (`Cops.list_cops` já entrega tudo). Nenhum novo campo no protocolo.
-- [ ] `FormattingEditProvider.test.ts`: o fake `linter` perde `legacyAutocorrectNeeded`; teste novo: `nativeAutocorrect: false` → 1 aviso na primeira formatação, 0 na segunda; `nativeAutocorrect: null` → 0 avisos; `true` → 0 avisos. `countWarnings` existente é reutilizado.
-- [ ] `README.md` › "Formatting and auto-correction": remover a menção ao fallback TypeScript (se houver); dizer que a autocorreção usa o haml-lint instalado e que os linters do haml-lint (não só RuboCop) exigem haml_lint ≥ 0.74.
-- [ ] `CHANGELOG.md` `### Changed` (criar se não existir): "Formatting relies entirely on haml-lint's autocorrect. The built-in TypeScript fixers (ClassesBeforeIds, HtmlAttributes, LeadingCommentSpace, UnnecessaryStringOutput, TrailingWhitespace, StrictLocals, FinalNewline) were removed; with haml_lint < 0.74 only RuboCop offenses are corrected, and the extension says so once per session."
-- [ ] `tmp/relatorio-analise.md` não precisa mudar neste PRD (é atualizado ao fim, ver §8).
-- [ ] `npm run compile` e `npm test` passam; a contagem de testes Mocha cai (formatter/haml_lint_cops removidos) e isso é esperado.
+- [x] Apagados: `src/formatter/` (3 arquivos), `src/test/formatter/` (2 arquivos), `src/linter/cops.ts`, `src/utils/haml.ts`, `src/utils/regex.ts`, e em `src/types.d.ts` os tipos `LinterConfig`, `LinterConfigEnabler`, `LinterMetcher` e o que mais ficar sem referência (`tsc --noEmit` e `eslint` com `no-unused-vars` confirmam).
+- [x] `Linter` perde `hamlLintConfig` e `legacyAutocorrectNeeded()`; mantém `hamlLintSupportsNativeAutocorrect` (renomeado para `nativeAutocorrect: boolean | null`, `null` = servidor ainda não respondeu) e `loadConfigs()` (que segue chamando `list_cops`).
+- [x] `FormattingEditProvider.computeEdits`: sem o bloco legado. Quando `linter.nativeAutocorrect === false` (servidor respondeu e a versão é < 0.74), após o autocorrect do servidor, mostra **uma vez por sessão** `window.showWarningMessage('haml-lint <versão> only autocorrects RuboCop offenses. Update to haml_lint >= 0.74 to autocorrect haml-lint linters too.')` — a versão vem de `list_cops.version`, guardada em `Linter.hamlLintVersion`. Enquanto `null`, nenhum aviso. O edit do servidor é aplicado normalmente em todos os casos.
+- [x] O servidor Ruby não muda (`Cops.list_cops` já entrega tudo). Nenhum novo campo no protocolo.
+- [x] `FormattingEditProvider.test.ts`: o fake `linter` perde `legacyAutocorrectNeeded`; teste novo: `nativeAutocorrect: false` → 1 aviso na primeira formatação, 0 na segunda; `nativeAutocorrect: null` → 0 avisos; `true` → 0 avisos. `countWarnings` existente é reutilizado.
+- [x] `README.md` › "Formatting and auto-correction": remover a menção ao fallback TypeScript (se houver); dizer que a autocorreção usa o haml-lint instalado e que os linters do haml-lint (não só RuboCop) exigem haml_lint ≥ 0.74.
+- [x] `CHANGELOG.md` `### Changed` (criar se não existir): "Formatting relies entirely on haml-lint's autocorrect. The built-in TypeScript fixers (ClassesBeforeIds, HtmlAttributes, LeadingCommentSpace, UnnecessaryStringOutput, TrailingWhitespace, StrictLocals, FinalNewline) were removed; with haml_lint < 0.74 only RuboCop offenses are corrected, and the extension says so once per session."
+- [x] `tmp/relatorio-analise.md` não precisa mudar neste PRD (é atualizado ao fim, ver §8).
+- [x] `npm run compile` e `npm test` passam; a contagem de testes Mocha cai (formatter/haml_lint_cops removidos) e isso é esperado.
 
 ### US-006: `hamlAll.lintOnType` e restart automático ao mudar `useBundler`/`rubyCommand` (M2)
 
