@@ -15,6 +15,7 @@ import Linter from './linter';
 import FixActionsProvider from './providers/FixActionsProvider';
 import { loadWithProgress } from './rails/utils';
 import { assetPathInvalidatesIndex, invalidateAssetIndex } from './rails/assetIndex';
+import { invalidatePartialIndex, watchPartials } from './rails/partialIndex';
 import { toPosix } from './utils/file';
 import Routes from './rails/routes';
 import LintServer from './server';
@@ -66,6 +67,20 @@ class EventSubscriber {
   public subscribeHaml() {
     this.subscribeToEvents();
     this.subscribeHamlWatchers();
+    this.subscribePartialWatchers();
+  }
+
+  // The partial index spans every workspace folder and does not need Rails: a
+  // plain `app/views` tree is enough for `render` to resolve.
+  private subscribePartialWatchers() {
+    this.context.subscriptions.push(...watchPartials());
+
+    this.context.subscriptions.push(
+      workspace.onDidChangeWorkspaceFolders(() => {
+        invalidatePartialIndex();
+        this.context.subscriptions.push(...watchPartials());
+      })
+    );
   }
 
   public subscribeRails() {

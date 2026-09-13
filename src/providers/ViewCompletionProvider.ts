@@ -10,6 +10,7 @@ import {
 } from 'vscode';
 
 import { CompletionItemWithScore } from '../types';
+import { getPartialIndex, PartialFile } from '../rails/partialIndex';
 import { toPosix } from '../utils/file';
 
 const RENDER_REGEXP = /[^\w.]render(?:\s+|\()['"]([\w\d_\/]*)$/;
@@ -40,14 +41,24 @@ export default class ViewCompletionProvider implements CompletionItemProvider {
   }
 
   private async buildCompletionItems(document: TextDocument): Promise<CompletionItem[] | null> {
-    const partialPaths = await workspace.findFiles('app/views/**/_*');
-    const viewPaths = partialPaths.map(viewPathForRelativePath);
+    // One item per partial, not per template: a Turbo app has `_row.html.haml`
+    // next to `_row.turbo_stream.haml`, and `render "row"` names both.
+    const byPartial = new Map<string, PartialFile[]>();
+
+    for (const partial of await getPartialIndex()) {
+      const key = `${partial.viewsRoot}/${partial.logicalPath}`;
+      byPartial.set(key, [...(byPartial.get(key) ?? []), partial]);
+    }
+
     const currentViewPath = viewPathForRelativePath(document.uri);
 
-    const itemsWithScore = viewPaths.map((viewPath) => ({
-      item: this.buildCompletionItem(viewPath, currentViewPath),
-      score: matchScore(currentViewPath, viewPath),
-    }));
+    const itemsWithScore = Array.from(byPartial.values()).map((templates) => {
+      const viewPath = `${templates[0].logicalPath}.${templates[0].variant}`;
+      const item = this.buildCompletionItem(viewPath, currentViewPath);
+      item.detail = templates.map((template) => `${template.logicalPath}.${template.variant}`).join(', ');
+
+      return { item, score: matchScore(currentViewPath, viewPath) };
+    });
 
     const maxItemWithScore = itemsWithScore.reduce<CompletionItemWithScore>(
       (maxItem, currentItem) => {

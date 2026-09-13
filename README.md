@@ -54,6 +54,8 @@ end
 
 Navigate to a partial file by using `CTRL + Click` on the partial name or right-click and select `Go to Definition`.
 
+Every way Rails names a partial is understood: `render "shared/header"`, `render partial: "row"`, `render "row"` (beside the current view), `render @user` and `render @users, collection: ...` (the object and its collection). When a partial exists in several templates — `_row.html.haml` next to `_row.turbo_stream.haml`, or a `+mobile` variant — all of them are offered. Partials under any `app/views` directory in the workspace are found, including an engine kept in the repository.
+
 ![Go to Definition](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/go-to-definition.gif)
 
 ### Partials - Split to Partial
@@ -86,7 +88,7 @@ After wrapping in conditional with `@user.present?`:
 
 ### Partial Completion
 
-Autocomplete for partials based on the `app/views` directory in your project.
+Autocomplete for partials found under any `app/views` directory in your project. The list is indexed once and refreshed when partials are added or removed, so it does not scan the workspace on every keystroke.
 
 ![Partial Completion](https://github.com/wilfison/vscode-haml-all/raw/HEAD/images/preview/partial-completion.gif)
 

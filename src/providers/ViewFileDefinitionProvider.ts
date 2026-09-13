@@ -17,7 +17,7 @@ export default class ViewFileDefinitionProvider implements DefinitionProvider {
       return [];
     }
 
-    const filePaths = resolvePartialFilePath(partialName, document.fileName);
+    const filePaths = await resolvePartialFilePath(partialName, document.fileName);
 
     if (filePaths.length === 0) {
       return [];

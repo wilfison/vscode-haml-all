@@ -5,7 +5,11 @@ const RENDER_BASE_REGEX = /^\s*=\s*render[\s\(]/;
 const RENDER_PARTIAL_REGEX = /render[\s\(]p/;
 
 class PartialSignatureHelpProvider implements SignatureHelpProvider {
-  public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken): SignatureHelp | null {
+  public async provideSignatureHelp(
+    document: TextDocument,
+    position: Position,
+    token: CancellationToken
+  ): Promise<SignatureHelp | null> {
     const lineContent = document.lineAt(position.line).text;
 
     if (!RENDER_BASE_REGEX.test(lineContent)) {
@@ -20,9 +24,9 @@ class PartialSignatureHelpProvider implements SignatureHelpProvider {
   }
 
   // Read '-# locals: (option1:, option2:)' from partial file
-  private loadPartialLocals(document: TextDocument, position: Position): string {
+  private async loadPartialLocals(document: TextDocument, position: Position): Promise<string> {
     const partialName = getPartialName(document, position);
-    const filePaths = resolvePartialFilePath(partialName, document.fileName);
+    const filePaths = await resolvePartialFilePath(partialName, document.fileName);
 
     if (filePaths.length === 0 || filePaths.length > 1) {
       return '';
@@ -31,9 +35,14 @@ class PartialSignatureHelpProvider implements SignatureHelpProvider {
     return fileStringLocals(filePaths[0]);
   }
 
-  private createSignature(lineContent: string, document: TextDocument, position: Position, renderType: string): SignatureHelp {
+  private async createSignature(
+    lineContent: string,
+    document: TextDocument,
+    position: Position,
+    renderType: string
+  ): Promise<SignatureHelp> {
     const beforeCursor = lineContent.substring(0, position.character);
-    const signature = this.buildSignature(document, position, renderType);
+    const signature = await this.buildSignature(document, position, renderType);
 
     const signatureHelp = new SignatureHelp();
     signatureHelp.activeSignature = 0;
@@ -50,8 +59,8 @@ class PartialSignatureHelpProvider implements SignatureHelpProvider {
     return signatureHelp;
   }
 
-  private buildSignature(document: TextDocument, position: Position, renderType: string): SignatureInformation {
-    const partialVariables: string = this.loadPartialLocals(document, position);
+  private async buildSignature(document: TextDocument, position: Position, renderType: string): Promise<SignatureInformation> {
+    const partialVariables: string = await this.loadPartialLocals(document, position);
     let options = partialVariables.split(',').map((option: string) => option.trim() || 'option:');
 
     const renderOptions = this.buildRender(renderType, options);

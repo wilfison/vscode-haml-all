@@ -12,6 +12,7 @@
 
 ### Added
 
+- Partial navigation, completion and signature help now understand `render @user`, `render user` and `collection:`, template variants (`_row.turbo_stream.haml`, `_row+mobile.html.haml`) and partials living under any `app/views` in the workspace, an in-repo engine included.
 - A status bar item showing the lint server state while a HAML file is open: starting, running, or a problem with the reason in the tooltip. Clicking it opens the "Haml" output, also reachable through the new **HAML: Show output** command.
 - `hamlAll.lintOnType` (default `true`): set it to `false` to lint only when a file is opened or saved.
 - Route helper completion also triggers while typing the helper itself: `posts_pa` now offers `posts_path`, outside `link_to` and friends. Accepting it replaces what you typed.
@@ -24,6 +25,10 @@
 ### Changed
 
 - Formatting now relies entirely on haml-lint's autocorrect. The extension's own TypeScript fixers (`ClassesBeforeIds`, `HtmlAttributes`, `LeadingCommentSpace`, `UnnecessaryStringOutput`, `TrailingWhitespace`, `StrictLocals`, `FinalNewline`) are gone; they duplicated what haml-lint has done natively since 0.74.0, and they ran on top of it during the first seconds of every session, before the server reported its version. With `haml_lint` older than 0.74 only RuboCop offenses are corrected, and the extension says so once per session.
+
+### Performance
+
+- Partials are indexed once and kept in memory: partial completion no longer scans the workspace on every keystroke, and signature help no longer re-reads the partial's `-# locals:` on every key.
 
 ### Fixes
 

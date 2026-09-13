@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 
 import ViewFileDefinitionProvider from '../../providers/ViewFileDefinitionProvider';
+import { partialFileFrom, PartialFile, setPartialIndex } from '../../rails/partialIndex';
 
 function fakeDocument(fileName: string, line: string) {
   return { fileName, lineAt: () => ({ text: line }) } as any;
@@ -23,9 +24,15 @@ suite('ViewFileDefinitionProvider Tests', () => {
     fs.writeFileSync(path.join(viewsDir, '_row.html.haml'), '%tr');
     fs.writeFileSync(path.join(viewsDir, '_row.html.erb'), '<tr>');
     currentView = path.join(viewsDir, 'index.html.haml');
+
+    // The test host opens no folder, so the index cannot scan for these.
+    setPartialIndex(
+      ['_row.html.haml', '_row.html.erb'].map((name) => partialFileFrom(path.join(viewsDir, name)) as PartialFile)
+    );
   });
 
   suiteTeardown(() => {
+    setPartialIndex(null);
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
