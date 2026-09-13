@@ -18,6 +18,7 @@ The following features are supported to make your HAML development effortless:
 | ✅     | Partial: Go to Definition  |                                                      |
 | ✅     | Partial: Autocompletion    |                                                      |
 | ✅     | Data Attributes Completion | HTML, Rails UJS, Turbo Rails & Stimulus              |
+| ✅     | Image Preview              | CodeLens on `image_tag` and friends                  |
 | ✅     | Routes: Autocompletion     | Rails Project                                        |
 | ✅     | Routes: Go to Definition   | Rails Project                                        |
 | ✅     | Split to Partial           |                                                      |
@@ -103,7 +104,7 @@ Works with all HAML attribute syntaxes:
 %button{:data_disable_with => "Processing..."}
 ```
 
-Simply start typing `data-` in any attribute context and get intelligent suggestions with descriptions.
+Simply start typing `data-` in any attribute context and get intelligent suggestions with descriptions. This works in any HAML project — a Rails app is not required.
 
 ### Formatting and auto-correction
 

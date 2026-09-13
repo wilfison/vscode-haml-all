@@ -154,4 +154,62 @@ suite('ImagePreviewCodeLensProvider Tests', () => {
 
     assert.ok(Array.isArray(codeLenses));
   });
+
+  // Only the helper's own argument is a candidate. Everything else on the line
+  // (alt:, class:, a route helper) used to be probed against the disk.
+  suite('image references', () => {
+    // Records every name the provider tries to resolve, and resolves none.
+    function spyingProvider(): { provider: ImagePreviewCodeLensProvider; probed: string[] } {
+      const probed: string[] = [];
+      const provider = new ImagePreviewCodeLensProvider();
+      (provider as any).findImagePath = (imageName: string) => {
+        probed.push(imageName);
+        return null;
+      };
+
+      return { provider, probed };
+    }
+
+    function probe(text: string): string[] {
+      const { provider, probed } = spyingProvider();
+      const document = { lineCount: 1, lineAt: () => ({ text }) } as any;
+
+      provider.provideCodeLenses(document, {} as any);
+
+      return probed;
+    }
+
+    test('ignores the other quoted options on an image_tag line', () => {
+      assert.deepStrictEqual(probe('= image_tag "logo.png", alt: "Company logo"'), ['logo.png']);
+    });
+
+    test('offers nothing when the image comes from a variable', () => {
+      assert.deepStrictEqual(probe('= image_tag user.avatar, class: "round"'), []);
+    });
+
+    test('finds the argument of a nested image_tag', () => {
+      assert.deepStrictEqual(probe('= link_to image_tag("icon"), root_path'), ['icon']);
+    });
+
+    test('keeps one candidate per helper call on the line', () => {
+      assert.deepStrictEqual(probe("= image_tag('logo.png') + image_tag('icon.svg')"), ['logo.png', 'icon.svg']);
+    });
+
+    test('ignores a quoted string on a line with no image helper', () => {
+      assert.deepStrictEqual(probe('= link_to "Home", root_path'), []);
+    });
+
+    test('the range covers the name without its quotes', () => {
+      const { provider } = spyingProvider();
+      (provider as any).findImagePath = (name: string) => `/w/app/assets/images/${name}`;
+      const text = '= image_tag "logo.png", alt: "x"';
+      const document = { lineCount: 1, lineAt: () => ({ text }) } as any;
+
+      const lenses = provider.provideCodeLenses(document, {} as any) as vscode.CodeLens[];
+
+      assert.strictEqual(lenses.length, 1);
+      assert.deepStrictEqual(lenses[0].range, new vscode.Range(0, 13, 0, 21));
+      assert.strictEqual(text.slice(13, 21), 'logo.png');
+    });
+  });
 });

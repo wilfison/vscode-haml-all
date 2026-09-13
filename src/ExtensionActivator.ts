@@ -137,12 +137,10 @@ export class ExtensionActivator {
       return;
     }
 
+    // Asset completion lists files from Rails' asset directories, so it is the
+    // only one of the three that a non-Rails project has no use for.
     this.context.subscriptions.push(
-      vscode.languages.registerCompletionItemProvider(this.HAML_SELECTOR, new AssetsCompletionProvider(), '"', "'"),
-
-      vscode.languages.registerCompletionItemProvider(this.HAML_SELECTOR, new DataAttributeCompletionProvider(), '-', '_'),
-
-      vscode.languages.registerCodeLensProvider(this.HAML_SELECTOR, new ImagePreviewCodeLensProvider())
+      vscode.languages.registerCompletionItemProvider(this.HAML_SELECTOR, new AssetsCompletionProvider(), '"', "'")
     );
   }
 
@@ -170,6 +168,14 @@ export class ExtensionActivator {
     );
 
     this.context.subscriptions.push(vscode.languages.registerCodeLensProvider(this.HAML_SELECTOR, new CodeLensProvider()));
+
+    // Neither of these reads anything Rails-specific: data attributes are HTML,
+    // Turbo and Stimulus, and the image preview resolves paths on disk.
+    this.context.subscriptions.push(
+      vscode.languages.registerCompletionItemProvider(this.HAML_SELECTOR, new DataAttributeCompletionProvider(), '-', '_'),
+
+      vscode.languages.registerCodeLensProvider(this.HAML_SELECTOR, new ImagePreviewCodeLensProvider())
+    );
   }
 
   private registerCommands(): void {

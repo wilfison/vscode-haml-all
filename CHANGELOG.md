@@ -20,6 +20,8 @@
 
 ### Fixes
 
+- Data attribute completion and the image preview now work in projects without `bin/rails`; they were registered only for Rails projects even though neither reads anything Rails-specific.
+- The image preview no longer probes the disk for every quoted string on an `image_tag` line — only the helper's own argument is looked up, so `alt:` and `class:` values are left alone.
 - The "Remove space inside hash literal braces" quick fix now removes the space on both sides of the hash; it used to leave the closing one.
 - Quick fixes are offered again: the lightbulb now appears for haml-lint **and** RuboCop offenses, at any severity. Previously almost none of them ever showed up.
 - "Disable ... for this entire file" on a RuboCop offense now inserts a directive haml-lint understands (`-# haml-lint:disable RuboCop`).

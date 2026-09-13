@@ -6,10 +6,12 @@ import { IMAGE_EXTENSIONS, IMAGE_HELPERS } from '../data/rails_helpers';
 import { AssetFile, listAssetFiles } from '../rails/assetIndex';
 import { getExtensionRoot } from '../utils/extensionRoot';
 
-// Compiled once and reused. Both carry the global flag, so `lastIndex` is reset
-// before each scan (see findImageReferences).
-const IMAGE_WITH_EXT_REGEX = /['"]([\w\-\.\/\\:]+\.(png|jpg|jpeg|gif|svg|webp|ico|bmp|avif))['"]/gi;
-const IMAGE_WITHOUT_EXT_REGEX = /['"]([\w\-\.\/\\:]+)['"]/gi;
+// The first quoted argument of each image helper call on a line. Anchoring on
+// the helper is what keeps `alt:`, `class:` and every other quoted option out:
+// scanning the whole line meant probing the disk for every string on it.
+// Compiled once; it carries the global flag, so `lastIndex` is reset before
+// each scan (see findImageReferences).
+const IMAGE_HELPER_ARGUMENT_REGEX = new RegExp(`\\b(?:${IMAGE_HELPERS.join('|')})\\s*\\(?\\s*['"]([^'"]+)['"]`, 'g');
 
 const HTML_ESCAPES: Record<string, string> = {
   '&': '&amp;',
@@ -75,18 +77,14 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
   private findImageReferences(lineText: string, lineIndex: number): Array<{ imageName: string; range: vscode.Range }> {
     const references: Array<{ imageName: string; range: vscode.Range }> = [];
 
-    if (!this.isImageHelper(lineText)) {
-      return references;
-    }
-
-    // First check for images with explicit extensions
-    const regexWithExt = IMAGE_WITH_EXT_REGEX;
-    regexWithExt.lastIndex = 0;
+    IMAGE_HELPER_ARGUMENT_REGEX.lastIndex = 0;
     let match;
 
-    while ((match = regexWithExt.exec(lineText)) !== null) {
+    while ((match = IMAGE_HELPER_ARGUMENT_REGEX.exec(lineText)) !== null) {
       const imageName = match[1];
-      const startPos = match.index + 1; // Skip opening quote
+      // Whether the name carries an extension does not matter here: resolution
+      // happens in provideCodeLenses, and it accepts both forms.
+      const startPos = match.index + match[0].length - imageName.length - 1;
       const endPos = startPos + imageName.length;
 
       const range = new vscode.Range(new vscode.Position(lineIndex, startPos), new vscode.Position(lineIndex, endPos));
@@ -94,44 +92,7 @@ export default class ImagePreviewCodeLensProvider implements vscode.CodeLensProv
       references.push({ imageName, range });
     }
 
-    // Then check for images without extensions (Rails convention)
-    if (references.length === 0) {
-      const regexWithoutExt = IMAGE_WITHOUT_EXT_REGEX;
-      regexWithoutExt.lastIndex = 0;
-
-      while ((match = regexWithoutExt.exec(lineText)) !== null) {
-        const imageName = match[1];
-
-        // Skip if it looks like a path or contains common non-image keywords
-        if (
-          imageName.includes('path') ||
-          imageName.includes('url') ||
-          imageName.includes('controller') ||
-          imageName.includes('action')
-        ) {
-          continue;
-        }
-
-        // Check if this imageName could be an image by trying to find it
-        const imagePath = this.findImagePath(imageName);
-        if (imagePath) {
-          const startPos = match.index + 1; // Skip opening quote
-          const endPos = startPos + imageName.length;
-
-          const range = new vscode.Range(new vscode.Position(lineIndex, startPos), new vscode.Position(lineIndex, endPos));
-
-          references.push({ imageName, range });
-        }
-      }
-    }
-
     return references;
-  }
-
-  private isImageHelper(line: string): boolean {
-    return IMAGE_HELPERS.some((helper) => {
-      return line.includes(helper);
-    });
   }
 
   private findImagePath(imageName: string): string | null {
