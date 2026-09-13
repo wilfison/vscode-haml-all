@@ -94,7 +94,7 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 - [x] `CHANGELOG.md` `### Fixes`: "Double-click selects `data-*` attributes, `@ivars` and `helper_path` as one word" e "`-# locals: (...)` is highlighted as Ruby".
 - [x] `npm run compile` passa (a gramática é JSON: `npm run format:check` valida a sintaxe).
 
-### US-004: Rotas — sem TTL, gatilho por palavra, controllers de engines (M5)
+### US-004: Rotas — sem TTL, gatilho por palavra, controllers de engines (M5) ✅ (`3ed3236`)
 
 **Descrição:** Como usuário, quero completar `users_pa` → `users_path` mesmo fora de `link_to`, quero que as rotas só recarreguem quando `routes.rb` mudar, e quero ir para a definição de uma rota cujo controller vive numa engine dentro do repositório.
 
@@ -102,15 +102,15 @@ Ordem sugerida: US-001 → US-002 → US-003 → US-004 → US-005 → US-006 �
 
 **Critérios de aceite:**
 
-- [ ] `CACHE_TTL`, `lastLoadTime` e a checagem de expiração saem de `Routes`; `isCacheValid()` passa a comparar só o `mtimeMs` de `config/routes.rb` (cache válido se o arquivo não mudou desde o último `load`). Se `config/routes.rb` não existir, o cache é sempre válido após o primeiro `load` (o watcher em `config/routes/**` continua forçando `load()`). Log "Routes cache expired (TTL exceeded)" removido.
-- [ ] `Routes.load()` ganha `force = false`; o watcher chama `load(true)` para ignorar o cache — hoje o watcher depende de `mtime` mudar, o que já acontece, mas `force` deixa a intenção explícita e cobre `config/routes/*.rb` (cuja mudança não altera o mtime de `routes.rb`).
-- [ ] `RoutesCompletionProvider.provideCompletionItems` também dispara quando a palavra sob o cursor (`document.getWordRangeAtPosition(position, /\w+/)`) tem ≥ 3 caracteres e é prefixo de algum `${prefix}_path`/`${prefix}_url` do `Routes.getAll()`. O item continua um por rota, label `${prefix}_path`, `insertText` snippet `${prefix}_${1|path,url|}(...)` (decisão do mantenedor). Para o gatilho por palavra, `item.range` cobre a palavra digitada, para que `users_pa` seja substituído em vez de concatenado. Também `filterText = \`${prefix}_path ${prefix}_url\`` para que digitar `users_url` case o item.
-- [ ] `RoutesDefinitionProvider.findControllerPaths` usa `workspace.findFiles(\`**/app/controllers/${controller}_controller.rb\`, '**/{node_modules,vendor,tmp,log,public}/**', 5)` e prefere o resultado sob a raiz (`app/controllers/...` direto) quando houver mais de um.
-- [ ] `src/test/rails/routes.test.ts` (novo): com `spawn` falso (padrão de `processRunner.test.ts`/`fakeServer.ts`) ou `execCmd` stubado, (a) segundo `load()` sem mudança em `routes.rb` não executa o comando; (b) `touch` no `routes.rb` (`fs.utimesSync`) faz o próximo `load()` executar; (c) `load(true)` executa sempre.
-- [ ] `RoutesCompletionProvider.test.ts`: (d) `users_pa` sem helper na linha → item `users_path` com `range` cobrindo `users_pa`; (e) `us` (2 chars) → `null`; (f) palavra que não prefixa rota → `null`; (g) `link_to` continua funcionando como hoje.
-- [ ] `RoutesDefinitionProvider.test.ts`: (h) o glob passado a `findFiles` começa com `**/app/controllers/`; (i) com dois resultados (`engines/blog/app/controllers/...` e `app/controllers/...`), o da raiz é usado.
-- [ ] `CHANGELOG.md` `### Added`: "Route helper completion also triggers while typing the helper name (`users_pa` → `users_path`)"; `### Fixes`: "Go to Definition on a route helper finds controllers inside in-repo engines"; "Routes are reloaded only when `config/routes*.rb` changes (no more 5-minute expiry)".
-- [ ] `npm run compile` e `npm test` passam.
+- [x] `CACHE_TTL`, `lastLoadTime` e a checagem de expiração saem de `Routes`; `isCacheValid()` passa a comparar só o `mtimeMs` de `config/routes.rb` (cache válido se o arquivo não mudou desde o último `load`). Se `config/routes.rb` não existir, o cache é sempre válido após o primeiro `load` (o watcher em `config/routes/**` continua forçando `load()`). Log "Routes cache expired (TTL exceeded)" removido.
+- [x] `Routes.load()` ganha `force = false`; o watcher chama `load(true)` para ignorar o cache — hoje o watcher depende de `mtime` mudar, o que já acontece, mas `force` deixa a intenção explícita e cobre `config/routes/*.rb` (cuja mudança não altera o mtime de `routes.rb`).
+- [x] `RoutesCompletionProvider.provideCompletionItems` também dispara quando a palavra sob o cursor (`document.getWordRangeAtPosition(position, /\w+/)`) tem ≥ 3 caracteres e é prefixo de algum `${prefix}_path`/`${prefix}_url` do `Routes.getAll()`. O item continua um por rota, label `${prefix}_path`, `insertText` snippet `${prefix}_${1|path,url|}(...)` (decisão do mantenedor). Para o gatilho por palavra, `item.range` cobre a palavra digitada, para que `users_pa` seja substituído em vez de concatenado. Também `filterText = \`${prefix}_path ${prefix}_url\`` para que digitar `users_url` case o item.
+- [x] `RoutesDefinitionProvider.findControllerPaths` usa `workspace.findFiles(\`**/app/controllers/${controller}_controller.rb\`, '**/{node_modules,vendor,tmp,log,public}/**', 5)` e prefere o resultado sob a raiz (`app/controllers/...` direto) quando houver mais de um.
+- [x] `src/test/rails/routes.test.ts` (novo): com `spawn` falso (padrão de `processRunner.test.ts`/`fakeServer.ts`) ou `execCmd` stubado, (a) segundo `load()` sem mudança em `routes.rb` não executa o comando; (b) `touch` no `routes.rb` (`fs.utimesSync`) faz o próximo `load()` executar; (c) `load(true)` executa sempre.
+- [x] `RoutesCompletionProvider.test.ts`: (d) `users_pa` sem helper na linha → item `users_path` com `range` cobrindo `users_pa`; (e) `us` (2 chars) → `null`; (f) palavra que não prefixa rota → `null`; (g) `link_to` continua funcionando como hoje.
+- [x] `RoutesDefinitionProvider.test.ts`: (h) o glob passado a `findFiles` começa com `**/app/controllers/`; (i) com dois resultados (`engines/blog/app/controllers/...` e `app/controllers/...`), o da raiz é usado.
+- [x] `CHANGELOG.md` `### Added`: "Route helper completion also triggers while typing the helper name (`users_pa` → `users_path`)"; `### Fixes`: "Go to Definition on a route helper finds controllers inside in-repo engines"; "Routes are reloaded only when `config/routes*.rb` changes (no more 5-minute expiry)".
+- [x] `npm run compile` e `npm test` passam.
 
 ### US-005: Remover o formatter legado (M3)
 
