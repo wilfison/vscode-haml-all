@@ -19,6 +19,10 @@
 - `hamlAll.rubyCommand` lets you point at the Ruby interpreter that runs the lint server — useful when rbenv/asdf/mise shims are missing from the PATH of a VS Code launched from the dock. When it cannot be spawned, the error now names the command and the setting.
 - `hamlAll.railsCommand` replaces `railsRoutes.railsCommand`, and it is now actually used to load routes — `bin/rails` used to be hardcoded. It accepts arguments, so `bundle exec rails` works. The old setting is deprecated but still read when the new one is unset.
 
+### Changed
+
+- Formatting now relies entirely on haml-lint's autocorrect. The extension's own TypeScript fixers (`ClassesBeforeIds`, `HtmlAttributes`, `LeadingCommentSpace`, `UnnecessaryStringOutput`, `TrailingWhitespace`, `StrictLocals`, `FinalNewline`) are gone; they duplicated what haml-lint has done natively since 0.74.0, and they ran on top of it during the first seconds of every session, before the server reported its version. With `haml_lint` older than 0.74 only RuboCop offenses are corrected, and the extension says so once per session.
+
 ### Fixes
 
 - "Go to Definition" on a route helper now finds controllers that live in an in-repo engine; only `app/controllers/` at the root was searched.

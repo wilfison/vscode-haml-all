@@ -1,16 +1,22 @@
 import path from 'node:path';
 import { DiagnosticCollection, languages, TextDocument, workspace, OutputChannel, window } from 'vscode';
 
-import { LinterConfig, LinterOffense } from '../types';
+import { LinterOffense } from '../types';
 import { DiagnosticFull, parseLintOffence } from './parser';
-import { HAML_LINT_DEFAULT_COPS } from './cops';
 import LintServer from '../server';
 
 export const SOURCE = 'haml-lint';
 
 export default class Linter {
-  public hamlLintConfig: LinterConfig = HAML_LINT_DEFAULT_COPS;
-  public hamlLintSupportsNativeAutocorrect = false;
+  /**
+   * Whether the installed haml-lint autocorrects its own linters (0.74.0+), or
+   * `null` while the server has not answered `list_cops` yet. Formatting uses it
+   * only to decide whether to tell the user what their version cannot do.
+   */
+  public nativeAutocorrect: boolean | null = null;
+
+  /** Version of the haml_lint gem the server is running, once known. */
+  public hamlLintVersion: string | null = null;
 
   private outputChanel: OutputChannel;
   private lintServer: LintServer;
@@ -69,23 +75,9 @@ export default class Linter {
     this.outputChanel.appendLine('Loading haml-lint config...');
 
     await this.lintServer.listCops((data: any) => {
-      this.hamlLintConfig = { ...this.hamlLintConfig, ...data.haml_lint };
-      this.hamlLintSupportsNativeAutocorrect = data.supports_native_autocorrect === true;
+      this.nativeAutocorrect = data.supports_native_autocorrect === true;
+      this.hamlLintVersion = typeof data.version === 'string' ? data.version : null;
     });
-  }
-
-  /**
-   * Whether the extension's own TypeScript autocorrection (src/formatter) should
-   * run on top of the server-side haml-lint autocorrect.
-   *
-   * haml-lint gained native safe autocorrect for its own linters in 0.74.0, which
-   * makes our formatter fixers redundant (and potentially conflicting) from that
-   * version on. The server reports that capability via `supports_native_autocorrect`;
-   * we default to running the legacy fixers until it confirms native support (the
-   * flag stays false until the server has answered list_cops).
-   */
-  public legacyAutocorrectNeeded(): boolean {
-    return !this.hamlLintSupportsNativeAutocorrect;
   }
 
   public async startServer() {

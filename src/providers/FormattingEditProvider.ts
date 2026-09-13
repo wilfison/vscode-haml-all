@@ -16,13 +16,12 @@ import {
 } from 'vscode';
 
 import Linter from '../linter';
-import autoCorrectAll from '../formatter';
 import LintServer from '../server';
 
 // `editor.codeActionsOnSave: { "source.fixAll.hamlLint": "explicit" }` and the
 // `Source Action...` menu. Kept on the formatting provider so "fix all" and
-// "format" are literally the same code path (timeout, pending-lint cancel,
-// legacy fallback and the once-per-session warning).
+// "format" are literally the same code path (timeout, pending-lint cancel and
+// the once-per-session warnings).
 export const FIX_ALL_KIND = CodeActionKind.SourceFixAll.append('hamlLint');
 const FIX_ALL_TITLE = 'Fix all auto-correctable haml-lint offenses';
 
@@ -39,6 +38,9 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
   private outputChanel: OutputChannel;
   private lintServer: LintServer;
   private cancelPendingLint: () => void;
+
+  // At most one "your haml-lint is too old" notice per session.
+  private versionWarned = false;
 
   // At most one timeout warning per session: `editor.formatOnSave` on a project
   // with heavy RuboCop cops would otherwise notify on every single save. The
@@ -113,21 +115,16 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
     }
 
     this.timeoutWarned = false;
+    this.warnIfAutocorrectIsPartial();
 
-    let fixedText = corrected;
-
-    if (this.linter.legacyAutocorrectNeeded()) {
-      fixedText = autoCorrectAll(document.fileName, fixedText, this.linter);
-    }
-
-    if (fixedText === text) {
+    if (corrected === text) {
       return [];
     }
 
     // Replace the entire document with the fixed text
     const fullRange = new Range(document.positionAt(0), document.positionAt(text.length));
 
-    return [TextEdit.replace(fullRange, fixedText)];
+    return [TextEdit.replace(fullRange, corrected)];
   }
 
   private async autocorrect(document: TextDocument, text: string): Promise<string | null> {
@@ -137,6 +134,25 @@ export default class FormattingEditProvider implements DocumentFormattingEditPro
       this.outputChanel.appendLine(`Haml All: autocorrect request failed: ${error}`);
       return null;
     }
+  }
+
+  /**
+   * haml-lint only autocorrects its own linters from 0.74.0 on; before that the
+   * server can still fix RuboCop offenses, and nothing else. Say so once, rather
+   * than leaving the user to wonder why half the offenses survive a format.
+   */
+  private warnIfAutocorrectIsPartial(): void {
+    // `null` means list_cops has not answered yet: say nothing rather than guess.
+    if (this.linter.nativeAutocorrect !== false || this.versionWarned) {
+      return;
+    }
+
+    this.versionWarned = true;
+    const version = this.linter.hamlLintVersion ? `haml_lint ${this.linter.hamlLintVersion}` : 'This haml_lint version';
+
+    window.showWarningMessage(
+      `${version} only autocorrects RuboCop offenses. Update to haml_lint >= 0.74 to autocorrect haml-lint linters too.`
+    );
   }
 
   private warnFormattingFailed(): void {

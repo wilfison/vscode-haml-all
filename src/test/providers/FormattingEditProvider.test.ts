@@ -3,13 +3,14 @@ import * as vscode from 'vscode';
 
 import FormattingEditProvider, { FIX_ALL_KIND } from '../../providers/FormattingEditProvider';
 
-// Enough of a Linter for the provider: the enable gate, the config path and the
-// legacy-formatter switch (off, so the server's answer is used verbatim).
-function fakeLinter(enabled = true): any {
+// Enough of a Linter for the provider: the enable gate, the config path and
+// what the server reported about the installed haml_lint.
+function fakeLinter(enabled = true, nativeAutocorrect: boolean | null = true, hamlLintVersion = '0.78.0'): any {
   return {
     isEnabled: () => enabled,
     configFilePath: () => '/ws/.haml-lint.yml',
-    legacyAutocorrectNeeded: () => false,
+    nativeAutocorrect,
+    hamlLintVersion,
   };
 }
 
@@ -28,6 +29,26 @@ function fakeLintServer(results: (string | null)[]): any {
 
 function fakeOutputChannel(): any {
   return { appendLine: () => {}, show: () => {} };
+}
+
+// Collects the "your haml_lint is too old" notices.
+function collectVersionWarnings(): { messages: string[]; restore: () => void } {
+  const original = vscode.window.showWarningMessage;
+  const messages: string[] = [];
+
+  (vscode.window as any).showWarningMessage = (...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('autocorrects RuboCop offenses')) {
+      messages.push(args[0]);
+    }
+    return Promise.resolve(undefined);
+  };
+
+  return {
+    messages,
+    restore: () => {
+      (vscode.window as any).showWarningMessage = original;
+    },
+  };
 }
 
 // Counts the warning notifications the provider raises.
@@ -231,6 +252,84 @@ suite('FormattingEditProvider Tests', () => {
 
       assert.deepStrictEqual(provider.provideCodeActions(document, range, context(FIX_ALL_KIND)), []);
       assert.strictEqual(lintServer.calls, 0);
+    });
+  });
+
+  // haml-lint autocorrects its own linters only from 0.74 on. The extension no
+  // longer carries TypeScript fixers for older versions; it says so instead.
+  suite('haml_lint older than 0.74', () => {
+    test('warns once per session, naming the installed version', async () => {
+      const document = await hamlDocument();
+      const warnings = collectVersionWarnings();
+      const provider = new FormattingEditProvider(
+        fakeLinter(true, false, '0.73.0'),
+        fakeOutputChannel(),
+        fakeLintServer(['%p Hi', '%p Ho']),
+        () => {}
+      );
+
+      try {
+        await provider.provideDocumentFormattingEdits(document, {} as any, null);
+        await provider.provideDocumentFormattingEdits(document, {} as any, null);
+
+        assert.strictEqual(warnings.messages.length, 1);
+        assert.ok(warnings.messages[0].startsWith('haml_lint 0.73.0 only autocorrects RuboCop offenses'), warnings.messages[0]);
+      } finally {
+        warnings.restore();
+      }
+    });
+
+    test('still applies the edit the server sent back', async () => {
+      const document = await hamlDocument('%p  Hello');
+      const warnings = collectVersionWarnings();
+      const provider = new FormattingEditProvider(
+        fakeLinter(true, false, '0.73.0'),
+        fakeOutputChannel(),
+        fakeLintServer(['%p Hello']),
+        () => {}
+      );
+
+      try {
+        const edits = await provider.provideDocumentFormattingEdits(document, {} as any, null);
+
+        assert.strictEqual(edits.length, 1);
+        assert.strictEqual(edits[0].newText, '%p Hello');
+      } finally {
+        warnings.restore();
+      }
+    });
+
+    test('says nothing while list_cops has not answered', async () => {
+      const document = await hamlDocument();
+      const warnings = collectVersionWarnings();
+      const provider = new FormattingEditProvider(
+        fakeLinter(true, null),
+        fakeOutputChannel(),
+        fakeLintServer(['%p Hi']),
+        () => {}
+      );
+
+      try {
+        await provider.provideDocumentFormattingEdits(document, {} as any, null);
+
+        assert.deepStrictEqual(warnings.messages, []);
+      } finally {
+        warnings.restore();
+      }
+    });
+
+    test('says nothing on a version that autocorrects natively', async () => {
+      const document = await hamlDocument();
+      const warnings = collectVersionWarnings();
+      const provider = new FormattingEditProvider(fakeLinter(), fakeOutputChannel(), fakeLintServer(['%p Hi']), () => {});
+
+      try {
+        await provider.provideDocumentFormattingEdits(document, {} as any, null);
+
+        assert.deepStrictEqual(warnings.messages, []);
+      } finally {
+        warnings.restore();
+      }
     });
   });
 });
